@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
     id("dagger.hilt.android.plugin")
     kotlin("kapt")
 }
@@ -68,6 +69,7 @@ dependencies {
     kapt(libs.google.hilt.compiler)
 
     implementation(libs.kotlinx.serialization.json)
+    implementation(platform(libs.firebase.bom))
 }
 
 kapt {

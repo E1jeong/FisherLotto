@@ -25,6 +25,8 @@ camera = "1.4.1"
 constraintlayout = "1.1.0"
 serialization = "1.6.3"
 mlkit = "17.3.0"
+googleServices = "4.4.2"
+firebaseBom = "33.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -79,6 +81,12 @@ camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", versi
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camera" }
 mlkit = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit" }
 
+firebase-bom = {group="com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom"}
+firebase-analytics = {group="com.google.firebase", name = "firebase-analytics"}
+firebase-auth = {group="com.google.firebase", name = "firebase-auth"}
+firebase-database = {group="com.google.firebase", name = "firebase-database"}
+firebase-messaging = {group="com.google.firebase", name = "firebase-messaging"}
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
@@ -87,4 +95,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}

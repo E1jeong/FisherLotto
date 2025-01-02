@@ -81,6 +81,9 @@ dependencies {
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
     implementation(libs.mlkit)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 }
 
 kapt {
