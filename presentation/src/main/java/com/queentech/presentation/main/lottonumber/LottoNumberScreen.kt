@@ -1,4 +1,4 @@
-package com.queentech.presentation.lottonumber
+package com.queentech.presentation.main.lottonumber
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

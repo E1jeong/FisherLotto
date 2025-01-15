@@ -1,4 +1,4 @@
-package com.queentech.presentation.information
+package com.queentech.presentation.main.information
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

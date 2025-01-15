@@ -1,4 +1,4 @@
-package com.queentech.presentation.statistic
+package com.queentech.presentation.main.statistic
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

@@ -1,4 +1,4 @@
-package com.queentech.presentation.mypage
+package com.queentech.presentation.main.camera
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -7,16 +7,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.queentech.presentation.theme.FisherLottoTheme
 
 @Composable
-fun MyPageScreen() {
-    Text("MyPageScreen")
+fun CameraScreen() {
+    Text("CameraScreen")
 }
 
 @Composable
 @Preview
-fun MyPageScreenPreview() {
+fun CameraScreenPreview() {
     FisherLottoTheme {
         Surface {
-            MyPageScreen()
+            CameraScreen()
         }
     }
 }
