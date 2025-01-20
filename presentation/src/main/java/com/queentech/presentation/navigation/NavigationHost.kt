@@ -13,13 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.queentech.presentation.camera.CameraScreen
-import com.queentech.presentation.information.InformationScreen
 import com.queentech.presentation.login.LoginScreen
-import com.queentech.presentation.lottonumber.LottoNumberScreen
-import com.queentech.presentation.mypage.MyPageScreen
+import com.queentech.presentation.main.camera.CameraScreen
+import com.queentech.presentation.main.information.InformationScreen
+import com.queentech.presentation.main.lottonumber.LottoNumberScreen
+import com.queentech.presentation.main.mypage.MyPageScreen
+import com.queentech.presentation.main.statistic.StatisticScreen
 import com.queentech.presentation.signup.SignUpScreen
-import com.queentech.presentation.statistic.StatisticScreen
 
 @Composable
 fun NavigationHost() {
@@ -49,7 +49,7 @@ fun NavigationHost() {
                         MyPageScreen()
                     }
                     composable(route = LoginNav.route) {
-                        LoginScreen()
+                        LoginScreen(navController)
                     }
                     composable(route = SignUpNav.route) {
                         SignUpScreen()
