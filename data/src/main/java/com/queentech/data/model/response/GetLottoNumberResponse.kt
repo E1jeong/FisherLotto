@@ -20,6 +20,9 @@ data class GetLottoNumberResponse(
 )
 
 fun GetLottoNumberResponse.toDomainModel(): GetLottoNumber = GetLottoNumber(
+    eachWinnings = firstWinamnt,
+    winnerCount = firstPrzwnerCo,
+    totalWinnings = firstAccumamnt,
     drwNo = drwNo,
     drwNoDate = drwNoDate,
     drwtNo1 = drwtNo1,

@@ -1,6 +1,9 @@
 package com.queentech.domain.model
 
 data class GetLottoNumber(
+    val eachWinnings: Long, // 1게임당 1등 당첨금
+    val winnerCount: Int, // 1등 당첨 수
+    val totalWinnings: Long, // 1등 당첨금 총액
     val drwNo: Int,
     val drwNoDate: String,
     val drwtNo1: Int,

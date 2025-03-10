@@ -32,6 +32,8 @@ fun InformationScreen(
         latestDrawNumber = state.latestDrawNumber,
         latestDrawDate = state.getLottoNumberResponse.drwNoDate,
         winningNumbers = winningNumbers,
+        latestWinnerCount = state.getLottoNumberResponse.winnerCount,
+        latestTotalWinnings = state.getLottoNumberResponse.totalWinnings,
     )
 }
 

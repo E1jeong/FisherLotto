@@ -60,6 +60,9 @@ class InformationViewModel @Inject constructor(
 @Immutable
 data class InformationState(
     val getLottoNumberResponse: GetLottoNumber = GetLottoNumber(
+        eachWinnings = 0,
+        winnerCount = 0,
+        totalWinnings = 0,
         drwNo = 0,
         drwNoDate = "",
         drwtNo1 = 0,
