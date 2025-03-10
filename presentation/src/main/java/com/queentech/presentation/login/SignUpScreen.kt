@@ -1,4 +1,4 @@
-package com.queentech.presentation.signup
+package com.queentech.presentation.login
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

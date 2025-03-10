@@ -14,12 +14,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.queentech.presentation.login.LoginScreen
+import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
 import com.queentech.presentation.main.information.InformationScreen
 import com.queentech.presentation.main.lottonumber.LottoNumberScreen
 import com.queentech.presentation.main.mypage.MyPageScreen
 import com.queentech.presentation.main.statistic.StatisticScreen
-import com.queentech.presentation.signup.SignUpScreen
 
 @Composable
 fun NavigationHost() {
