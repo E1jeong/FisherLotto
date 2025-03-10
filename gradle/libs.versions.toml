@@ -27,6 +27,7 @@ serialization = "1.6.3"
 mlkit = "17.3.0"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
+jsoup = "1.15.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,6 +68,8 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version = "5.0.0-alpha.3" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+
 orbit-core = { group = "org.orbit-mvi", name = "orbit-core", version.ref = "orbit" }
 orbit-viewmodel = { group = "org.orbit-mvi", name = "orbit-viewmodel", version.ref = "orbit" }
 orbit-compose = { group = "org.orbit-mvi", name = "orbit-compose", version.ref = "orbit" }
@@ -82,11 +85,11 @@ camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", versi
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camera" }
 mlkit = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit" }
 
-firebase-bom = {group="com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom"}
-firebase-analytics = {group="com.google.firebase", name = "firebase-analytics"}
-firebase-auth = {group="com.google.firebase", name = "firebase-auth"}
-firebase-database = {group="com.google.firebase", name = "firebase-database"}
-firebase-messaging = {group="com.google.firebase", name = "firebase-messaging"}
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -96,4 +99,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

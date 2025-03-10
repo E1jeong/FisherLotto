@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.datastore)
+
+    implementation(libs.jsoup)
 }
 
 kapt {
