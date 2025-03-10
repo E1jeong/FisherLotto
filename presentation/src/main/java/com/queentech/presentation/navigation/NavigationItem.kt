@@ -21,8 +21,8 @@ sealed class MainNav(
     val icon: ImageVector
 ) : Destination {
 
-    data object Camera : MainNav(CAMERA, "카메라", Icons.Filled.CameraAlt)
-    data object LottoNumber : MainNav(LOTTO_NUMBER, "로또 번호", Icons.Filled.LooksOne)
+    data object Camera : MainNav(CAMERA, "당첨 확인", Icons.Filled.CameraAlt)
+    data object LottoNumber : MainNav(LOTTO_NUMBER, "예상 번호", Icons.Filled.LooksOne)
     data object Information : MainNav(INFORMATION, "홈", Icons.Filled.Home)
     data object Statistic : MainNav(STATISTIC, "통계", Icons.Filled.AutoGraph)
     data object MyPage : MainNav(MY_PAGE, "내 정보", Icons.Filled.AccountCircle)
