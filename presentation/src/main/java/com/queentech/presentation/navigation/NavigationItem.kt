@@ -5,9 +5,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LooksOne
-import androidx.compose.material.icons.filled.Recycling
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.queentech.presentation.navigation.RouteName.CAMERA
 import com.queentech.presentation.navigation.RouteName.INFORMATION
@@ -23,11 +21,11 @@ sealed class MainNav(
     val icon: ImageVector
 ) : Destination {
 
-    data object Camera : MainNav(CAMERA, "Camera", Icons.Filled.CameraAlt)
-    data object LottoNumber : MainNav(LOTTO_NUMBER, "Lotto Number", Icons.Filled.LooksOne)
-    data object Information : MainNav(INFORMATION, "Information", Icons.Filled.Home)
-    data object Statistic : MainNav(STATISTIC, "Statistic", Icons.Filled.AutoGraph)
-    data object MyPage : MainNav(MY_PAGE, "My page", Icons.Filled.AccountCircle)
+    data object Camera : MainNav(CAMERA, "카메라", Icons.Filled.CameraAlt)
+    data object LottoNumber : MainNav(LOTTO_NUMBER, "로또 번호", Icons.Filled.LooksOne)
+    data object Information : MainNav(INFORMATION, "홈", Icons.Filled.Home)
+    data object Statistic : MainNav(STATISTIC, "통계", Icons.Filled.AutoGraph)
+    data object MyPage : MainNav(MY_PAGE, "내 정보", Icons.Filled.AccountCircle)
 
     companion object {
         fun isMainRoute(route: String?): Boolean {
@@ -41,12 +39,12 @@ sealed class MainNav(
 
 object LoginNav : Destination {
     override val route: String = LOGIN
-    override val title: String = "Login"
+    override val title: String = "로그인"
 }
 
 object SignUpNav : Destination {
     override val route: String = SIGNUP
-    override val title: String = "SignUp"
+    override val title: String = "회원가입"
 }
 
 interface Destination {
