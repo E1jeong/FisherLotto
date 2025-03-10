@@ -27,6 +27,7 @@ import com.queentech.presentation.util.ColorHelper
 fun WinningNumbersInfo(
     modifier: Modifier = Modifier,
     winningNumbers: List<Int>,
+    numberSize: Int = 30,
 ) {
 
     Row(
@@ -34,25 +35,33 @@ fun WinningNumbersInfo(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        for (i in 0..winningNumbers.size - 2) {
-            Ball(number = winningNumbers[i])
+        for (i in winningNumbers.indices) {
+            if (i == winningNumbers.size - 1) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "plus",
+                    tint = Color.White
+                )
+            }
+
+            Ball(
+                number = winningNumbers[i],
+                size = numberSize,
+            )
         }
-        Icon(
-            imageVector = Icons.Filled.Add,
-            contentDescription = "plus",
-            tint = Color.White
-        )
-        Ball(number = winningNumbers[winningNumbers.size - 1])
     }
 }
 
 @Composable
-private fun Ball(number: Int) {
+private fun Ball(
+    number: Int,
+    size: Int,
+) {
     val backgroundColor = ColorHelper.selectBallColor(ballNumber = number)
 
     Box(
         modifier = Modifier
-            .size(30.dp)
+            .size(size.dp)
             .clip(CircleShape)
             .background(backgroundColor),
         contentAlignment = Alignment.Center
