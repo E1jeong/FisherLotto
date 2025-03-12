@@ -1,5 +1,7 @@
 package com.queentech.presentation.main.information
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -27,8 +29,7 @@ fun InformationScreen(
         state.getLottoNumberResponse.bnusNo
     )
 
-    LatestDrawInfo(
-        modifier = Modifier.padding(Paddings.medium, Paddings.xextra, Paddings.medium, Paddings.medium),
+    InformationContent(
         latestDrawNumber = state.latestDrawNumber,
         latestDrawDate = state.getLottoNumberResponse.drwNoDate,
         winningNumbers = winningNumbers,
@@ -38,11 +39,42 @@ fun InformationScreen(
 }
 
 @Composable
+private fun InformationContent(
+    latestDrawNumber: Int,
+    latestDrawDate: String,
+    winningNumbers: List<Int>,
+    latestWinnerCount: Int,
+    latestTotalWinnings: Long,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        LatestDrawInfo(
+            modifier = Modifier.padding(Paddings.medium, Paddings.xextra, Paddings.medium, Paddings.medium),
+            latestDrawNumber = latestDrawNumber,
+            latestDrawDate = latestDrawDate,
+            winningNumbers = winningNumbers,
+            latestWinnerCount = latestWinnerCount,
+            latestTotalWinnings = latestTotalWinnings,
+        )
+        FisherLottoResultInfo(
+            modifier = Modifier.padding(Paddings.medium, Paddings.medium, Paddings.medium, Paddings.xextra),
+            latestDrawNumber = latestDrawNumber,
+            latestDrawDate = latestDrawDate,
+        )
+    }
+}
+
+@Composable
 @Preview
 fun InformationScreenPreview() {
     FisherLottoTheme {
         Surface {
-            InformationScreen()
+            InformationContent(
+                latestDrawNumber = 1,
+                latestDrawDate = "2023-08-01",
+                winningNumbers = listOf(1, 2, 3, 4, 5, 6, 7),
+                latestWinnerCount = 10,
+                latestTotalWinnings = 1000000000,
+            )
         }
     }
 }
