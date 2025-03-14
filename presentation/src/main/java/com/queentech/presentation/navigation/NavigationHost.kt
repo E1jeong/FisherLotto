@@ -1,5 +1,8 @@
 package com.queentech.presentation.navigation
 
+import android.Manifest
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -20,7 +23,10 @@ import com.queentech.presentation.main.information.InformationScreen
 import com.queentech.presentation.main.lottonumber.LottoNumberScreen
 import com.queentech.presentation.main.mypage.MyPageScreen
 import com.queentech.presentation.main.statistic.StatisticScreen
+import com.queentech.presentation.util.PermissionState
+import com.queentech.presentation.util.permissionRequest
 
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun NavigationHost() {
     val navController = rememberNavController()
