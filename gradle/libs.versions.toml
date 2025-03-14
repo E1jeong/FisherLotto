@@ -28,6 +28,7 @@ mlkit = "17.3.0"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 jsoup = "1.15.3"
+beetablescompose = "1.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -90,6 +91,8 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+
+beetablescompose = { group = "com.github.Breens-Mbaka", name = "BeeTablesCompose", version.ref = "beetablescompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
