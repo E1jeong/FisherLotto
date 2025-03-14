@@ -28,46 +28,60 @@ fun NavigationHost() {
     val snackbarHostState = remember { SnackbarHostState() }
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Surface {
-        Scaffold(
-            content = { paddingValues ->
-                NavHost(
-                    modifier = Modifier.padding(paddingValues),
-                    navController = navController,
-                    startDestination = MainNav.Information.route
-                ) {
-                    composable(route = MainNav.Information.route) {
-                        InformationScreen()
-                    }
-                    composable(route = MainNav.Camera.route) {
-                        CameraScreen()
-                    }
-                    composable(route = MainNav.LottoNumber.route) {
-                        LottoNumberScreen()
-                    }
-                    composable(route = MainNav.MyPage.route) {
-                        MyPageScreen()
-                    }
-                    composable(route = LoginNav.route) {
-                        LoginScreen(navController)
-                    }
-                    composable(route = SignUpNav.route) {
-                        SignUpScreen()
-                    }
-                    composable(route = MainNav.Statistic.route) {
-                        StatisticScreen()
-                    }
-                }
-            },
-            bottomBar = {
-                if (MainNav.isMainRoute(currentRoute)) {
-                    NavigationBottomBar(
+    val normalPermissions = listOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.CAMERA
+    )
+
+    val normalPermissionState = permissionRequest(
+        permissions = normalPermissions,
+        rationaleTitle = "권한 요청",
+        rationaleText = "권한 요청을 수락해주시길 바랍니다."
+    )
+
+    if (normalPermissionState == PermissionState.Granted) {
+        Surface {
+            Scaffold(
+                content = { paddingValues ->
+                    NavHost(
+                        modifier = Modifier.padding(paddingValues),
                         navController = navController,
-                        currentRoute = currentRoute
-                    )
-                }
-            },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-        )
+                        startDestination = MainNav.Information.route
+                    ) {
+                        composable(route = MainNav.Information.route) {
+                            InformationScreen()
+                        }
+                        composable(route = MainNav.Camera.route) {
+                            CameraScreen()
+                        }
+                        composable(route = MainNav.LottoNumber.route) {
+                            LottoNumberScreen()
+                        }
+                        composable(route = MainNav.MyPage.route) {
+                            MyPageScreen()
+                        }
+                        composable(route = LoginNav.route) {
+                            LoginScreen(navController)
+                        }
+                        composable(route = SignUpNav.route) {
+                            SignUpScreen()
+                        }
+                        composable(route = MainNav.Statistic.route) {
+                            StatisticScreen()
+                        }
+                    }
+                },
+                bottomBar = {
+                    if (MainNav.isMainRoute(currentRoute)) {
+                        NavigationBottomBar(
+                            navController = navController,
+                            currentRoute = currentRoute
+                        )
+                    }
+                },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            )
+        }
     }
 }
