@@ -10,6 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.queentech.presentation.main.information.component.FisherLottoResultInfo
+import com.queentech.presentation.main.information.component.LatestDrawInfo
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
 
