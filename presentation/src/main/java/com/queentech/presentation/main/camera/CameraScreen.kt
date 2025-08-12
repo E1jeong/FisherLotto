@@ -10,23 +10,16 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -35,46 +28,34 @@ import java.util.concurrent.Executors
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun CameraScreen() {
-//    val state = viewModel.collectAsState().value
-    val context = LocalContext.current
+fun CameraScreen(
+    viewModel: CameraViewModel = hiltViewModel(),
+) {
+    val state by viewModel.container.stateFlow.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var qrCodeValueDialogVisible by remember { mutableStateOf(false) }
 
-//    viewModel.collectSideEffect { sideEffect ->
-//        when (sideEffect) {
-//            is MainSideEffect.Toast -> {
-//                Toast.makeText(
-//                    context,
-//                    sideEffect.message,
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
-//        }
-//    }
-
-    CameraScreen(
+    CameraPreview(
         lifecycleOwner = lifecycleOwner,
-        qrCodeValue = "",
-        onQrCodeValueChange = {},
-        onQrCodeValueDetect = { qrCodeValueDialogVisible = true }
+        onQrCodeValueDetect = {
+            viewModel.onQrCodeScanned(it)
+            qrCodeValueDialogVisible = true
+        }
     )
 
     QrResultDialog(
         visible = qrCodeValueDialogVisible,
-        qrCodeValue = "",
+        result = state.result,
+        winning = state.winningNumbers,
         onDismissRequest = { qrCodeValueDialogVisible = false }
     )
 }
 
-
-@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @Composable
-private fun CameraScreen(
+private fun CameraPreview(
     lifecycleOwner: LifecycleOwner,
-    qrCodeValue: String,
-    onQrCodeValueChange: (String) -> Unit,
-    onQrCodeValueDetect: () -> Unit
+    onQrCodeValueDetect: (String) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -93,7 +74,7 @@ private fun CameraScreen(
                     .build()
                     .also {
                         it.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-                            processImageProxy(imageProxy, onQrCodeValueChange, onQrCodeValueDetect)
+                            processImageProxy(imageProxy, onQrCodeValueDetect)
                         }
                     }
 
@@ -110,15 +91,13 @@ private fun CameraScreen(
                 previewView
             },
         )
-        QrCodeValueText(qrCodeValue = qrCodeValue)
     }
 }
 
 @ExperimentalGetImage
 private fun processImageProxy(
     imageProxy: ImageProxy,
-    onQrCodeValueChange: (String) -> Unit,
-    onQrCodeValueDetect: () -> Unit
+    onQrCodeValueDetect: (String) -> Unit,
 ) {
     imageProxy.image?.let { image ->
         val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
@@ -127,8 +106,7 @@ private fun processImageProxy(
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
                     barcode.rawValue?.let { qrValue ->
-                        onQrCodeValueChange(qrValue)
-                        onQrCodeValueDetect()
+                        onQrCodeValueDetect(qrValue)
                     }
                 }
             }
@@ -136,18 +114,4 @@ private fun processImageProxy(
                 imageProxy.close()
             }
     }
-}
-
-@Composable
-private fun BoxScope.QrCodeValueText(qrCodeValue: String) {
-    Text(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .align(Alignment.BottomCenter),
-        text = qrCodeValue,
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onPrimaryContainer
-    )
 }
