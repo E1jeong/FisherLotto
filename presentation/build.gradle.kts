@@ -57,6 +57,10 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.material.icon.extended)
     implementation(libs.androidx.constraintlayout)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.core)
 
     implementation(project(":domain"))
 
@@ -64,6 +68,8 @@ dependencies {
     kapt(libs.google.hilt.compiler)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)
+    androidTestImplementation(libs.google.hilt.testing)
+    kaptAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.google.gson)
 

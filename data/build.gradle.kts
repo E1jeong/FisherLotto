@@ -43,17 +43,20 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
+    testImplementation(libs.kotlinx.coroutines.test)
 
     implementation(project(":domain"))
 
     implementation(libs.google.hilt)
     kapt(libs.google.hilt.compiler)
+    androidTestImplementation(libs.google.hilt.testing)
+    kaptAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
     implementation(libs.google.gson)
+    testImplementation(libs.androidx.room.testing)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
@@ -61,6 +64,10 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.retrofit.converter.moshi)
+    testImplementation(libs.moshi)
+    testImplementation(libs.moshi.kotlin)
+    testImplementation(libs.okhttp.mockwebserver)
 
     implementation(libs.datastore)
 
