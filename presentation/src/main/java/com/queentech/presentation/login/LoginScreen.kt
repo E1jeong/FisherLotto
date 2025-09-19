@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.queentech.presentation.navigation.RouteName
@@ -33,7 +32,7 @@ fun LoginScreen(
     InitScreen(navController = navController, viewModel = viewModel)
     val state by viewModel.container.stateFlow.collectAsState()
 
-    LoginScreen()
+    LoginScreen(navController)
 }
 
 @Composable
@@ -63,7 +62,7 @@ private fun InitScreen(
 }
 
 @Composable
-private fun LoginScreen() {
+private fun LoginScreen(navController: NavHostController) {
     Column(
         modifier = Modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -112,7 +111,13 @@ private fun LoginScreen() {
                     .clickable(onClick = {})
             ) {
                 Text(text = "Don't have an account?")
-                Text(text = "Sign up", color = MaterialTheme.colorScheme.primary)
+                Text(
+                    modifier = Modifier.clickable {
+                        NavigationHelper.navigate(navController, RouteName.SIGNUP)
+                    },
+                    text = "Sign up",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -123,7 +128,7 @@ private fun LoginScreen() {
 fun LoginScreenPreview() {
     FisherLottoTheme {
         Surface {
-            LoginScreen()
+//            LoginScreen()
         }
     }
 }

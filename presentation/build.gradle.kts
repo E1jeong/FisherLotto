@@ -92,6 +92,8 @@ dependencies {
     implementation(libs.firebase.auth)
 
     implementation(libs.beetablescompose)
+
+    implementation(libs.google.auth)
 }
 
 kapt {

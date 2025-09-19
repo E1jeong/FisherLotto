@@ -111,6 +111,8 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi"}
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 
+google-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.4.0"}
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

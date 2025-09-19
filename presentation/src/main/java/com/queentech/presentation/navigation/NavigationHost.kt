@@ -53,7 +53,7 @@ fun NavigationHost() {
                     NavHost(
                         modifier = Modifier.padding(paddingValues),
                         navController = navController,
-                        startDestination = MainNav.Information.route
+                        startDestination = LoginNav.route
                     ) {
                         composable(route = MainNav.Information.route) {
                             InformationScreen()
