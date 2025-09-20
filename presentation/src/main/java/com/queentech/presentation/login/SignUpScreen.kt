@@ -21,6 +21,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.kakao.sdk.auth.model.OAuthToken
+import com.kakao.sdk.user.UserApiClient
 import com.queentech.presentation.theme.FisherLottoTheme
 
 @Composable
@@ -66,6 +68,34 @@ fun SignUpScreen(
             }
         ) {
             Text("구글 로그인")
+        }
+
+        Button(
+            onClick = {
+                val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+                    if (error != null) {
+                        Log.e("KakaoLogin", "카카오 로그인 실패", error)
+                    } else if (token != null) {
+                        Log.d("KakaoLogin", "카카오 로그인 성공, 토큰: ${token.accessToken}")
+                        // viewModel.onKakaoLoginSuccess(token.accessToken) 등으로 처리 가능
+                        UserApiClient.instance.me { user, meError ->
+                            if (meError != null) {
+                                Log.e("KakaoLogin", "사용자 정보 요청 실패", meError)
+                            } else if (user != null) {
+                                Log.d("KakaoLogin", "사용자 정보: ${user.kakaoAccount?.email}")
+                            }
+                        }
+                    }
+                }
+
+                if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
+                    UserApiClient.instance.loginWithKakaoTalk(context, callback = callback)
+                } else {
+                    UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
+                }
+            }
+        ) {
+            Text("카카오 로그인")
         }
     }
 }

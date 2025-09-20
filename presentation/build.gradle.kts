@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.beetablescompose)
 
     implementation(libs.google.auth)
+    implementation(libs.kakao.auth)
 }
 
 kapt {
