@@ -95,6 +95,7 @@ dependencies {
 
     implementation(libs.google.auth)
     implementation(libs.kakao.auth)
+    implementation(libs.lottie.compose)
 }
 
 kapt {

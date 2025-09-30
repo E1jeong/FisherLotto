@@ -115,6 +115,8 @@ google-auth = { group = "com.google.android.gms", name = "play-services-auth", v
 kakao-auth = { group="com.kakao.sdk", name = "v2-user", version = "2.20.1"}
 kakao-common = { group="com.kakao.sdk", name = "v2-common", version = "2.20.1"}
 
+lottie-compose = {group = "com.airbnb.android", name="lottie-compose", version="6.6.6"}
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

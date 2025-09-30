@@ -18,6 +18,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.queentech.presentation.R
 import com.queentech.presentation.navigation.RouteName
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
@@ -95,32 +101,50 @@ private fun LoginScreen(navController: NavHostController) {
                 text = "Id",
                 style = MaterialTheme.typography.labelLarge
             )
-
-
             Text(
                 modifier = Modifier.padding(top = Paddings.xlarge),
                 text = "Password",
                 style = MaterialTheme.typography.labelLarge
             )
-
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = Paddings.extra)
-                    .clickable(onClick = {})
-            ) {
-                Text(text = "Don't have an account?")
-                Text(
-                    modifier = Modifier.clickable {
-                        NavigationHelper.navigate(navController, RouteName.SIGNUP)
-                    },
-                    text = "Sign up",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+        }
+        LottieFishing()
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = Paddings.extra)
+                .clickable(onClick = {})
+        ) {
+            Text(text = "Don't have an account? ")
+            Text(
+                modifier = Modifier.clickable {
+                    NavigationHelper.navigate(navController, RouteName.SIGNUP)
+                },
+                text = "Sign up",
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
+}
+
+@Composable
+fun LottieFishing() {
+    // 1) 애니메이션 로드 (raw 리소스 예시)
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.fishing)
+    )
+
+    // 2) 진행도 상태 (무한 반복)
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    // 3) 렌더
+    LottieAnimation(
+        composition = composition,
+        progress = { progress }
+    )
 }
 
 @Composable
