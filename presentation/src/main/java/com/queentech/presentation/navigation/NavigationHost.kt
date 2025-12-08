@@ -12,11 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.queentech.presentation.login.LoginScreen
+import com.queentech.presentation.login.LoginViewModel
 import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
 import com.queentech.presentation.main.information.InformationScreen
@@ -47,6 +49,8 @@ fun NavigationHost() {
     )
 
     if (normalPermissionState == PermissionState.Granted) {
+        val loginViewModel: LoginViewModel = hiltViewModel()
+
         Surface {
             Scaffold(
                 content = { paddingValues ->
@@ -68,10 +72,10 @@ fun NavigationHost() {
                             MyPageScreen()
                         }
                         composable(route = LoginNav.route) {
-                            LoginScreen(navController)
+                            LoginScreen(navController = navController, viewModel = loginViewModel)
                         }
                         composable(route = SignUpNav.route) {
-                            SignUpScreen()
+                            SignUpScreen(navController = navController, viewModel = loginViewModel)
                         }
                         composable(route = MainNav.Statistic.route) {
                             StatisticScreen()

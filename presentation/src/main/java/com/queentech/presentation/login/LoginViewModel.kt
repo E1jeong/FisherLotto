@@ -38,6 +38,15 @@ class LoginViewModel @Inject constructor(
         onCreate = {},
     )
 
+    // 회원가입 클릭 시 호출할 함수
+    fun onSignUpClick() = intent {
+        postSideEffect(LoginSideEffect.NavigateToSignUp)
+    }
+
+    // 정보 화면으로 이동하고 싶다면 이런 것도 가능
+    fun onInformationClick() = intent {
+        postSideEffect(LoginSideEffect.NavigateToInformation)
+    }
 
     @SuppressLint("HardwareIds")
     private fun getAndroidId() = blockingIntent {

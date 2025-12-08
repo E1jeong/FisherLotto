@@ -33,12 +33,14 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel
 ) {
     InitScreen(navController = navController, viewModel = viewModel)
     val state by viewModel.container.stateFlow.collectAsState()
 
-    LoginScreen(navController)
+    LoginScreen(
+        onSignUpClick = { viewModel.onSignUpClick() }
+    )
 }
 
 @Composable
@@ -68,7 +70,9 @@ private fun InitScreen(
 }
 
 @Composable
-private fun LoginScreen(navController: NavHostController) {
+private fun LoginScreen(
+    onSignUpClick: () -> Unit
+) {
     Column(
         modifier = Modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -118,7 +122,7 @@ private fun LoginScreen(navController: NavHostController) {
             Text(text = "Don't have an account? ")
             Text(
                 modifier = Modifier.clickable {
-                    NavigationHelper.navigate(navController, RouteName.SIGNUP)
+                    onSignUpClick()
                 },
                 text = "Sign up",
                 color = MaterialTheme.colorScheme.primary

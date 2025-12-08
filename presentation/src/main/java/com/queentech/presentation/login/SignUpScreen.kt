@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -27,7 +27,8 @@ import com.queentech.presentation.theme.FisherLottoTheme
 
 @Composable
 fun SignUpScreen(
-    viewModel: LoginViewModel = hiltViewModel()
+    navController: NavHostController,
+    viewModel: LoginViewModel
 ) {
     val context = LocalContext.current
 
@@ -105,7 +106,7 @@ fun SignUpScreen(
 fun SignUpScreenPreview() {
     FisherLottoTheme {
         Surface {
-            SignUpScreen()
+//            SignUpScreen()
         }
     }
 }
