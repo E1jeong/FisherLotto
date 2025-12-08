@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -38,7 +37,7 @@ fun LoginScreen(
     InitScreen(navController = navController, viewModel = viewModel)
     val state by viewModel.container.stateFlow.collectAsState()
 
-    LoginScreen(
+    LoginContent(
         onSignUpClick = { viewModel.onSignUpClick() }
     )
 }
@@ -70,7 +69,7 @@ private fun InitScreen(
 }
 
 @Composable
-private fun LoginScreen(
+private fun LoginContent(
     onSignUpClick: () -> Unit
 ) {
     Column(
@@ -156,7 +155,7 @@ fun LottieFishing() {
 fun LoginScreenPreview() {
     FisherLottoTheme {
         Surface {
-//            LoginScreen()
+            LoginContent(onSignUpClick = {})
         }
     }
 }
