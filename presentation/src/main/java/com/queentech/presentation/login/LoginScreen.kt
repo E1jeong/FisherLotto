@@ -137,6 +137,8 @@ private fun InitScreen(
                 val route = RouteName.INFORMATION
                 NavigationHelper.navigate(navController, route)
             }
+
+            else -> Unit
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.kakao.sdk.auth.AuthApiClient
 import com.kakao.sdk.auth.model.OAuthToken
@@ -175,6 +176,56 @@ class LoginViewModel @Inject constructor(
         postSideEffect(LoginSideEffect.NavigateToInformation)
     }
 
+    fun logout() {
+        val provider = container.stateFlow.value.loginProvider
+
+        when (provider) {
+            LoginProvider.GOOGLE -> logoutGoogle()
+            LoginProvider.KAKAO -> logoutKakao()
+            else -> clearLoginStateAndNavigateToLogin()
+        }
+    }
+
+    private fun logoutGoogle() {
+        // LoginScreen과 동일한 설정 사용 (clientId는 동일해야 함)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("534679949408-29ggudnci4tr0g6ir43kbcrh874e90v9.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
+
+        val client = GoogleSignIn.getClient(context, gso)
+
+        client.signOut().addOnCompleteListener {
+            // 필요하면 revokeAccess() 도 추가 가능
+            clearLoginStateAndNavigateToLogin()
+        }
+    }
+
+    private fun logoutKakao() {
+        UserApiClient.instance.logout { error ->
+            if (error != null) {
+                Log.w(TAG, "카카오 로그아웃 실패: $error")
+                intent {
+                    postSideEffect(LoginSideEffect.Toast("Kakao 로그아웃 중 문제가 발생했지만, 로컬 상태는 초기화합니다."))
+                }
+            }
+            clearLoginStateAndNavigateToLogin()
+        }
+    }
+
+    private fun clearLoginStateAndNavigateToLogin() = intent {
+        reduce {
+            state.copy(
+                userEmail = null,
+                loginProvider = null,
+                providerUserId = null,
+                isLoggedIn = false,
+                isCheckingAutoLogin = false,
+            )
+        }
+        postSideEffect(LoginSideEffect.NavigateToLogin)
+    }
+
     companion object {
         const val TAG = "LoginViewModel"
     }
@@ -198,4 +249,5 @@ sealed interface LoginSideEffect {
     data class Toast(val message: String) : LoginSideEffect
     data object NavigateToSignUp : LoginSideEffect
     data object NavigateToInformation : LoginSideEffect
+    data object NavigateToLogin : LoginSideEffect
 }

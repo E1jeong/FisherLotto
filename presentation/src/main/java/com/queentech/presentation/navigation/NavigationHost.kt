@@ -69,7 +69,7 @@ fun NavigationHost() {
                             LottoNumberScreen()
                         }
                         composable(route = MainNav.MyPage.route) {
-                            MyPageScreen()
+                            MyPageScreen(navController = navController, loginViewModel = loginViewModel)
                         }
                         composable(route = LoginNav.route) {
                             LoginScreen(navController = navController, viewModel = loginViewModel)
