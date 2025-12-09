@@ -62,7 +62,7 @@ private fun InitScreen(
             }
 
             is LoginSideEffect.NavigateToLogin -> {
-                NavigationHelper.navigate(navController, RouteName.LOGIN)
+                NavigationHelper.navigateToLoginAfterLogout(navController, RouteName.LOGIN)
             }
 
             else -> Unit

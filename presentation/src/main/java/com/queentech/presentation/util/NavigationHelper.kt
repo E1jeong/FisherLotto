@@ -26,6 +26,18 @@ object NavigationHelper {
         }
     }
 
+    // 로그아웃 전용: back stack 비우고 로그인만 남김
+    fun navigateToLoginAfterLogout(controller: NavHostController, loginRoute: String) {
+        controller.navigate(loginRoute) {
+            // 그래프 루트까지 싹 지움
+            popUpTo(controller.graph.startDestinationId) {
+                inclusive = true    // startDestination까지 포함해서 제거
+            }
+            launchSingleTop = true
+            restoreState = false    // 이전 상태 복원 X
+        }
+    }
+
     fun findDestination(route: String?): Destination {
         return when {
             route == null -> MainNav.Information
