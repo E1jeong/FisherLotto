@@ -1,5 +1,6 @@
 package com.queentech.presentation.main.camera
 
+import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.GetLottoNumber
@@ -8,14 +9,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.annotation.OrbitExperimental
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import org.orbitmvi.orbit.viewmodel.container
 import javax.inject.Inject
 
-@OptIn(OrbitExperimental::class)
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
@@ -33,7 +32,9 @@ class CameraViewModel @Inject constructor(
     )
 
     fun onQrCodeScanned(rawValue: String) = intent {
+        Log.d("CameraViewModel", "raw QR: $rawValue")
         val result = LottoQrResult.parse(rawValue) ?: return@intent
+        Log.d("CameraViewModel", "Parsed drawNo=${result.drawNo}, games=${result.games}")
         val winning = getLottoNumberUseCase(result.drawNo).getOrNull()
         reduce { state.copy(result = result, winningNumbers = winning) }
     }
