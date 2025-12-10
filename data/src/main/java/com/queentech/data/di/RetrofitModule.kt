@@ -1,6 +1,7 @@
 package com.queentech.data.di
 
 import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.PaymentsService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,9 +11,11 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 
 
 const val DH_LOTTERY_URL = "https://www.dhlottery.co.kr/"
+const val PAYMENTS_BASE_URL = "https://kspay-backend-nxsq81ji2-e1jeongs-projects.vercel.app/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,7 +36,9 @@ object RetrofitModule {
             .build()
     }
 
+    // --- 로또용 Retrofit ---
     @Provides
+    @Named("lotto")
     fun provideRetrofit(client: OkHttpClient): Retrofit {
         val gsonConverterFactory = GsonConverterFactory.create()
 
@@ -45,8 +50,25 @@ object RetrofitModule {
     }
 
     @Provides
-    fun provideLottoService(retrofit: Retrofit): LottoService {
+    fun provideLottoService(@Named("lotto") retrofit: Retrofit): LottoService {
         return retrofit.create(LottoService::class.java)
     }
-}
 
+    // --- 결제 서버용 Retrofit ---
+    @Provides
+    @Named("payments")
+    fun providePaymentsRetrofit(client: OkHttpClient): Retrofit {
+        val gsonConverterFactory = GsonConverterFactory.create()
+
+        return Retrofit.Builder()
+            .baseUrl(PAYMENTS_BASE_URL)
+            .addConverterFactory(gsonConverterFactory)
+            .client(client)
+            .build()
+    }
+
+    @Provides
+    fun providePaymentsService(@Named("payments") retrofit: Retrofit): PaymentsService {
+        return retrofit.create(PaymentsService::class.java)
+    }
+}

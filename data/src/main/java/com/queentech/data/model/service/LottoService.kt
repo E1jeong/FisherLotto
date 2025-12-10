@@ -1,6 +1,6 @@
 package com.queentech.data.model.service
 
-import com.queentech.data.model.response.GetLottoNumberResponse
+import com.queentech.data.model.lotto.GetLottoNumberResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

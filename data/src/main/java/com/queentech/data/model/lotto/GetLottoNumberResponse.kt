@@ -1,4 +1,4 @@
-package com.queentech.data.model.response
+package com.queentech.data.model.lotto
 
 import com.queentech.domain.model.GetLottoNumber
 
