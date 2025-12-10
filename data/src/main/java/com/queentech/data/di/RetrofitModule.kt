@@ -15,7 +15,7 @@ import javax.inject.Named
 
 
 const val DH_LOTTERY_URL = "https://www.dhlottery.co.kr/"
-const val PAYMENTS_BASE_URL = "https://kspay-backend-nxsq81ji2-e1jeongs-projects.vercel.app/"
+const val PAYMENTS_BASE_URL = "https://kspay-backend.vercel.app/"
 
 @Module
 @InstallIn(SingletonComponent::class)

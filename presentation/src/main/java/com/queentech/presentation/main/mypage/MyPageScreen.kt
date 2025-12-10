@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.queentech.presentation.login.LoginProvider
 import com.queentech.presentation.login.LoginSideEffect
@@ -31,26 +32,39 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun MyPageScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    myPageViewModel: MyPageViewModel = hiltViewModel()
 ) {
-    val state by loginViewModel.container.stateFlow.collectAsState()
+    val loginState by loginViewModel.container.stateFlow.collectAsState()
+    val myPageState by myPageViewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
 
-    InitScreen(
+    InitLoginScreen(
         context = context,
         navController = navController,
         loginViewModel = loginViewModel
     )
 
+    InitMyPageScreen(
+        context = context,
+        myPageViewModel = myPageViewModel
+    )
+
     MyPageContent(
-        userEmail = state.userEmail,
-        loginProvider = state.loginProvider,
-        onLogoutClick = { loginViewModel.logout() }
+        userEmail = loginState.userEmail,
+        loginProvider = loginState.loginProvider,
+        isLoading = myPageState.isLoading,
+        paymentResultText = myPageState.result?.let { result ->
+            // 결제 결과가 있을 때 보여줄 문자열
+            "결제 결과: ${result.status} / 금액: ${result.amount}"
+        } ?: "아직 결제 결과가 없습니다.",
+        onLogoutClick = { loginViewModel.logout() },
+        onTestPaymentClick = { myPageViewModel.onTestPaymentButtonClick() }, // 🔹 버튼 클릭
     )
 }
 
 @Composable
-private fun InitScreen(
+private fun InitLoginScreen(
     context: Context,
     navController: NavHostController,
     loginViewModel: LoginViewModel
@@ -71,10 +85,27 @@ private fun InitScreen(
 }
 
 @Composable
+private fun InitMyPageScreen(
+    context: Context,
+    myPageViewModel: MyPageViewModel
+) {
+    myPageViewModel.collectSideEffect { sideEffect ->
+        when (sideEffect) {
+            is MyPageSideEffect.Toast -> {
+                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+}
+
+@Composable
 private fun MyPageContent(
     userEmail: String?,
     loginProvider: LoginProvider?,
-    onLogoutClick: () -> Unit
+    isLoading: Boolean,
+    paymentResultText: String,
+    onLogoutClick: () -> Unit,
+    onTestPaymentClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -101,6 +132,24 @@ private fun MyPageContent(
             style = MaterialTheme.typography.bodyMedium
         )
 
+        Spacer(Modifier.height(24.dp))
+
+        // 🔹 결제 테스트 버튼
+        Button(
+            onClick = onTestPaymentClick,
+            enabled = !isLoading,
+        ) {
+            Text(text = if (isLoading) "결제 진행중..." else "테스트 결제 요청")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // 🔹 결제 결과 표시
+        Text(
+            text = paymentResultText,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
         Spacer(Modifier.weight(1f))
 
         Button(
@@ -119,7 +168,10 @@ fun MyPageScreenPreview() {
             MyPageContent(
                 userEmail = "user@example.com",
                 loginProvider = LoginProvider.GOOGLE,
-                onLogoutClick = {}
+                isLoading = false,
+                paymentResultText = "아직 결제 결과가 없습니다.",
+                onLogoutClick = {},
+                onTestPaymentClick = {},
             )
         }
     }
