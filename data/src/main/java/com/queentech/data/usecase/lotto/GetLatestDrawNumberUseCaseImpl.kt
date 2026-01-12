@@ -1,6 +1,6 @@
-package com.queentech.data.usecase
+package com.queentech.data.usecase.lotto
 
-import com.queentech.domain.usecase.GetLatestDrawNumberUseCase
+import com.queentech.domain.usecase.lotto.GetLatestDrawNumberUseCase
 import org.jsoup.Jsoup
 import javax.inject.Inject
 

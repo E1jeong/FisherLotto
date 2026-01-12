@@ -1,6 +1,6 @@
-package com.queentech.domain.usecase
+package com.queentech.domain.usecase.lotto
 
-import com.queentech.domain.model.GetLottoNumber
+import com.queentech.domain.model.lotto.GetLottoNumber
 
 interface GetLottoNumberUseCase {
 

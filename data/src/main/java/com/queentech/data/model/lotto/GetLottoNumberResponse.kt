@@ -1,6 +1,6 @@
 package com.queentech.data.model.lotto
 
-import com.queentech.domain.model.GetLottoNumber
+import com.queentech.domain.model.lotto.GetLottoNumber
 
 data class GetLottoNumberResponse(
     val totSellamnt: Long, // 해당 회차 복권 판매 금액

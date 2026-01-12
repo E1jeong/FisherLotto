@@ -1,4 +1,4 @@
-package com.queentech.domain.usecase
+package com.queentech.domain.usecase.lotto
 
 interface GetLatestDrawNumberUseCase {
 

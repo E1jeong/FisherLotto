@@ -1,4 +1,4 @@
-package com.queentech.domain.model
+package com.queentech.domain.model.lotto
 
 data class GetLottoNumber(
     val eachWinnings: Long, // 1게임당 1등 당첨금

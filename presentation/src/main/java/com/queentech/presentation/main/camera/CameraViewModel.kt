@@ -3,8 +3,8 @@ package com.queentech.presentation.main.camera
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.queentech.domain.model.GetLottoNumber
-import com.queentech.domain.usecase.GetLottoNumberUseCase
+import com.queentech.domain.model.lotto.GetLottoNumber
+import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container

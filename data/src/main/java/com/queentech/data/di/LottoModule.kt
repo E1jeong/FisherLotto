@@ -1,9 +1,9 @@
 package com.queentech.data.di
 
-import com.queentech.data.usecase.GetLatestDrawNumberUseCaseImpl
-import com.queentech.data.usecase.GetLottoNumberUseCaseImpl
-import com.queentech.domain.usecase.GetLatestDrawNumberUseCase
-import com.queentech.domain.usecase.GetLottoNumberUseCase
+import com.queentech.data.usecase.lotto.GetLatestDrawNumberUseCaseImpl
+import com.queentech.data.usecase.lotto.GetLottoNumberUseCaseImpl
+import com.queentech.domain.usecase.lotto.GetLatestDrawNumberUseCase
+import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
