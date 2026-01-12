@@ -4,9 +4,11 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.queentech.domain.model.GetLottoNumber
-import com.queentech.domain.usecase.GetLatestDrawNumberUseCase
-import com.queentech.domain.usecase.GetLottoNumberUseCase
+import com.queentech.domain.model.lotto.GetLottoNumber
+import com.queentech.domain.model.news.NewsArticle
+import com.queentech.domain.usecase.lotto.GetLatestDrawNumberUseCase
+import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
+import com.queentech.domain.usecase.news.GetLotteryNewsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
@@ -26,6 +28,7 @@ import javax.inject.Inject
 class InformationViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
     private val getLatestDrawNumberUseCase: GetLatestDrawNumberUseCase,
+    private val getLotteryNewsUseCase: GetLotteryNewsUseCase,
     private val prefs: SharedPreferences,
 ) : ViewModel(), ContainerHost<InformationState, InformationSideEffect> {
 
@@ -102,6 +105,49 @@ class InformationViewModel @Inject constructor(
         reduce { state.copy(latestDrawNumber = latestDraw, getLottoNumberResponse = response) }
     }
 
+    fun refreshNews() = loadNews(force = true)
+
+    private fun loadNews(force: Boolean) = intent {
+        val lastFetch = prefs.getLong(KEY_NEWS_FETCH_AT, 0L)
+        val now = System.currentTimeMillis()
+
+        // 예: 30분 캐시
+        val canUseCache = !force && (now - lastFetch) < 30 * 60 * 1000L
+        if (canUseCache) {
+            val cachedTitles = prefs.getStringSet(KEY_NEWS_CACHE_TITLES, emptySet()).orEmpty()
+            val cachedLinks = prefs.getStringSet(KEY_NEWS_CACHE_LINKS, emptySet()).orEmpty()
+            // 캐시를 아주 단순하게(제목/링크)만 저장한 버전. (원하면 JSON으로 고도화 가능)
+            if (cachedTitles.isNotEmpty() && cachedLinks.isNotEmpty()) {
+                // 제목/링크 개수 mismatch 방지
+                val pairs = cachedTitles.zip(cachedLinks)
+                val cached = pairs.map { (t, l) ->
+                    NewsArticle(
+                        title = t,
+                        link = l,
+                        source = "",
+                        publishedAtEpochMillis = 0L,
+                        summary = "",
+                    )
+                }
+                reduce { state.copy(news = cached, isNewsLoading = false) }
+                return@intent
+            }
+        }
+
+        reduce { state.copy(isNewsLoading = true) }
+
+        val news = getLotteryNewsUseCase(maxResults = 20).getOrThrow()
+
+        // 캐시(간단 버전)
+        prefs.edit().apply {
+            putLong(KEY_NEWS_FETCH_AT, now)
+            putStringSet(KEY_NEWS_CACHE_TITLES, news.map { it.title }.toSet())
+            putStringSet(KEY_NEWS_CACHE_LINKS, news.map { it.link }.toSet())
+        }.apply()
+
+        reduce { state.copy(news = news, isNewsLoading = false) }
+    }
+
     companion object {
         private const val KEY_DRAW_NUMBER = "latest_draw_number"
         private const val KEY_DRW_DATE = "drw_no_date"
@@ -115,6 +161,10 @@ class InformationViewModel @Inject constructor(
         private const val KEY_WINNER_COUNT = "winner_count"
         private const val KEY_EACH_WINNINGS = "each_winnings"
         private const val KEY_TOTAL_WINNINGS = "total_winnings"
+
+        private const val KEY_NEWS_FETCH_AT = "news_fetch_at"
+        private const val KEY_NEWS_CACHE_TITLES = "news_cache_titles"
+        private const val KEY_NEWS_CACHE_LINKS = "news_cache_links"
     }
 }
 
@@ -136,6 +186,9 @@ data class InformationState(
         bnusNo = 0,
     ),
     val latestDrawNumber: Int = 0,
+
+    val news: List<NewsArticle> = emptyList(),
+    val isNewsLoading: Boolean = false,
 )
 
 sealed interface InformationSideEffect {
