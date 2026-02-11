@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Named
 
 
-const val DH_LOTTERY_URL = "https://www.dhlottery.co.kr/"
-const val PAYMENTS_BASE_URL = "https://kspay-backend.vercel.app/"
+const val LOTTO_SERVER_URL = "http://www.fisherlotto.com:10907/"
+const val LOTTO_SUB_BACKEND_URL = "https://lotto-sub-backend.vercel.app/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,7 +43,7 @@ object RetrofitModule {
         val gsonConverterFactory = GsonConverterFactory.create()
 
         return Retrofit.Builder()
-            .baseUrl(DH_LOTTERY_URL)
+            .baseUrl(LOTTO_SERVER_URL)
             .addConverterFactory(gsonConverterFactory)
             .client(client)
             .build()
@@ -56,19 +56,19 @@ object RetrofitModule {
 
     // --- 결제 서버용 Retrofit ---
     @Provides
-    @Named("payments")
+    @Named("lotto-sub")
     fun providePaymentsRetrofit(client: OkHttpClient): Retrofit {
         val gsonConverterFactory = GsonConverterFactory.create()
 
         return Retrofit.Builder()
-            .baseUrl(PAYMENTS_BASE_URL)
+            .baseUrl(LOTTO_SUB_BACKEND_URL)
             .addConverterFactory(gsonConverterFactory)
             .client(client)
             .build()
     }
 
     @Provides
-    fun providePaymentsService(@Named("payments") retrofit: Retrofit): PaymentsService {
+    fun providePaymentsService(@Named("lotto-sub") retrofit: Retrofit): PaymentsService {
         return retrofit.create(PaymentsService::class.java)
     }
 }

@@ -53,21 +53,21 @@ fun InformationScreen(
     }
 
     val winningNumbers = listOf(
-        state.getLottoNumberResponse.drwtNo1,
-        state.getLottoNumberResponse.drwtNo2,
-        state.getLottoNumberResponse.drwtNo3,
-        state.getLottoNumberResponse.drwtNo4,
-        state.getLottoNumberResponse.drwtNo5,
-        state.getLottoNumberResponse.drwtNo6,
-        state.getLottoNumberResponse.bnusNo
+        state.getLottoNumberResponse.num1Int,
+        state.getLottoNumberResponse.num2Int,
+        state.getLottoNumberResponse.num3Int,
+        state.getLottoNumberResponse.num4Int,
+        state.getLottoNumberResponse.num5Int,
+        state.getLottoNumberResponse.num6Int,
+        state.getLottoNumberResponse.bonusInt
     )
 
     InformationContent(
-        latestDrawNumber = state.latestDrawNumber,
-        latestDrawDate = state.getLottoNumberResponse.drwNoDate,
+        latestDrawNumber = state.getLottoNumberResponse.roundInt,
+        latestDrawDate = state.getLottoNumberResponse.pdate,
         winningNumbers = winningNumbers,
-        latestWinnerCount = state.getLottoNumberResponse.winnerCount,
-        latestTotalWinnings = state.getLottoNumberResponse.totalWinnings,
+        latestWinnerCount = state.getLottoNumberResponse.firstCountInt,
+        latestTotalWinnings = state.getLottoNumberResponse.firstMoneyLong,
         news = state.news,
         isNewsLoading = state.isNewsLoading,
         onRefreshNews = viewModel::refreshNews,

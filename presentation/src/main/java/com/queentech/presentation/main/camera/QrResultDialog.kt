@@ -30,14 +30,14 @@ fun QrResultDialog(
 
     // 🔹 당첨번호 / 보너스 번호
     val mainWinningNumbers = listOf(
-        winning.drwtNo1,
-        winning.drwtNo2,
-        winning.drwtNo3,
-        winning.drwtNo4,
-        winning.drwtNo5,
-        winning.drwtNo6,
+        winning.num1Int,
+        winning.num2Int,
+        winning.num3Int,
+        winning.num4Int,
+        winning.num5Int,
+        winning.num6Int,
     )
-    val bonusNumber = winning.bnusNo
+    val bonusNumber = winning.bonusInt
 
     val allWinningNumbers = mainWinningNumbers + bonusNumber
 
