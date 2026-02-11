@@ -1,19 +1,10 @@
 package com.queentech.presentation.login
 
-import android.content.Context
-import android.content.Intent
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.kakao.sdk.auth.AuthApiClient
-import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.user.UserApiClient
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
@@ -25,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val prefs: SharedPreferences,
 ) : ViewModel(), ContainerHost<LoginState, LoginSideEffect> {
 
     override val container: Container<LoginState, LoginSideEffect> = container(
@@ -38,216 +29,182 @@ class LoginViewModel @Inject constructor(
                 }
             }
         },
-        onCreate = {},
+        onCreate = {
+            loadRememberedId()
+        },
     )
+    companion object {
+        const val TAG = "LoginViewModel"
+        const val KEY_REMEMBER_ID = "remember_id"
+        const val KEY_REMEMBER_EMAIL = "remember_email"
+
+        const val KEY_SIGNUP_NAME = "signup_name"
+        const val KEY_SIGNUP_EMAIL = "signup_email"
+        const val KEY_SIGNUP_BIRTH = "signup_birth"
+        const val KEY_SIGNUP_PHONE = "signup_phone"
+    }
 
     fun onSignUpClick() = intent {
         postSideEffect(LoginSideEffect.NavigateToSignUp)
     }
 
+    fun onEmailChanged(value: String) = intent {
+        reduce { state.copy(emailInput = value) }
 
-    //LoginScreen 진입 시 자동 로그인 체크
-    fun checkAutoLogin() = intent {
-        // 로딩 시작
-        reduce { state.copy(isCheckingAutoLogin = true) }
+        // ✅ "ID 기억"이 켜져있다면 입력이 바뀔 때마다 저장(정책)
+        // 원하면 이 부분을 제거하고 로그인 성공 시점에만 저장해도 됨.
+        if (state.rememberId) {
+            saveRememberedId(email = value.trim(), remember = true)
+        }
+    }
 
-        // 1) Google 자동 로그인 여부
-        val googleAccount = GoogleSignIn.getLastSignedInAccount(context)
-        if (googleAccount != null) {
-            Log.d(TAG, "자동 로그인(Google): ${googleAccount.email}")
-            // 공통 성공 처리 재사용
-            onGoogleLoginSuccess(googleAccount)
+    fun onRememberIdChanged(value: Boolean) = intent {
+        reduce { state.copy(rememberId = value) }
+
+        if (value) {
+            // 켜는 순간: 현재 입력값을 저장
+            saveRememberedId(email = state.emailInput.trim(), remember = true)
+        } else {
+            // 끄는 순간: 저장된 값 삭제
+            saveRememberedId(email = "", remember = false)
+        }
+    }
+
+    fun onEmailLoginClick() = intent {
+        val email = state.emailInput.trim()
+
+        if (email.isBlank()) {
+            postSideEffect(LoginSideEffect.Toast("이메일(ID)을 입력해주세요."))
+            return@intent
+        }
+        if (!isValidEmailLike(email)) {
+            postSideEffect(LoginSideEffect.Toast("이메일 형식을 확인해주세요."))
             return@intent
         }
 
-        // 2) Kakao 자동 로그인 여부
-        if (AuthApiClient.instance.hasToken()) {
-            UserApiClient.instance.accessTokenInfo { _, error ->
-                if (error != null) {
-                    Log.w(TAG, "카카오 토큰 유효하지 않음 or 에러: $error")
-                    intent {
-                        reduce { state.copy(isCheckingAutoLogin = false) }
-                    }
-                } else {
-                    UserApiClient.instance.me { user, meError ->
-                        if (meError != null || user == null) {
-                            Log.e(TAG, "카카오 사용자 정보 조회 실패: $meError")
-                            intent {
-                                reduce { state.copy(isCheckingAutoLogin = false) }
-                            }
-                        } else {
-                            val email = user.kakaoAccount?.email
-                            val kakaoUserId = user.id
-
-                            if (kakaoUserId != null) {
-                                onKakaoLoginSuccess(kakaoUserId, email)
-                                Log.d(TAG, "자동 로그인(Kakao) 사용자: id=$kakaoUserId, email=$email")
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            // 둘 다 자동로그인 불가 → 로그인 화면 노출
-            reduce { state.copy(isCheckingAutoLogin = false) }
-        }
-    }
-
-    /**
-     * Google ActivityResult 처리: Screen에서는 Intent만 넘겨주고,
-     * 실제 account 파싱/에러 처리는 ViewModel이 담당.
-     */
-    fun onGoogleSignInActivityResult(data: Intent?) = intent {
-        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            Log.d(TAG, "구글 로그인 성공: ${account.email}, 토큰: ${account.idToken}")
-            onGoogleLoginSuccess(account)
-        } catch (e: ApiException) {
-            Log.e(TAG, "구글 로그인 실패: ${e.statusCode}", e)
-            postSideEffect(LoginSideEffect.Toast("Google 로그인 실패 (${e.statusCode})"))
-        }
-    }
-
-    /**
-     * Kakao 로그인 결과 처리: Screen에서는 Kakao SDK의 callback만 넘겨줌.
-     */
-    fun onKakaoLoginResult(token: OAuthToken?, error: Throwable?) {
-        if (error != null) {
-            Log.e(TAG, "카카오 로그인 실패", error)
-            intent {
-                postSideEffect(LoginSideEffect.Toast("Kakao 로그인 실패"))
-            }
-            return
+        // ✅ rememberId가 true면 로그인 시점에 최종 저장 보장
+        if (state.rememberId) {
+            saveRememberedId(email = email, remember = true)
         }
 
-        if (token == null) {
-            intent {
-                postSideEffect(LoginSideEffect.Toast("Kakao 토큰이 없습니다."))
-            }
-            return
-        }
-
-        Log.d(TAG, "카카오 로그인 성공, 토큰: ${token.accessToken}")
-
-        UserApiClient.instance.me { user, meError ->
-            if (meError != null) {
-                Log.e(TAG, "카카오 사용자 정보 요청 실패", meError)
-                intent {
-                    postSideEffect(LoginSideEffect.Toast("Kakao 사용자 정보 요청 실패"))
-                }
-            } else if (user != null) {
-                val email = user.kakaoAccount?.email
-                val kakaoUserId = user.id
-
-                if (kakaoUserId != null) {
-                    onKakaoLoginSuccess(kakaoUserId, email)
-                    Log.d(TAG, "카카오 사용자 정보: id=$kakaoUserId, email=$email")
-                }
-            }
-        }
-    }
-
-    // 구글 로그인 공통 성공 처리 (자동로그인 + 버튼 로그인 공용)
-    private fun onGoogleLoginSuccess(account: GoogleSignInAccount) = intent {
-        reduce {
-            state.copy(
-                userEmail = account.email,
-                loginProvider = LoginProvider.GOOGLE,
-                providerUserId = account.id,
-                isLoggedIn = true,
-                isCheckingAutoLogin = false,
-            )
-        }
+        // ✅ 로그인 성공 처리(최종 email 확정)
+        reduce { state.copy(userEmail = email) }
         postSideEffect(LoginSideEffect.NavigateToInformation)
     }
 
-    // 카카오 로그인 공통 성공 처리 (자동로그인 + 버튼 로그인 공용)
-    private fun onKakaoLoginSuccess(userId: Long, email: String?) = intent {
+    private fun loadRememberedId() = intent {
+        val remember = prefs.getBoolean(KEY_REMEMBER_ID, false)
+        val savedEmail = prefs.getString(KEY_REMEMBER_EMAIL, "") ?: ""
+
         reduce {
             state.copy(
-                userEmail = email,
-                loginProvider = LoginProvider.KAKAO,
-                providerUserId = userId.toString(),
-                isLoggedIn = true,
-                isCheckingAutoLogin = false,
+                rememberId = remember,
+                emailInput = if (remember) savedEmail else state.emailInput
             )
         }
-        postSideEffect(LoginSideEffect.NavigateToInformation)
     }
 
-    fun logout() {
-        val provider = container.stateFlow.value.loginProvider
+    private fun saveRememberedId(email: String, remember: Boolean) {
+        prefs.edit()
+            .putBoolean(KEY_REMEMBER_ID, remember)
+            .putString(KEY_REMEMBER_EMAIL, if (remember) email else "")
+            .apply()
+    }
 
-        when (provider) {
-            LoginProvider.GOOGLE -> logoutGoogle()
-            LoginProvider.KAKAO -> logoutKakao()
-            else -> clearLoginStateAndNavigateToLogin()
+    private fun isValidEmailLike(email: String): Boolean {
+        // 너무 빡빡하게 하면 실제 이메일인데도 걸릴 수 있어서 최소 체크만
+        val at = email.indexOf('@')
+        val dot = email.lastIndexOf('.')
+        return at > 0 && dot > at + 1 && dot < email.length - 1
+    }
+
+    /*****************************************************
+     *  Signup Screen
+     *****************************************************/
+    fun onSignUpNameChanged(v: String) = intent {
+        reduce { state.copy(signUp = state.signUp.copy(name = v)) }
+    }
+
+    fun onSignUpEmailChanged(v: String) = intent {
+        reduce { state.copy(signUp = state.signUp.copy(email = v)) }
+    }
+
+    fun onSignUpBirthChanged(v: String) = intent {
+        reduce { state.copy(signUp = state.signUp.copy(birth = v)) }
+    }
+
+    fun onSignUpPhoneChanged(v: String) = intent {
+        reduce { state.copy(signUp = state.signUp.copy(phone = v)) }
+    }
+
+    fun onBackToLoginClick() = intent {
+        postSideEffect(LoginSideEffect.SignUpDoneNavigateToLogin) // 그냥 뒤로 가기 용도면 이름 바꿔도 됨
+    }
+
+    fun onSignUpSubmitClick() = intent {
+        val s = state.signUp
+
+        val name = s.name.trim()
+        val email = s.email.trim()
+        val birth = s.birth.trim()
+        val phone = s.phone.trim()
+
+        if (name.isBlank()) {
+            postSideEffect(LoginSideEffect.Toast("이름을 입력해주세요."))
+            return@intent
         }
-    }
-
-    private fun logoutGoogle() {
-        // LoginScreen과 동일한 설정 사용 (clientId는 동일해야 함)
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("534679949408-29ggudnci4tr0g6ir43kbcrh874e90v9.apps.googleusercontent.com")
-            .requestEmail()
-            .build()
-
-        val client = GoogleSignIn.getClient(context, gso)
-
-        client.signOut().addOnCompleteListener {
-            // 필요하면 revokeAccess() 도 추가 가능
-            clearLoginStateAndNavigateToLogin()
+        if (!isValidEmailLike(email)) {
+            postSideEffect(LoginSideEffect.Toast("이메일 형식을 확인해주세요."))
+            return@intent
         }
-    }
-
-    private fun logoutKakao() {
-        UserApiClient.instance.logout { error ->
-            if (error != null) {
-                Log.w(TAG, "카카오 로그아웃 실패: $error")
-                intent {
-                    postSideEffect(LoginSideEffect.Toast("Kakao 로그아웃 중 문제가 발생했지만, 로컬 상태는 초기화합니다."))
-                }
-            }
-            clearLoginStateAndNavigateToLogin()
+        if (birth.length != 8) {
+            postSideEffect(LoginSideEffect.Toast("생년월일을 8자리(YYYYMMDD)로 입력해주세요."))
+            return@intent
         }
-    }
-
-    private fun clearLoginStateAndNavigateToLogin() = intent {
-        reduce {
-            state.copy(
-                userEmail = null,
-                loginProvider = null,
-                providerUserId = null,
-                isLoggedIn = false,
-                isCheckingAutoLogin = false,
-            )
+        if (phone.length < 10) {
+            postSideEffect(LoginSideEffect.Toast("전화번호를 확인해주세요."))
+            return@intent
         }
-        postSideEffect(LoginSideEffect.NavigateToLogin)
+
+        // ✅ 정책: 회원가입 입력값 prefs 저장
+        saveSignUpInfo(name, email, birth, phone)
+
+        // ✅ 저장했으면 UX 상 입력 초기화도 많이 함(선택)
+        reduce { state.copy(signUp = SignUpState()) }
+
+        postSideEffect(LoginSideEffect.Toast("회원가입 정보가 저장됐어요."))
+        postSideEffect(LoginSideEffect.SignUpDoneNavigateToLogin)
     }
 
-    companion object {
-        const val TAG = "LoginViewModel"
+    private fun saveSignUpInfo(name: String, email: String, birth: String, phone: String) {
+        prefs.edit()
+            .putString(KEY_SIGNUP_NAME, name)
+            .putString(KEY_SIGNUP_EMAIL, email)
+            .putString(KEY_SIGNUP_BIRTH, birth)
+            .putString(KEY_SIGNUP_PHONE, phone)
+            .apply()
     }
-}
-
-enum class LoginProvider {
-    GOOGLE,
-    KAKAO
 }
 
 @Immutable
 data class LoginState(
-    val userEmail: String? = null,
-    val loginProvider: LoginProvider? = null,
-    val providerUserId: String? = null, // SNS에서 받은 고유 ID
-    val isLoggedIn: Boolean = false,
-    val isCheckingAutoLogin: Boolean = true, // 화면 진입 시 자동로그인 체크 중인지
+    val emailInput: String = "", //TextInput
+    val rememberId: Boolean = false,
+    val userEmail: String? = null, //최종 email
+    val signUp: SignUpState = SignUpState()
+)
+
+@Immutable
+data class SignUpState(
+    val name: String = "",
+    val email: String = "",
+    val birth: String = "",
+    val phone: String = ""
 )
 
 sealed interface LoginSideEffect {
     data class Toast(val message: String) : LoginSideEffect
     data object NavigateToSignUp : LoginSideEffect
     data object NavigateToInformation : LoginSideEffect
-    data object NavigateToLogin : LoginSideEffect
+    data object SignUpDoneNavigateToLogin : LoginSideEffect
 }

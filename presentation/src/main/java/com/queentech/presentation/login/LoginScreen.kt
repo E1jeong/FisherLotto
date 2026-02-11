@@ -1,32 +1,33 @@
 package com.queentech.presentation.login
 
-import SocialLoginButton
 import android.content.Context
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -35,11 +36,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.user.UserApiClient
 import com.queentech.presentation.R
+import com.queentech.presentation.component.textfield.DefaultTextField
 import com.queentech.presentation.navigation.RouteName
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
@@ -54,172 +52,165 @@ fun LoginScreen(
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
 
-    // 화면 최초 진입 시 자동로그인 체크
-    LaunchedEffect(Unit) {
-        viewModel.checkAutoLogin()
-    }
+    InitLoginScreen(context, navController, viewModel)
 
-    InitScreen(context = context, navController = navController, viewModel = viewModel)
-
-    // 1. Google SignIn Client 준비 (remember로 재생성 방지)
-    val googleSignInClient = remember(context) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("534679949408-29ggudnci4tr0g6ir43kbcrh874e90v9.apps.googleusercontent.com")
-            .requestEmail()
-            .build()
-        GoogleSignIn.getClient(context, gso)
-    }
-
-    // 2. ActivityResultLauncher 등록 (결과 처리는 ViewModel로 위임)
-    val googleLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        viewModel.onGoogleSignInActivityResult(result.data)
-    }
-
-    // 3. UI에 내려줄 콜백 정의
-    val onGoogleLoginClick: () -> Unit = {
-        val signInIntent = googleSignInClient.signInIntent
-        googleLauncher.launch(signInIntent)
-    }
-
-    val onKakaoLoginClick: () -> Unit = {
-        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
-            viewModel.onKakaoLoginResult(token, error)
-        }
-
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-            UserApiClient.instance.loginWithKakaoTalk(context, callback = callback)
-        } else {
-            UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
-        }
-    }
-
-    if (state.isCheckingAutoLogin) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            LottieFishing(
-                modifier = Modifier.fillMaxSize()
-            )
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-    } else {
-        LoginContent(
-            onGoogleLoginClick = onGoogleLoginClick,
-            onKakaoLoginClick = onKakaoLoginClick,
-            onSignUpClick = { viewModel.onSignUpClick() }
-        )
-    }
+    LoginContent(
+        email = state.emailInput,
+        rememberId = state.rememberId,
+        onEmailChanged = viewModel::onEmailChanged,
+        onRememberIdChanged = viewModel::onRememberIdChanged,
+        onLoginClick = viewModel::onEmailLoginClick,
+        onSignUpClick = viewModel::onSignUpClick
+    )
 }
 
 @Composable
-private fun InitScreen(
+private fun InitLoginScreen(
     context: Context,
     navController: NavHostController,
     viewModel: LoginViewModel
 ) {
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
-            is LoginSideEffect.Toast -> {
+            is LoginSideEffect.Toast ->
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
-            }
 
-            is LoginSideEffect.NavigateToSignUp -> {
-                val route = RouteName.SIGNUP
-                NavigationHelper.navigate(navController, route)
-            }
+            is LoginSideEffect.NavigateToSignUp ->
+                NavigationHelper.navigate(navController, RouteName.SIGNUP)
 
-            is LoginSideEffect.NavigateToInformation -> {
-                val route = RouteName.INFORMATION
-                NavigationHelper.navigate(navController, route)
-            }
+            is LoginSideEffect.NavigateToInformation ->
+                NavigationHelper.navigate(navController, RouteName.INFORMATION)
 
-            else -> Unit
+            is LoginSideEffect.SignUpDoneNavigateToLogin ->
+                navController.popBackStack()
         }
     }
 }
 
-/**
- * 순수 UI를 담당하는 Composable
- * - Context, Google/Kakao SDK, NavController, ViewModel 모름
- * - 오직 콜백과 레이아웃만 신경 씀
- */
 @Composable
 private fun LoginContent(
-    onGoogleLoginClick: () -> Unit,
-    onKakaoLoginClick: () -> Unit,
+    email: String,
+    rememberId: Boolean,
+    onEmailChanged: (String) -> Unit,
+    onRememberIdChanged: (Boolean) -> Unit,
+    onLoginClick: () -> Unit,
+    onSignUpClick: () -> Unit
+) {
+    // ✅ 화면 폭 통일
+    val contentPadding = 24.dp
+    val fullWidth = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = contentPadding)
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            // ✅ 여기서 “extra bottom padding” 제거하고, 딱 붙게 만든다
+            LoginBottomBarTight(
+                fullWidth = fullWidth,
+                email = email,
+                onLoginClick = onLoginClick,
+                onSignUpClick = onSignUpClick
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)           // ✅ bottomBar만큼만 비워줌
+                .padding(top = Paddings.xextra), // 상단만
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Fisher Lotto", style = MaterialTheme.typography.displaySmall)
+            Text("Your favorite lotto app", style = MaterialTheme.typography.labelSmall)
+
+            LottieFishing(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(280.dp)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            DefaultTextField(
+                modifier = fullWidth,
+                value = email,
+                placeholder = "Email (ID)",
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done
+                ),
+                onValueChange = onEmailChanged
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = fullWidth,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text("ID 기억하기", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = rememberId,
+                    onCheckedChange = onRememberIdChanged
+                )
+            }
+
+            // ✅ 여기서 바닥으로 더 밀지 않음
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun LoginBottomBarTight(
+    fullWidth: Modifier,
+    email: String,
+    onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()          // ✅ 제스처바 높이만큼만 띄움(필수)
+            .padding(horizontal = 0.dp)       // ✅ 불필요한 padding 제거
+            .padding(bottom = 0.dp, top = 0.dp), // ✅ “완전 바닥” 스타일
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 상단 타이틀
-        Column(
-            modifier = Modifier.padding(top = Paddings.xextra),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Button(
+            modifier = fullWidth.height(48.dp),
+            onClick = onLoginClick,
+            enabled = email.isNotBlank()
+        ) { Text("로그인") }
+
+        // ✅ 버튼-텍스트 간격 최소화
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Don't have an account? ")
             Text(
-                text = "Fisher Lotto",
-                style = MaterialTheme.typography.displaySmall,
-            )
-            Text(
-                text = "Your favorite lotto app",
-                style = MaterialTheme.typography.labelSmall
-            )
-        }
-
-        // 애니메이션
-        LottieFishing()
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // 구글 로그인 버튼
-        GoogleLoginButton(onClick = onGoogleLoginClick)
-
-        Spacer(Modifier.height(16.dp))
-
-        // 카카오 로그인 버튼
-        KakaoLoginButton(onClick = onKakaoLoginClick)
-
-        Spacer(Modifier.height(16.dp))
-
-        // 회원가입 텍스트
-        Row(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = Paddings.extra)
-                .clickable(onClick = { /* Row 전체 클릭 시 별 행동 없으면 비워둬도 됨 */ })
-        ) {
-            Text(text = "Don't have an account? ")
-            Text(
-                modifier = Modifier.clickable {
-                    onSignUpClick()
-                },
+                modifier = Modifier.clickable { onSignUpClick() },
                 text = "Sign up",
                 color = MaterialTheme.colorScheme.primary
             )
         }
+
+        // ✅ 혹시 너무 바닥에 붙는 게 불편하면 4~6dp 정도만 주면 됨
+        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 
 @Composable
-fun LottieFishing(
-    modifier: Modifier = Modifier
-) {
+fun LottieFishing(modifier: Modifier = Modifier) {
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.fishing)
     )
-
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever
     )
-
     LottieAnimation(
         composition = composition,
         progress = { progress },
@@ -227,42 +218,17 @@ fun LottieFishing(
     )
 }
 
-@Composable
-fun GoogleLoginButton(
-    onClick: () -> Unit
-) {
-    SocialLoginButton(
-        text = "Google 계정으로 로그인",
-        icon = painterResource(id = R.drawable.google_logo),
-        backgroundColor = Color.White,
-        textColor = Color(0xFF000000),
-        borderColor = Color(0xFFDADCE0),
-        onClick = onClick
-    )
-}
-
-@Composable
-fun KakaoLoginButton(
-    onClick: () -> Unit
-) {
-    SocialLoginButton(
-        text = "카카오로 로그인",
-        icon = painterResource(id = R.drawable.kakao_logo),
-        backgroundColor = Color(0xFFFEE500),
-        textColor = Color(0xFF191919),
-        borderColor = null,
-        onClick = onClick
-    )
-}
-
-@Composable
 @Preview
+@Composable
 fun LoginScreenPreview() {
     FisherLottoTheme {
         Surface {
             LoginContent(
-                onGoogleLoginClick = {},
-                onKakaoLoginClick = {},
+                email = "",
+                rememberId = true,
+                onEmailChanged = {},
+                onRememberIdChanged = {},
+                onLoginClick = {},
                 onSignUpClick = {}
             )
         }

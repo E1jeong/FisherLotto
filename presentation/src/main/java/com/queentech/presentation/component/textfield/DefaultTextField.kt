@@ -1,6 +1,7 @@
 package com.queentech.presentation.component.textfield
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -16,6 +17,7 @@ fun DefaultTextField(
     modifier: Modifier,
     value: String,
     placeholder: String = "",
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     onValueChange: (String) -> Unit
 ) {
@@ -35,6 +37,7 @@ fun DefaultTextField(
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
         ),
+        keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation
     )
 }
