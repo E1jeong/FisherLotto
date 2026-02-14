@@ -28,13 +28,13 @@ fun StatisticScreen(viewModel: InformationViewModel = hiltViewModel()) {
     val state by viewModel.container.stateFlow.collectAsState()
 
     val winnerDatas = listOf(
-        WinnerData(1161, 1, 3, 50),
-        WinnerData(1160, 2, 10, 32),
-        WinnerData(1159, 1, 7, 28),
-        WinnerData(1158, 2, 6, 75),
+        WinnerData(1161, 1, 3, 50, 233, 566, 788),
+        WinnerData(1160, 2, 10, 32, 233, 566, 788),
+        WinnerData(1159, 1, 7, 28, 233, 566, 788),
+        WinnerData(1158, 2, 6, 75, 233, 566, 788),
     )
 
-    val tableHeader = listOf("회차", "1등", "2등", "3등")
+    val tableHeader = listOf("회차", "1등", "2등", "3등", "4등", "5등", "6등")
 
     Column(
         modifier = Modifier
@@ -42,8 +42,8 @@ fun StatisticScreen(viewModel: InformationViewModel = hiltViewModel()) {
             .padding(Paddings.medium, Paddings.xextra, Paddings.medium, Paddings.medium),
     ) {
         FisherLottoResultInfo(
-            latestDrawNumber = state.latestDrawNumber,
-            latestDrawDate = state.getLottoNumberResponse.drwNoDate,
+            latestDrawNumber = state.getLottoNumberResponse.roundInt,
+            latestDrawDate = state.getLottoNumberResponse.pdate,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -53,7 +53,8 @@ fun StatisticScreen(viewModel: InformationViewModel = hiltViewModel()) {
                 data = winnerDatas,
                 headerTableTitles = tableHeader,
                 headerTitlesBackGroundColor = Color.LightGray,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(8.dp),
+                columnToIndexIncreaseWidth = 50
             )
         }
     }
@@ -75,4 +76,7 @@ data class WinnerData(
     val firstPrize: Int,
     val secondPrize: Int,
     val thirdPrize: Int,
+    val fourthPrize: Int,
+    val fifthPrize: Int,
+    val sixthPrize: Int,
 )
