@@ -21,12 +21,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.queentech.presentation.login.LoginProvider
 import com.queentech.presentation.login.LoginSideEffect
 import com.queentech.presentation.login.LoginViewModel
-import com.queentech.presentation.navigation.RouteName
 import com.queentech.presentation.theme.FisherLottoTheme
-import com.queentech.presentation.util.NavigationHelper
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
@@ -52,13 +49,11 @@ fun MyPageScreen(
 
     MyPageContent(
         userEmail = loginState.userEmail,
-        loginProvider = loginState.loginProvider,
         isLoading = myPageState.isLoading,
         paymentResultText = myPageState.result?.let { result ->
             // 결제 결과가 있을 때 보여줄 문자열
             "결제 결과: ${result.status} / 금액: ${result.amount}"
         } ?: "아직 결제 결과가 없습니다.",
-        onLogoutClick = { loginViewModel.logout() },
         onTestPaymentClick = { myPageViewModel.onTestPaymentButtonClick() }, // 🔹 버튼 클릭
     )
 }
@@ -73,10 +68,6 @@ private fun InitLoginScreen(
         when (sideEffect) {
             is LoginSideEffect.Toast -> {
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
-            }
-
-            is LoginSideEffect.NavigateToLogin -> {
-                NavigationHelper.navigateToLoginAfterLogout(navController, RouteName.LOGIN)
             }
 
             else -> Unit
@@ -101,10 +92,8 @@ private fun InitMyPageScreen(
 @Composable
 private fun MyPageContent(
     userEmail: String?,
-    loginProvider: LoginProvider?,
     isLoading: Boolean,
     paymentResultText: String,
-    onLogoutClick: () -> Unit,
     onTestPaymentClick: () -> Unit,
 ) {
     Column(
@@ -119,11 +108,6 @@ private fun MyPageContent(
         )
 
         Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = "Login Provider: ${loginProvider?.name ?: "Unknown"}",
-            style = MaterialTheme.typography.bodyMedium
-        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -151,12 +135,6 @@ private fun MyPageContent(
         )
 
         Spacer(Modifier.weight(1f))
-
-        Button(
-            onClick = onLogoutClick,
-        ) {
-            Text(text = "로그아웃")
-        }
     }
 }
 
@@ -167,10 +145,8 @@ fun MyPageScreenPreview() {
         Surface {
             MyPageContent(
                 userEmail = "user@example.com",
-                loginProvider = LoginProvider.GOOGLE,
                 isLoading = false,
                 paymentResultText = "아직 결제 결과가 없습니다.",
-                onLogoutClick = {},
                 onTestPaymentClick = {},
             )
         }
