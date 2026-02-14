@@ -1,6 +1,7 @@
 package com.queentech.data.di
 
 import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.OpenBankingService
 import com.queentech.data.model.service.PaymentsService
 import dagger.Module
 import dagger.Provides
@@ -70,5 +71,11 @@ object RetrofitModule {
     @Provides
     fun providePaymentsService(@Named("lotto-sub") retrofit: Retrofit): PaymentsService {
         return retrofit.create(PaymentsService::class.java)
+    }
+
+    // --- 오픈뱅킹 서비스 (lotto-sub 서버 사용) ---
+    @Provides
+    fun provideOpenBankingService(@Named("lotto-sub") retrofit: Retrofit): OpenBankingService {
+        return retrofit.create(OpenBankingService::class.java)
     }
 }
