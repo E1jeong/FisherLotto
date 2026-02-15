@@ -193,4 +193,7 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
+# Custom
+.claude
+
 # End of https://www.toptal.com/developers/gitignore/api/androidstudio,kotlin,gradle
