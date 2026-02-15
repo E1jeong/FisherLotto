@@ -2,14 +2,11 @@ package com.queentech.presentation.login
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -27,6 +24,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.queentech.presentation.component.textfield.DefaultTextField
 import com.queentech.presentation.theme.FisherLottoTheme
@@ -36,7 +34,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun SignUpScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel
+    viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
@@ -48,16 +46,15 @@ fun SignUpScreen(
     )
 
     SignUpContent(
-        name = state.signUp.name,
-        email = state.signUp.email,
-        birth = state.signUp.birth,
-        phone = state.signUp.phone,
+        name = state.name,
+        email = state.email,
+        birth = state.birth,
+        phone = state.phone,
         onNameChanged = viewModel::onSignUpNameChanged,
         onEmailChanged = viewModel::onSignUpEmailChanged,
         onBirthChanged = viewModel::onSignUpBirthChanged,
         onPhoneChanged = viewModel::onSignUpPhoneChanged,
         onSubmitClick = viewModel::onSignUpSubmitClick,
-        onLoginClick = viewModel::onBackToLoginClick
     )
 }
 
@@ -65,19 +62,17 @@ fun SignUpScreen(
 private fun InitSignUpScreen(
     context: Context,
     navController: NavHostController,
-    viewModel: LoginViewModel
+    viewModel: SignUpViewModel
 ) {
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
-            is LoginSideEffect.Toast -> {
+            is SignUpSideEffect.Toast -> {
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
 
-            is LoginSideEffect.SignUpDoneNavigateToLogin -> {
+            is SignUpSideEffect.SignUpDoneNavigateToLogin -> {
                 navController.popBackStack()
             }
-
-            else -> Unit
         }
     }
 }
@@ -93,7 +88,6 @@ private fun SignUpContent(
     onBirthChanged: (String) -> Unit,
     onPhoneChanged: (String) -> Unit,
     onSubmitClick: () -> Unit,
-    onLoginClick: () -> Unit,
 ) {
     val contentPadding = 24.dp
     val fullWidth = Modifier
@@ -106,11 +100,10 @@ private fun SignUpContent(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            SignUpBottomBarTight(
+            SignUpBottomBar(
                 fullWidth = fullWidth,
                 enableSubmit = enableSubmit,
                 onSubmitClick = onSubmitClick,
-                onLoginClick = onLoginClick
             )
         }
     ) { innerPadding ->
@@ -190,39 +183,22 @@ private fun SignUpContent(
 }
 
 @Composable
-private fun SignUpBottomBarTight(
+private fun SignUpBottomBar(
     fullWidth: Modifier,
     enableSubmit: Boolean,
     onSubmitClick: () -> Unit,
-    onLoginClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(bottom = 0.dp, top = 0.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            modifier = fullWidth.height(48.dp),
+            modifier = fullWidth,
             onClick = onSubmitClick,
             enabled = enableSubmit
         ) {
             Text("가입하기")
         }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Already have an account? ")
-            Text(
-                modifier = Modifier.clickable { onLoginClick() },
-                text = "Login",
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 
@@ -241,7 +217,6 @@ fun SignUpScreenPreview() {
                 onBirthChanged = {},
                 onPhoneChanged = {},
                 onSubmitClick = {},
-                onLoginClick = {}
             )
         }
     }

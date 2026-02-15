@@ -3,22 +3,18 @@ package com.queentech.presentation.login
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,10 +52,8 @@ fun LoginScreen(
 
     LoginContent(
         email = state.emailInput,
-        rememberId = state.rememberId,
         onEmailChanged = viewModel::onEmailChanged,
-        onRememberIdChanged = viewModel::onRememberIdChanged,
-        onLoginClick = viewModel::onEmailLoginClick,
+        onLoginClick = viewModel::onLoginClick,
         onSignUpClick = viewModel::onSignUpClick
     )
 }
@@ -80,9 +74,6 @@ private fun InitLoginScreen(
 
             is LoginSideEffect.NavigateToInformation ->
                 NavigationHelper.navigate(navController, RouteName.INFORMATION)
-
-            is LoginSideEffect.SignUpDoneNavigateToLogin ->
-                navController.popBackStack()
         }
     }
 }
@@ -90,9 +81,7 @@ private fun InitLoginScreen(
 @Composable
 private fun LoginContent(
     email: String,
-    rememberId: Boolean,
     onEmailChanged: (String) -> Unit,
-    onRememberIdChanged: (Boolean) -> Unit,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
 ) {
@@ -106,7 +95,7 @@ private fun LoginContent(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             // ✅ 여기서 “extra bottom padding” 제거하고, 딱 붙게 만든다
-            LoginBottomBarTight(
+            LoginBottomBar(
                 fullWidth = fullWidth,
                 email = email,
                 onLoginClick = onLoginClick,
@@ -143,40 +132,20 @@ private fun LoginContent(
                 onValueChange = onEmailChanged
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = fullWidth,
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text("ID 기억하기", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.width(8.dp))
-                Switch(
-                    checked = rememberId,
-                    onCheckedChange = onRememberIdChanged
-                )
-            }
-
-            // ✅ 여기서 바닥으로 더 밀지 않음
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-private fun LoginBottomBarTight(
+private fun LoginBottomBar(
     fullWidth: Modifier,
     email: String,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()          // ✅ 제스처바 높이만큼만 띄움(필수)
-            .padding(horizontal = 0.dp)       // ✅ 불필요한 padding 제거
-            .padding(bottom = 0.dp, top = 0.dp), // ✅ “완전 바닥” 스타일
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
@@ -196,9 +165,6 @@ private fun LoginBottomBarTight(
                 color = MaterialTheme.colorScheme.primary
             )
         }
-
-        // ✅ 혹시 너무 바닥에 붙는 게 불편하면 4~6dp 정도만 주면 됨
-        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 
@@ -225,9 +191,7 @@ fun LoginScreenPreview() {
         Surface {
             LoginContent(
                 email = "",
-                rememberId = true,
                 onEmailChanged = {},
-                onRememberIdChanged = {},
                 onLoginClick = {},
                 onSignUpClick = {}
             )

@@ -75,7 +75,7 @@ fun NavigationHost() {
                             LoginScreen(navController = navController, viewModel = loginViewModel)
                         }
                         composable(route = SignUpNav.route) {
-                            SignUpScreen(navController = navController, viewModel = loginViewModel)
+                            SignUpScreen(navController = navController)
                         }
                         composable(route = MainNav.Statistic.route) {
                             StatisticScreen()
