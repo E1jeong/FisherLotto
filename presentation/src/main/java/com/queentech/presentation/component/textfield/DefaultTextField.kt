@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DefaultTextField(
     modifier: Modifier,
+    enabled: Boolean = true,
     value: String,
     placeholder: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -23,6 +24,7 @@ fun DefaultTextField(
 ) {
     TextField(
         modifier = modifier,
+        enabled = enabled,
         value = value,
         placeholder = {
             Text(

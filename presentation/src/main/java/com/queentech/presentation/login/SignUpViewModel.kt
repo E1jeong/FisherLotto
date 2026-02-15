@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
+import com.queentech.domain.model.login.SignUpResultStatus
+import com.queentech.domain.usecase.login.SignUpUserUseCase
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val prefs: SharedPreferences,
+    private val signUpUserUseCase: SignUpUserUseCase,
 ) : ViewModel(), ContainerHost<SignUpState, SignUpSideEffect> {
 
     override val container: Container<SignUpState, SignUpSideEffect> = container(
@@ -87,13 +90,18 @@ class SignUpViewModel @Inject constructor(
             return@intent
         }
 
-        // ✅ 정책: 회원가입 입력값 prefs 저장
-        saveSignUpInfo(name, email, birth, phone)
+        val response = signUpUserUseCase(name, email, birth, phone).getOrNull()
+        when (response?.statusInt) {
+            SignUpResultStatus.OK.status -> {
+                // ✅ 정책: 회원가입 입력값 prefs 저장
+                saveSignUpInfo(name, email, birth, phone)
 
-        reduce { state.copy(name = name, email = email, birth = birth, phone = phone) }
+                reduce { state.copy(name = name, email = email, birth = birth, phone = phone) }
 
-        postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
-        postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
+                postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
+                postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
+            }
+        }
     }
 
     private fun saveSignUpInfo(name: String, email: String, birth: String, phone: String) {

@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,10 +49,16 @@ fun LoginScreen(
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        viewModel.loadUserEmail()
+    }
+
     InitLoginScreen(context, navController, viewModel)
 
     LoginContent(
-        email = state.emailInput,
+        email = state.userEmail.ifEmpty { state.emailInput },
+        enabledTextInput = state.userEmail.isEmpty(),
+        isVisibleSignUp = state.userEmail.isEmpty(),
         onEmailChanged = viewModel::onEmailChanged,
         onLoginClick = viewModel::onLoginClick,
         onSignUpClick = viewModel::onSignUpClick
@@ -81,6 +88,8 @@ private fun InitLoginScreen(
 @Composable
 private fun LoginContent(
     email: String,
+    enabledTextInput: Boolean,
+    isVisibleSignUp: Boolean,
     onEmailChanged: (String) -> Unit,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
@@ -98,6 +107,7 @@ private fun LoginContent(
             LoginBottomBar(
                 fullWidth = fullWidth,
                 email = email,
+                isVisibleSignUp = isVisibleSignUp,
                 onLoginClick = onLoginClick,
                 onSignUpClick = onSignUpClick
             )
@@ -123,6 +133,7 @@ private fun LoginContent(
 
             DefaultTextField(
                 modifier = fullWidth,
+                enabled = enabledTextInput,
                 value = email,
                 placeholder = "Email (ID)",
                 keyboardOptions = KeyboardOptions(
@@ -140,6 +151,7 @@ private fun LoginContent(
 @Composable
 private fun LoginBottomBar(
     fullWidth: Modifier,
+    isVisibleSignUp: Boolean,
     email: String,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
@@ -157,13 +169,17 @@ private fun LoginBottomBar(
         // ✅ 버튼-텍스트 간격 최소화
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Don't have an account? ")
-            Text(
-                modifier = Modifier.clickable { onSignUpClick() },
-                text = "Sign up",
-                color = MaterialTheme.colorScheme.primary
-            )
+        if (isVisibleSignUp) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Don't have an account? ")
+                Text(
+                    modifier = Modifier.clickable { onSignUpClick() },
+                    text = "Sign up",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }
@@ -191,6 +207,8 @@ fun LoginScreenPreview() {
         Surface {
             LoginContent(
                 email = "",
+                enabledTextInput = true,
+                isVisibleSignUp = true,
                 onEmailChanged = {},
                 onLoginClick = {},
                 onSignUpClick = {}

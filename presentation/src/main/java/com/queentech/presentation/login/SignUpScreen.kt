@@ -199,6 +199,8 @@ private fun SignUpBottomBar(
         ) {
             Text("가입하기")
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 

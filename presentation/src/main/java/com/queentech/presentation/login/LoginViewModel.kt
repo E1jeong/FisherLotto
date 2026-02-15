@@ -49,7 +49,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onLoginClick() = intent {
-        val email = state.emailInput.trim()
+        val email = state.userEmail.ifEmpty { state.emailInput.trim() }
 
         if (email.isBlank()) {
             postSideEffect(LoginSideEffect.Toast("이메일(ID)을 입력해주세요."))
@@ -65,16 +65,16 @@ class LoginViewModel @Inject constructor(
         postSideEffect(LoginSideEffect.NavigateToInformation)
     }
 
-    private fun loadUserEmail() = intent {
+    fun loadUserEmail() = intent {
         val email = prefs.getString(KEY_SIGNUP_EMAIL, "")
-        reduce { state.copy(userEmail = email) }
+        reduce { state.copy(userEmail = email!!) }
     }
 }
 
 @Immutable
 data class LoginState(
     val emailInput: String = "", //TextInput
-    val userEmail: String? = null, //최종 email
+    val userEmail: String = "", //최종 email
 )
 
 sealed interface LoginSideEffect {
