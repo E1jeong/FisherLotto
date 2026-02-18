@@ -10,8 +10,8 @@ class GetLottoNumberUseCaseImpl @Inject constructor(
     private val lottoService: LottoService,
 ) : GetLottoNumberUseCase {
 
-    override suspend fun invoke(drwNo: Int): Result<GetLottoNumber> = kotlin.runCatching {
-        val response = lottoService.getNumber(drwNo = drwNo)
+    override suspend fun invoke(round: Int): Result<GetLottoNumber> = kotlin.runCatching {
+        val response = lottoService.getNumber(round = round)
 
         response.toDomainModel()
     }

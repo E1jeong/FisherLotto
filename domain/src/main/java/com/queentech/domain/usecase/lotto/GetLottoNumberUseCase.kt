@@ -5,6 +5,6 @@ import com.queentech.domain.model.lotto.GetLottoNumber
 interface GetLottoNumberUseCase {
 
     suspend operator fun invoke(
-        drwNo: Int,
+        round: Int,
     ): Result<GetLottoNumber>
 }

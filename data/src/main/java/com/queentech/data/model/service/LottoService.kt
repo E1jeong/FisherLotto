@@ -14,7 +14,7 @@ interface LottoService {
 
         const val SIGNUP_USER = "1022"
         const val GET_LOTTO_NUMBER = "1044"
-        const val DRW_NO = "drwNo" // 로또 당첨 회차 번호
+        const val ROUND = "round" // 로또 당첨 회차
     }
 
     @POST("$RESOURCE_LOTTO/$SIGNUP_USER")
@@ -24,6 +24,6 @@ interface LottoService {
 
     @GET("$RESOURCE_LOTTO/$GET_LOTTO_NUMBER")
     suspend fun getNumber(
-        @Query(DRW_NO) drwNo: Int,
+        @Query(ROUND) round: Int,
     ): GetLottoNumberResponse
 }

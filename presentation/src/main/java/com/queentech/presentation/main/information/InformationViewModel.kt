@@ -44,7 +44,7 @@ class InformationViewModel @Inject constructor(
     )
 
     private fun loadLottoNumber() = blockingIntent {
-        val response = getLottoNumberUseCase(drwNo = 0).getOrThrow()
+        val response = getLottoNumberUseCase(round = 0).getOrThrow()
         reduce { state.copy( getLottoNumberResponse = response) }
     }
 
