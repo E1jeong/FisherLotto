@@ -50,7 +50,7 @@ fun LoginScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.loadUserEmail()
+        viewModel.loadUserFromPref()
     }
 
     InitLoginScreen(context, navController, viewModel)
@@ -169,18 +169,20 @@ private fun LoginBottomBar(
         // ✅ 버튼-텍스트 간격 최소화
         Spacer(modifier = Modifier.height(6.dp))
 
-        if (isVisibleSignUp) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isVisibleSignUp) {
                 Text("Don't have an account? ")
                 Text(
                     modifier = Modifier.clickable { onSignUpClick() },
                     text = "Sign up",
                     color = MaterialTheme.colorScheme.primary
                 )
+            } else {
+                Text("Already sign up account")
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 

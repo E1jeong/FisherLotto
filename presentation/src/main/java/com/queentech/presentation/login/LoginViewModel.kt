@@ -4,7 +4,10 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
+import com.queentech.domain.model.common.CommonResponse
+import com.queentech.domain.usecase.login.GetUserUseCase
 import com.queentech.presentation.login.SignUpViewModel.Companion.KEY_SIGNUP_EMAIL
+import com.queentech.presentation.login.SignUpViewModel.Companion.KEY_SIGNUP_PHONE
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -19,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val prefs: SharedPreferences,
+    private val getUserUseCase: GetUserUseCase,
 ) : ViewModel(), ContainerHost<LoginState, LoginSideEffect> {
 
     override val container: Container<LoginState, LoginSideEffect> = container(
@@ -32,7 +36,7 @@ class LoginViewModel @Inject constructor(
             }
         },
         onCreate = {
-            loadUserEmail()
+            loadUserFromPref()
         },
     )
 
@@ -60,21 +64,30 @@ class LoginViewModel @Inject constructor(
             return@intent
         }
 
-        // ✅ 로그인 성공 처리(최종 email 확정)
-        reduce { state.copy(userEmail = email) }
-        postSideEffect(LoginSideEffect.NavigateToInformation)
+        val response = getUserUseCase(email = email, phone = state.phone).getOrDefault(
+            CommonResponse("8699")
+        )
+        when (response.statusInt) {
+            8200 -> {
+                // ✅ 로그인 성공 처리(최종 email 확정)
+                reduce { state.copy(userEmail = email) }
+                postSideEffect(LoginSideEffect.NavigateToInformation)
+            }
+        }
     }
 
-    fun loadUserEmail() = intent {
+    fun loadUserFromPref() = intent {
         val email = prefs.getString(KEY_SIGNUP_EMAIL, "")
-        reduce { state.copy(userEmail = email!!) }
+        val phone = prefs.getString(KEY_SIGNUP_PHONE, "")
+        reduce { state.copy(userEmail = email!!, phone = phone!!) }
     }
 }
 
 @Immutable
 data class LoginState(
-    val emailInput: String = "", //TextInput
-    val userEmail: String = "", //최종 email
+    val emailInput: String = "", // TextInput
+    val userEmail: String = "", // 유저 email
+    val phone: String = "", // 유저 전화번호
 )
 
 sealed interface LoginSideEffect {
