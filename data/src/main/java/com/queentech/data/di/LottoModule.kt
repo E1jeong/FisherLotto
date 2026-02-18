@@ -2,9 +2,11 @@ package com.queentech.data.di
 
 import com.queentech.data.usecase.login.GetUserUseCaseImpl
 import com.queentech.data.usecase.login.SignUpUserUseCaseImpl
+import com.queentech.data.usecase.lotto.GetExpectNumberUseCaseImpl
 import com.queentech.data.usecase.lotto.GetLottoNumberUseCaseImpl
 import com.queentech.domain.usecase.login.GetUserUseCase
 import com.queentech.domain.usecase.login.SignUpUserUseCase
+import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import dagger.Binds
 import dagger.Module
@@ -14,6 +16,9 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class LottoModule {
+
+    @Binds
+    abstract fun bindGetExpectNumberUseCase(uc: GetExpectNumberUseCaseImpl): GetExpectNumberUseCase
 
     @Binds
     abstract fun bindSignUpUserUseCase(uc: SignUpUserUseCaseImpl): SignUpUserUseCase
