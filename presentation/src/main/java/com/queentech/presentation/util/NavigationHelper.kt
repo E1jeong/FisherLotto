@@ -44,7 +44,7 @@ object NavigationHelper {
             route.contains(RouteName.CAMERA) -> MainNav.Camera
             route.contains(RouteName.MY_PAGE) -> MainNav.MyPage
             route.contains(RouteName.INFORMATION) -> MainNav.Information
-            route.contains(RouteName.LOTTO_NUMBER) -> MainNav.LottoNumber
+            route.contains(RouteName.EXPECT_NUMBER) -> MainNav.ExpectNumber
             route.contains(RouteName.STATISTIC) -> MainNav.Statistic
             route.contains(RouteName.LOGIN) -> LoginNav
             route.contains(RouteName.SIGNUP) -> SignUpNav

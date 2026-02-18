@@ -21,8 +21,8 @@ import com.queentech.presentation.login.LoginScreen
 import com.queentech.presentation.login.LoginViewModel
 import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
+import com.queentech.presentation.main.expect_number.ExpectNumberScreen
 import com.queentech.presentation.main.information.InformationScreen
-import com.queentech.presentation.main.lottonumber.LottoNumberScreen
 import com.queentech.presentation.main.mypage.MyPageScreen
 import com.queentech.presentation.main.statistic.StatisticScreen
 import com.queentech.presentation.util.PermissionState
@@ -65,8 +65,8 @@ fun NavigationHost() {
                         composable(route = MainNav.Camera.route) {
                             CameraScreen()
                         }
-                        composable(route = MainNav.LottoNumber.route) {
-                            LottoNumberScreen()
+                        composable(route = MainNav.ExpectNumber.route) {
+                            ExpectNumberScreen(navController = navController, loginViewModel = loginViewModel)
                         }
                         composable(route = MainNav.MyPage.route) {
                             MyPageScreen(navController = navController, loginViewModel = loginViewModel)

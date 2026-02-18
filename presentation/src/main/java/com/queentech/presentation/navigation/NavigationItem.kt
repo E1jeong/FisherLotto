@@ -8,9 +8,9 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.queentech.presentation.navigation.RouteName.CAMERA
+import com.queentech.presentation.navigation.RouteName.EXPECT_NUMBER
 import com.queentech.presentation.navigation.RouteName.INFORMATION
 import com.queentech.presentation.navigation.RouteName.LOGIN
-import com.queentech.presentation.navigation.RouteName.LOTTO_NUMBER
 import com.queentech.presentation.navigation.RouteName.MY_PAGE
 import com.queentech.presentation.navigation.RouteName.SIGNUP
 import com.queentech.presentation.navigation.RouteName.STATISTIC
@@ -22,7 +22,7 @@ sealed class MainNav(
 ) : Destination {
 
     data object Camera : MainNav(CAMERA, "당첨 확인", Icons.Filled.CameraAlt)
-    data object LottoNumber : MainNav(LOTTO_NUMBER, "예상 번호", Icons.Filled.LooksOne)
+    data object ExpectNumber : MainNav(EXPECT_NUMBER, "예상 번호", Icons.Filled.LooksOne)
     data object Information : MainNav(INFORMATION, "홈", Icons.Filled.Home)
     data object Statistic : MainNav(STATISTIC, "통계", Icons.Filled.AutoGraph)
     data object MyPage : MainNav(MY_PAGE, "내 정보", Icons.Filled.AccountCircle)
@@ -30,7 +30,7 @@ sealed class MainNav(
     companion object {
         fun isMainRoute(route: String?): Boolean {
             return when (route) {
-                CAMERA, INFORMATION, STATISTIC, LOTTO_NUMBER, MY_PAGE -> true
+                CAMERA, INFORMATION, STATISTIC, EXPECT_NUMBER, MY_PAGE -> true
                 else -> false
             }
         }
@@ -59,5 +59,5 @@ object RouteName {
     const val INFORMATION = "InformationScreen"
     const val STATISTIC = "StatisticScreen"
     const val MY_PAGE = "MyPageScreen"
-    const val LOTTO_NUMBER = "LottoNumberScreen"
+    const val EXPECT_NUMBER = "ExpectNumberScreen"
 }
