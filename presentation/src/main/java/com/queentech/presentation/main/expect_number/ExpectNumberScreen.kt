@@ -2,6 +2,7 @@ package com.queentech.presentation.main.expect_number
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,14 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.queentech.presentation.login.LoginViewModel
 import com.queentech.presentation.theme.FisherLottoTheme
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
 fun ExpectNumberScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel,
     viewModel: ExpectNumberViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
@@ -30,7 +29,10 @@ fun ExpectNumberScreen(
         viewModel = viewModel
     )
 
-    ExpectNumberContent()
+    ExpectNumberContent(
+        expectNumber = state.expectNumber,
+        onNumberIssueClick = viewModel::onExpectNumberClick
+    )
 }
 
 @Composable
@@ -49,8 +51,16 @@ private fun InitExpectNumberScreen(
 }
 
 @Composable
-private fun ExpectNumberContent() {
-    Text("ExpectNumber Screen")
+private fun ExpectNumberContent(
+    expectNumber: List<String>,
+    onNumberIssueClick: () -> Unit,
+) {
+    Text("ExpectNumber Screen $expectNumber")
+    Button(
+        onClick = onNumberIssueClick
+    ) {
+        Text("예상번호 발급")
+    }
 }
 
 @Composable
