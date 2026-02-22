@@ -1,11 +1,17 @@
 package com.queentech.presentation.main.mypage
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.queentech.domain.model.payments.PaymentResult
-import com.queentech.domain.usecase.payments.GetPaymentResultUseCase
-import com.queentech.domain.usecase.payments.StartPaymentUseCase
-import com.queentech.presentation.login.LoginViewModel.Companion.TAG
+import com.queentech.domain.model.login.User
+import com.queentech.domain.model.openbanking.Account
+import com.queentech.domain.model.openbanking.AccountBalance
+import com.queentech.domain.usecase.login.UserRepository
+import com.queentech.domain.usecase.openbanking.GetAccountsUseCase
+import com.queentech.domain.usecase.openbanking.GetAuthorizeUrlUseCase
+import com.queentech.domain.usecase.openbanking.GetBalanceUseCase
+import com.queentech.domain.usecase.openbanking.GetTokenUseCase
+import com.queentech.domain.usecase.openbanking.TransferUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
@@ -18,8 +24,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MyPageViewModel @Inject constructor(
-    private val startPaymentUseCase: StartPaymentUseCase,
-    private val getPaymentResultUseCase: GetPaymentResultUseCase,
+    private val userRepository: UserRepository,
+    private val getAuthorizeUrlUseCase: GetAuthorizeUrlUseCase,
+    private val getTokenUseCase: GetTokenUseCase,
+    private val getAccountsUseCase: GetAccountsUseCase,
+    private val getBalanceUseCase: GetBalanceUseCase,
+    private val transferUseCase: TransferUseCase,
 ) : ViewModel(), ContainerHost<MyPageState, MyPageSideEffect> {
 
     override val container: Container<MyPageState, MyPageSideEffect> = container(
@@ -27,69 +37,132 @@ class MyPageViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(MyPageSideEffect.Toast(throwable.message.toString()))
+                    reduce { state.copy(isLoading = false) }
+                    postSideEffect(MyPageSideEffect.Toast(throwable.message ?: "오류가 발생했습니다."))
                     Log.e(TAG, "error handler: ${throwable.message}", throwable)
                 }
             }
         },
-        onCreate = {},
+        onCreate = {
+            loadUser()
+        },
     )
 
-    /**
-     * 테스트용 결제 플로우
-     * - 1) 주문 생성 + ready 호출 (startPaymentUseCase)
-     * - 2) 바로 결제 결과 조회 (getPaymentResultUseCase)
-     * 실제 WebView 붙이기 전까지는 이렇게 한 번에 왕복해서 확인
-     */
-    fun onTestPaymentButtonClick() = intent {
-        // 1. 로딩 시작
-        reduce {
-            state.copy(
-                isLoading = true,
-                errorMessage = null,
-                result = null,
-            )
+    companion object {
+        const val TAG = "MyPageViewModel"
+    }
+
+    // ── User ──
+
+    private fun loadUser() = intent {
+        userRepository.loadCachedUser()
+        val user = userRepository.currentUser.value
+        if (user != null) {
+            reduce { state.copy(user = user) }
         }
+    }
 
-        // 2. 결제 시작 (order + ready)
-        //    여기 금액/상품명/주문자명은 테스트 값으로 고정
-        val ready = startPaymentUseCase(
-            amount = 1000L,
-            goodName = "테스트 상품",
-            orderName = "원정",
-        )
+    fun onLogoutClick() = intent {
+        userRepository.logout()
+        reduce { state.copy(user = null) }
+        postSideEffect(MyPageSideEffect.NavigateToLogin)
+    }
 
-        // 3. 결제 결과 조회 (지금은 mock이라 바로 성공 응답)
-        val result = getPaymentResultUseCase(ready.orderId)
+    // ── OpenBanking: 인증 ──
 
-        // 4. 상태 업데이트
+    fun onConnectBankClick() = intent {
+        reduce { state.copy(isLoading = true) }
+        val result = getAuthorizeUrlUseCase()
+        reduce { state.copy(isLoading = false) }
+        postSideEffect(MyPageSideEffect.OpenBankAuth(result.authorizeUrl))
+    }
+
+    fun onAuthCodeReceived(code: String) = intent {
+        reduce { state.copy(isLoading = true) }
+        val token = getTokenUseCase(code = code)
         reduce {
             state.copy(
                 isLoading = false,
-                currentOrderId = ready.orderId,
-                payUrl = ready.payUrl,
-                result = result,
-                errorMessage = null,
+                accessToken = token.accessToken,
+                userSeqNo = token.userSeqNo,
+                refreshToken = token.refreshToken,
+                isBankConnected = true,
             )
         }
+        postSideEffect(MyPageSideEffect.Toast("계좌 연결이 완료되었습니다."))
+        loadAccounts()
+    }
 
-        // 5. 토스트로 간단히 결과 알려주기
-        postSideEffect(
-            MyPageSideEffect.Toast(
-                "결제 상태: ${result.status} / 금액: ${result.amount}"
-            )
+    // ── OpenBanking: 계좌 목록 ──
+
+    private fun loadAccounts() = intent {
+        val token = state.accessToken ?: return@intent
+        val userSeqNo = state.userSeqNo ?: return@intent
+
+        reduce { state.copy(isLoading = true) }
+        val accounts = getAccountsUseCase(accessToken = token, userSeqNo = userSeqNo)
+        reduce { state.copy(isLoading = false, accounts = accounts) }
+    }
+
+    // ── OpenBanking: 잔액 조회 ──
+
+    fun onCheckBalanceClick(fintechUseNum: String) = intent {
+        val token = state.accessToken ?: return@intent
+
+        reduce { state.copy(isLoading = true) }
+        val balance = getBalanceUseCase(accessToken = token, fintechUseNum = fintechUseNum)
+        reduce { state.copy(isLoading = false, selectedBalance = balance) }
+    }
+
+    // ── OpenBanking: 송금 ──
+
+    fun onTransferClick(
+        fintechUseNum: String,
+        amount: Long,
+        reqClientName: String,
+        reqClientNum: String,
+        recvClientName: String,
+        recvClientAccountNum: String,
+    ) = intent {
+        val token = state.accessToken ?: return@intent
+
+        reduce { state.copy(isLoading = true) }
+        val result = transferUseCase(
+            accessToken = token,
+            fintechUseNum = fintechUseNum,
+            tranAmt = amount,
+            reqClientName = reqClientName,
+            reqClientNum = reqClientNum,
+            recvClientName = recvClientName,
+            recvClientAccountNum = recvClientAccountNum,
         )
+        reduce { state.copy(isLoading = false) }
+
+        if (result.rspCode == "A0000") {
+            postSideEffect(MyPageSideEffect.Toast("송금 완료: ${result.recvClientName}님에게 ${result.tranAmt}원"))
+            loadAccounts() // 잔액 갱신
+        } else {
+            postSideEffect(MyPageSideEffect.Toast("송금 실패: ${result.rspMessage}"))
+        }
     }
 }
 
+@Immutable
 data class MyPageState(
+    val user: User? = null,
     val isLoading: Boolean = false,
-    val currentOrderId: String? = null,
-    val payUrl: String? = null,
-    val result: PaymentResult? = null,
-    val errorMessage: String? = null,
+
+    // OpenBanking
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val userSeqNo: String? = null,
+    val isBankConnected: Boolean = false,
+    val accounts: List<Account> = emptyList(),
+    val selectedBalance: AccountBalance? = null,
 )
 
 sealed interface MyPageSideEffect {
     data class Toast(val message: String) : MyPageSideEffect
+    data object NavigateToLogin : MyPageSideEffect
+    data class OpenBankAuth(val url: String) : MyPageSideEffect
 }

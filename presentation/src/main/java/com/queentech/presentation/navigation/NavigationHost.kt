@@ -69,7 +69,7 @@ fun NavigationHost() {
                             ExpectNumberScreen(navController = navController)
                         }
                         composable(route = MainNav.MyPage.route) {
-                            MyPageScreen(navController = navController, loginViewModel = loginViewModel)
+                            MyPageScreen(navController = navController)
                         }
                         composable(route = LoginNav.route) {
                             LoginScreen(navController = navController, viewModel = loginViewModel)
