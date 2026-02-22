@@ -2,6 +2,7 @@ package com.queentech.presentation.login
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -94,7 +96,6 @@ private fun LoginContent(
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit
 ) {
-    // ✅ 화면 폭 통일
     val contentPadding = 24.dp
     val fullWidth = Modifier
         .fillMaxWidth()
@@ -102,8 +103,8 @@ private fun LoginContent(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            // ✅ 여기서 “extra bottom padding” 제거하고, 딱 붙게 만든다
             LoginBottomBar(
                 fullWidth = fullWidth,
                 email = email,
@@ -116,12 +117,21 @@ private fun LoginContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)           // ✅ bottomBar만큼만 비워줌
-                .padding(top = Paddings.xextra), // 상단만
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding)
+                .padding(top = Paddings.xextra),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Fisher Lotto", style = MaterialTheme.typography.displaySmall)
-            Text("Your favorite lotto app", style = MaterialTheme.typography.labelSmall)
+            Text(
+                text = "Fisher Lotto",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "Your favorite lotto app",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             LottieFishing(
                 modifier = Modifier
@@ -157,28 +167,43 @@ private fun LoginBottomBar(
     onSignUpClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
             modifier = fullWidth.height(48.dp),
             onClick = onLoginClick,
-            enabled = email.isNotBlank()
-        ) { Text("로그인") }
+            enabled = email.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            Text("로그인")
+        }
 
-        // ✅ 버튼-텍스트 간격 최소화
         Spacer(modifier = Modifier.height(6.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (isVisibleSignUp) {
-                Text("Don't have an account? ")
+                Text(
+                    text = "Don't have an account? ",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(
                     modifier = Modifier.clickable { onSignUpClick() },
                     text = "Sign up",
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.secondary
                 )
             } else {
-                Text("Already sign up account")
+                Text(
+                    text = "Already sign up account",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 

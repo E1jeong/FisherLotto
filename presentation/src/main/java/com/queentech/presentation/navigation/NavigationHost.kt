@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,8 +52,9 @@ fun NavigationHost() {
     if (normalPermissionState == PermissionState.Granted) {
         val loginViewModel: LoginViewModel = hiltViewModel()
 
-        Surface {
+        Surface(color = MaterialTheme.colorScheme.background) {
             Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
                 content = { paddingValues ->
                     NavHost(
                         modifier = Modifier.padding(paddingValues),

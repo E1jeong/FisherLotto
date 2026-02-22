@@ -3,15 +3,19 @@ package com.queentech.presentation.navigation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.queentech.presentation.theme.AccentBlue
+import com.queentech.presentation.theme.BgDark
+import com.queentech.presentation.theme.DividerColor
+import com.queentech.presentation.theme.SectionBg
+import com.queentech.presentation.theme.TextPrimary
+import com.queentech.presentation.theme.TextSecondary
 import com.queentech.presentation.util.NavigationHelper
 
 @Composable
@@ -28,17 +32,22 @@ fun NavigationBottomBar(
     )
 
     Column {
-        HorizontalDivider(thickness = 2.dp)
-        NavigationBar(containerColor = Color.White) {
+        HorizontalDivider(thickness = 1.dp, color = DividerColor)
+        NavigationBar(containerColor = BgDark) {
             mainBottomNavigationItems.forEach { item ->
                 NavigationBarItem(
                     icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
                     selected = currentRoute == item.route,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedIconColor = AccentBlue,
+                        selectedTextColor = TextPrimary,
+                        unselectedIconColor = TextSecondary,
+                        unselectedTextColor = TextSecondary,
+                        indicatorColor = SectionBg,
                     ),
-                    label = { Text(text = item.title, style = MaterialTheme.typography.labelMedium) },
+                    label = {
+                        Text(text = item.title)
+                    },
                     onClick = {
                         NavigationHelper.navigate(
                             navController,

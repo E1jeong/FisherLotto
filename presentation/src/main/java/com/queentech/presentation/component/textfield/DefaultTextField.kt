@@ -11,6 +11,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.queentech.presentation.theme.CardBg
+import com.queentech.presentation.theme.TextPrimary
+import com.queentech.presentation.theme.TextSecondary
 
 @Composable
 fun DefaultTextField(
@@ -29,15 +32,25 @@ fun DefaultTextField(
         placeholder = {
             Text(
                 modifier = Modifier.alpha(0.5f),
-                text = placeholder
+                text = placeholder,
+                color = TextSecondary
             )
         },
         onValueChange = onValueChange,
         shape = RoundedCornerShape(8.dp),
         colors = TextFieldDefaults.colors(
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            disabledTextColor = TextSecondary,
+            focusedContainerColor = CardBg,
+            unfocusedContainerColor = CardBg,
+            disabledContainerColor = CardBg.copy(alpha = 0.6f),
+            cursorColor = TextPrimary,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
+            focusedPlaceholderColor = TextSecondary,
+            unfocusedPlaceholderColor = TextSecondary,
         ),
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation
