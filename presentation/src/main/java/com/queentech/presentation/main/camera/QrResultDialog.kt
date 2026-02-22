@@ -1,22 +1,42 @@
 package com.queentech.presentation.main.camera
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.queentech.domain.model.lotto.GetLottoNumber
+import com.queentech.presentation.theme.AccentBlue
+import com.queentech.presentation.theme.AccentGold
+import com.queentech.presentation.theme.BgDark
+import com.queentech.presentation.theme.CardBg
+import com.queentech.presentation.theme.DividerColor
+import com.queentech.presentation.theme.SectionBg
+import com.queentech.presentation.theme.TextPrimary
+import com.queentech.presentation.theme.TextSecondary
 import com.queentech.presentation.util.ColorHelper
 
 @Composable
@@ -28,7 +48,6 @@ fun QrResultDialog(
 ) {
     if (!visible || result == null || winning == null) return
 
-    // 🔹 당첨번호 / 보너스 번호
     val mainWinningNumbers = listOf(
         winning.num1Int,
         winning.num2Int,
@@ -38,100 +57,224 @@ fun QrResultDialog(
         winning.num6Int,
     )
     val bonusNumber = winning.bonusInt
-
     val allWinningNumbers = mainWinningNumbers + bonusNumber
 
-    val defaultNumberColor = Color.White
-
-    Dialog(onDismissRequest = onDismissRequest) {
-        Card {
-            Column(modifier = Modifier.padding(16.dp)) {
-
-                // 회차
-                Text(
-                    text = "${result.drawNo}회차",
-                    style = MaterialTheme.typography.titleLarge
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .clip(RoundedCornerShape(20.dp))
+                .background(BgDark)
+                .padding(20.dp)
+        ) {
+            // ── 회차 헤더 ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(AccentGold)
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // ✅ 해당 회차 당첨번호 표시
-                Text(
-                    text = "당첨 번호",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // 1등 번호 6개
-                    mainWinningNumbers.forEach { number ->
-                        Text(
-                            text = number.toString().padStart(2, '0') + " ",
-                            color = ColorHelper.selectBallColor(number),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
-                    // 보너스 구분 기호
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
                     Text(
-                        text = "+ ",
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "ROUND ${result.drawNo}",
+                        color = AccentGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp
                     )
-
-                    // 보너스 번호
                     Text(
-                        text = bonusNumber.toString().padStart(2, '0'),
-                        color = ColorHelper.selectBallColor(bonusNumber),
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "${result.drawNo}회차 QR 결과",
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
 
-                HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+            // ── 당첨 번호 섹션 ──
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SectionBg)
+                    .padding(14.dp)
+            ) {
+                Text(
+                    text = "당첨 번호",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
 
-                // ✅ 내 번호들
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    mainWinningNumbers.forEach { number ->
+                        LottoBallSmall(number = number)
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+
+                    Text(
+                        text = "+",
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
+                    LottoBallSmall(number = bonusNumber)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── 구분선 ──
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(BgDark, DividerColor, BgDark)
+                        )
+                    )
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── 내 번호 섹션 ──
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SectionBg)
+                    .padding(14.dp)
+            ) {
                 Text(
                     text = "내 번호",
-                    style = MaterialTheme.typography.titleMedium
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 result.games.forEachIndexed { index, game ->
-                    Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (index > 0) Modifier.padding(top = 8.dp) else Modifier
+                            )
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(CardBg)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 게임 라벨 (A, B, C ...)
                         Text(
-                            text = "${'A' + index} : ",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "${'A' + index}",
+                            color = AccentBlue,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.width(20.dp),
+                            textAlign = TextAlign.Center
                         )
 
-                        game.forEach { number ->
-                            val color = if (allWinningNumbers.contains(number)) {
-                                // 당첨 번호 → 볼 색깔
-                                ColorHelper.selectBallColor(number)
-                            } else {
-                                // 미당첨 번호 → 연한 회색
-                                defaultNumberColor
-                            }
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                            val weight = if (allWinningNumbers.contains(number)) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Normal
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            game.forEach { number ->
+                                val isMatch = allWinningNumbers.contains(number)
+                                if (isMatch) {
+                                    LottoBallSmall(number = number)
+                                } else {
+                                    // 미당첨 번호 → 어두운 스타일
+                                    Box(
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape)
+                                            .background(DividerColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = number.toString(),
+                                            color = TextSecondary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
                             }
-
-                            Text(
-                                text = number.toString().padStart(2, '0') + " ",
-                                color = color,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = weight
-                            )
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── 닫기 버튼 ──
+            TextButton(
+                onClick = onDismissRequest,
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(
+                    text = "닫기",
+                    color = AccentBlue,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun LottoBallSmall(number: Int) {
+    val ballColor = ColorHelper.selectBallColor(number)
+
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .shadow(2.dp, CircleShape)
+            .clip(CircleShape)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        ballColor.copy(alpha = 1f),
+                        ballColor.copy(alpha = 0.75f)
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = number.toString(),
+            color = Color.White,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
     }
 }
