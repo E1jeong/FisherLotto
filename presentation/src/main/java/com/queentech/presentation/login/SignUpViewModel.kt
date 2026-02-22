@@ -1,11 +1,9 @@
 package com.queentech.presentation.login
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.queentech.domain.model.login.SignUpResultStatus
-import com.queentech.domain.usecase.login.SignUpUserUseCase
+import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -19,8 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val prefs: SharedPreferences,
-    private val signUpUserUseCase: SignUpUserUseCase,
+    private val userRepository: UserRepository,
 ) : ViewModel(), ContainerHost<SignUpState, SignUpSideEffect> {
 
     override val container: Container<SignUpState, SignUpSideEffect> = container(
@@ -33,23 +30,12 @@ class SignUpViewModel @Inject constructor(
                 }
             }
         },
-        onCreate = {
-
-        },
     )
 
     companion object {
         const val TAG = "SignUpViewModel"
-
-        const val KEY_SIGNUP_NAME = "signup_name"
-        const val KEY_SIGNUP_EMAIL = "signup_email"
-        const val KEY_SIGNUP_BIRTH = "signup_birth"
-        const val KEY_SIGNUP_PHONE = "signup_phone"
     }
 
-    /*****************************************************
-     *  Signup Screen
-     *****************************************************/
     fun onSignUpNameChanged(v: String) = intent {
         reduce { state.copy(name = v) }
     }
@@ -90,27 +76,15 @@ class SignUpViewModel @Inject constructor(
             return@intent
         }
 
-        val response = signUpUserUseCase(name, email, birth, phone).getOrNull()
-        when (response?.statusInt) {
-            SignUpResultStatus.OK.status -> {
-                // ✅ 정책: 회원가입 입력값 prefs 저장
-                saveSignUpInfo(name, email, birth, phone)
+        val result = userRepository.signUp(name, email, birth, phone)
 
-                reduce { state.copy(name = name, email = email, birth = birth, phone = phone) }
-
-                postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
-                postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
-            }
+        result.onSuccess {
+            reduce { state.copy(name = name, email = email, birth = birth, phone = phone) }
+            postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
+            postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
+        }.onFailure {
+            postSideEffect(SignUpSideEffect.Toast(it.message ?: "회원가입에 실패했습니다."))
         }
-    }
-
-    private fun saveSignUpInfo(name: String, email: String, birth: String, phone: String) {
-        prefs.edit()
-            .putString(KEY_SIGNUP_NAME, name)
-            .putString(KEY_SIGNUP_EMAIL, email)
-            .putString(KEY_SIGNUP_BIRTH, birth)
-            .putString(KEY_SIGNUP_PHONE, phone)
-            .apply()
     }
 }
 

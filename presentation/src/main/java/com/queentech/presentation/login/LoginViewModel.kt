@@ -1,13 +1,9 @@
 package com.queentech.presentation.login
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.queentech.domain.model.common.CommonResponse
-import com.queentech.domain.usecase.login.GetUserUseCase
-import com.queentech.presentation.login.SignUpViewModel.Companion.KEY_SIGNUP_EMAIL
-import com.queentech.presentation.login.SignUpViewModel.Companion.KEY_SIGNUP_PHONE
+import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -21,8 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val prefs: SharedPreferences,
-    private val getUserUseCase: GetUserUseCase,
+    private val userRepository: UserRepository,
 ) : ViewModel(), ContainerHost<LoginState, LoginSideEffect> {
 
     override val container: Container<LoginState, LoginSideEffect> = container(
@@ -36,7 +31,7 @@ class LoginViewModel @Inject constructor(
             }
         },
         onCreate = {
-            loadUserFromPref()
+            loadCachedUser()
         },
     )
 
@@ -64,30 +59,45 @@ class LoginViewModel @Inject constructor(
             return@intent
         }
 
-        val response = getUserUseCase(email = email, phone = state.phone).getOrDefault(
-            CommonResponse("8699")
+        val result = userRepository.login(
+            name = state.userName,
+            birth = state.userBirth,
+            phone = state.userPhone,
+            email = email
         )
-        when (response.statusInt) {
-            8200 -> {
-                // ✅ 로그인 성공 처리(최종 email 확정)
-                reduce { state.copy(userEmail = email) }
-                postSideEffect(LoginSideEffect.NavigateToInformation)
-            }
+
+        result.onSuccess {
+            reduce { state.copy(userEmail = email) }
+            postSideEffect(LoginSideEffect.NavigateToInformation)
+        }.onFailure {
+            postSideEffect(LoginSideEffect.Toast(it.message ?: "로그인에 실패했습니다."))
         }
     }
 
-    fun loadUserFromPref() = intent {
-        val email = prefs.getString(KEY_SIGNUP_EMAIL, "")
-        val phone = prefs.getString(KEY_SIGNUP_PHONE, "")
-        reduce { state.copy(userEmail = email!!, phone = phone!!) }
+    fun loadCachedUser() = intent {
+        userRepository.loadCachedUser()
+        val cachedUser = userRepository.currentUser.value
+        if (cachedUser != null) {
+            reduce {
+                state.copy(
+                    userEmail = cachedUser.email,
+                    userName = cachedUser.name,
+                    userBirth = cachedUser.birth,
+                    userPhone = cachedUser.phone
+                )
+            }
+        }
+//        userRepository.logout()
     }
 }
 
 @Immutable
 data class LoginState(
-    val emailInput: String = "", // TextInput
-    val userEmail: String = "", // 유저 email
-    val phone: String = "", // 유저 전화번호
+    val emailInput: String = "",    // TextInput
+    val userEmail: String = "",     // 유저 email
+    val userName: String = "",      // 유저 이름
+    val userBirth: String = "",     // 유저 생년월일
+    val userPhone: String = "",     // 유저 전화번호
 )
 
 sealed interface LoginSideEffect {

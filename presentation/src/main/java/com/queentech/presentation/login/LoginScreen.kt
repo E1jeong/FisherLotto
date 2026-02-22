@@ -50,7 +50,7 @@ fun LoginScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.loadUserFromPref()
+        viewModel.loadCachedUser()
     }
 
     InitLoginScreen(context, navController, viewModel)
