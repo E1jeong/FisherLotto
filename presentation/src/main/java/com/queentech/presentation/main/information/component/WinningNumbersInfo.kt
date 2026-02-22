@@ -10,26 +10,27 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.queentech.presentation.theme.FisherLottoTheme
+import com.queentech.presentation.theme.TextSecondary
 import com.queentech.presentation.util.ColorHelper
 
 @Composable
 fun WinningNumbersInfo(
     modifier: Modifier = Modifier,
     winningNumbers: List<Int>,
-    numberSize: Int = 30,
+    numberSize: Int = 36,
 ) {
-
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -40,7 +41,8 @@ fun WinningNumbersInfo(
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "plus",
-                    tint = Color.White
+                    tint = TextSecondary,
+                    modifier = Modifier.size(16.dp)
                 )
             }
 
@@ -62,6 +64,7 @@ private fun Ball(
     Box(
         modifier = Modifier
             .size(size.dp)
+            .shadow(4.dp, CircleShape)
             .clip(CircleShape)
             .background(backgroundColor),
         contentAlignment = Alignment.Center
@@ -69,7 +72,8 @@ private fun Ball(
         Text(
             text = number.toString(),
             color = Color.White,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+            fontSize = (size / 2.5).sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
