@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.lotto.GetExpectNumber
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
+import com.queentech.domain.usecase.lotto.LottoIssueRepository
+import com.queentech.presentation.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
@@ -20,6 +22,7 @@ import javax.inject.Inject
 class ExpectNumberViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val getExpectNumberUseCase: GetExpectNumberUseCase,
+    private val lottoIssueRepository: LottoIssueRepository,
 ) : ViewModel(), ContainerHost<ExpectNumberState, ExpectNumberSideEffect> {
     override val container: Container<ExpectNumberState, ExpectNumberSideEffect> = container(
         initialState = ExpectNumberState(),
@@ -33,6 +36,7 @@ class ExpectNumberViewModel @Inject constructor(
         },
         onCreate = {
             loadCachedUser()
+            loadSavedNumbers()
         },
     )
 
@@ -55,16 +59,56 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
+    private fun loadSavedNumbers() = intent {
+        val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+        val lastWeekStart = DateUtils.getLastWeekStartMillis()
+
+        // 2주 이전 데이터 정리
+        val cutoff = DateUtils.getCutoffWeekStartMillis()
+        lottoIssueRepository.cleanupOldData(cutoff)
+
+        val thisWeek = lottoIssueRepository.getThisWeekNumbers(thisWeekStart)
+        val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
+        reduce {
+            state.copy(
+                thisWeekNumbers = thisWeek,
+                lastWeekNumbers = lastWeek,
+                isThisWeekIssued = thisWeek.isNotEmpty()
+            )
+        }
+    }
+
     fun onExpectNumberClick() = intent {
+        val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+
+        // 이미 이번주에 발급했으면 토스트 + 리턴
+        if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
+            postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
+            return@intent
+        }
+
         val result = getExpectNumberUseCase(state.userEmail, state.userPhone).getOrDefault(
             GetExpectNumber(count = 0, lotto = emptyList())
         )
 
         if (result.count != 0) {
+            // Room에 저장
+            lottoIssueRepository.saveIssue(
+                numbers = result.lotto,
+                weekStartMillis = thisWeekStart
+            )
+
+            // UI 갱신
+            val lastWeekStart = DateUtils.getLastWeekStartMillis()
+            val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
             reduce {
                 state.copy(
                     count = result.count,
-                    expectNumber = result.lotto
+                    lastWeekNumbers = lastWeek,
+                    thisWeekNumbers = result.lotto,
+                    isThisWeekIssued = true
                 )
             }
         }
@@ -74,11 +118,13 @@ class ExpectNumberViewModel @Inject constructor(
 @Immutable
 data class ExpectNumberState(
     val count: Int = 0,
-    val expectNumber: List<String> = emptyList(),
-    val userEmail: String = "",     // 유저 email
-    val userName: String = "",      // 유저 이름
-    val userBirth: String = "",     // 유저 생년월일
-    val userPhone: String = "",     // 유저 전화번호
+    val lastWeekNumbers: List<String> = emptyList(),  // 저번주 번호 (10개)
+    val thisWeekNumbers: List<String> = emptyList(),  // 이번주 번호 (10개)
+    val isThisWeekIssued: Boolean = false,            // 이번주 발급 여부
+    val userEmail: String = "",
+    val userName: String = "",
+    val userBirth: String = "",
+    val userPhone: String = "",
 )
 
 sealed interface ExpectNumberSideEffect {
