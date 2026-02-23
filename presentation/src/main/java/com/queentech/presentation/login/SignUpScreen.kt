@@ -3,6 +3,7 @@ package com.queentech.presentation.login
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -47,17 +49,41 @@ fun SignUpScreen(
         viewModel = viewModel
     )
 
-    SignUpContent(
-        name = state.name,
-        email = state.email,
-        birth = state.birth,
-        phone = state.phone,
-        onNameChanged = viewModel::onSignUpNameChanged,
-        onEmailChanged = viewModel::onSignUpEmailChanged,
-        onBirthChanged = viewModel::onSignUpBirthChanged,
-        onPhoneChanged = viewModel::onSignUpPhoneChanged,
-        onSubmitClick = viewModel::onSignUpSubmitClick,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        SignUpContent(
+            name = state.name,
+            email = state.email,
+            birth = state.birth,
+            phone = state.phone,
+            onNameChanged = viewModel::onSignUpNameChanged,
+            onEmailChanged = viewModel::onSignUpEmailChanged,
+            onBirthChanged = viewModel::onSignUpBirthChanged,
+            onPhoneChanged = viewModel::onSignUpPhoneChanged,
+            onSubmitClick = viewModel::onSignUpSubmitClick,
+        )
+
+        // 회원가입 완료 로딩 오버레이
+        if (state.isSignUpComplete) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "회원가입 완료! 로그인 화면으로 이동합니다...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

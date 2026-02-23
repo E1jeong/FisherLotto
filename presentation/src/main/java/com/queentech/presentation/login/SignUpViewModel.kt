@@ -7,6 +7,7 @@ import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -79,8 +80,18 @@ class SignUpViewModel @Inject constructor(
         val result = userRepository.signUp(name, email, birth, phone)
 
         result.onSuccess {
-            reduce { state.copy(name = name, email = email, birth = birth, phone = phone) }
+            reduce {
+                state.copy(
+                    name = name,
+                    email = email,
+                    birth = birth,
+                    phone = phone,
+                    isSignUpComplete = true
+                )
+            }
             postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
+            delay(3000L)
+            reduce { state.copy(isSignUpComplete = false) }
             postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
         }.onFailure {
             postSideEffect(SignUpSideEffect.Toast(it.message ?: "회원가입에 실패했습니다."))
@@ -93,7 +104,8 @@ data class SignUpState(
     val name: String = "",
     val email: String = "",
     val birth: String = "",
-    val phone: String = ""
+    val phone: String = "",
+    val isSignUpComplete: Boolean = false
 )
 
 sealed interface SignUpSideEffect {
