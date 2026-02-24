@@ -10,12 +10,15 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.annotation.OrbitExperimental
+import org.orbitmvi.orbit.syntax.simple.blockingIntent
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import org.orbitmvi.orbit.viewmodel.container
 import javax.inject.Inject
 
+@OrbitExperimental
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val userRepository: UserRepository,
@@ -37,19 +40,19 @@ class SignUpViewModel @Inject constructor(
         const val TAG = "SignUpViewModel"
     }
 
-    fun onSignUpNameChanged(v: String) = intent {
+    fun onSignUpNameChanged(v: String) = blockingIntent {
         reduce { state.copy(name = v) }
     }
 
-    fun onSignUpEmailChanged(v: String) = intent {
+    fun onSignUpEmailChanged(v: String) = blockingIntent {
         reduce { state.copy(email = v) }
     }
 
-    fun onSignUpBirthChanged(v: String) = intent {
+    fun onSignUpBirthChanged(v: String) = blockingIntent {
         reduce { state.copy(birth = v) }
     }
 
-    fun onSignUpPhoneChanged(v: String) = intent {
+    fun onSignUpPhoneChanged(v: String) = blockingIntent {
         reduce { state.copy(phone = v) }
     }
 
