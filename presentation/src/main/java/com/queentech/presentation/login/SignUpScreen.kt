@@ -33,8 +33,10 @@ import androidx.navigation.NavHostController
 import com.queentech.presentation.component.textfield.DefaultTextField
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
+import org.orbitmvi.orbit.annotation.OrbitExperimental
 import org.orbitmvi.orbit.compose.collectSideEffect
 
+@OptIn(OrbitExperimental::class)
 @Composable
 fun SignUpScreen(
     navController: NavHostController,
@@ -86,6 +88,7 @@ fun SignUpScreen(
     }
 }
 
+@OptIn(OrbitExperimental::class)
 @Composable
 private fun InitSignUpScreen(
     context: Context,
