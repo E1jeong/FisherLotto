@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import com.queentech.domain.model.login.User
 import com.queentech.domain.model.openbanking.Account
 import com.queentech.domain.model.openbanking.AccountBalance
+import com.queentech.presentation.navigation.RouteName.LOGIN
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.AccentGreen
@@ -64,6 +65,7 @@ import com.queentech.presentation.theme.DividerColor
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
+import com.queentech.presentation.util.NavigationHelper
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
@@ -97,9 +99,7 @@ private fun InitMyPageScreen(
             }
 
             is MyPageSideEffect.NavigateToLogin -> {
-                navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
-                }
+                NavigationHelper.navigateToLoginAfterLogout(navController, LOGIN)
             }
 
             is MyPageSideEffect.OpenBankAuth -> {

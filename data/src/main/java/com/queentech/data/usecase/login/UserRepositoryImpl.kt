@@ -1,5 +1,6 @@
 package com.queentech.data.usecase.login
 
+import com.queentech.data.database.dao.LottoIssueDao
 import com.queentech.data.database.local.UserLocalDataSource
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val lottoService: LottoService,
-    private val localDataSource: UserLocalDataSource
+    private val localDataSource: UserLocalDataSource,
+    private val lottoIssueDao: LottoIssueDao
 ) : UserRepository {
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -94,5 +96,6 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         _currentUser.value = null
         localDataSource.clear()
+        lottoIssueDao.deleteAll()
     }
 }

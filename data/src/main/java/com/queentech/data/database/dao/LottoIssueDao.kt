@@ -23,4 +23,8 @@ interface LottoIssueDao {
     // 오래된 데이터 정리 (2주 이전 삭제)
     @Query("DELETE FROM lotto_issue WHERE weekStartMillis < :cutoffWeekStart")
     suspend fun deleteOlderThan(cutoffWeekStart: Long)
+
+    // 모든 데이터 삭제
+    @Query("DELETE FROM lotto_issue")
+    suspend fun deleteAll()
 }
