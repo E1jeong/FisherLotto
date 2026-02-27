@@ -1,7 +1,12 @@
 package com.queentech.presentation.main.mypage
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -49,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.util.Consumer
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.queentech.domain.model.login.User
@@ -75,8 +82,37 @@ fun MyPageScreen(
 ) {
     val state by myPageViewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     InitMyPageScreen(context, navController, myPageViewModel)
+
+    LaunchedEffect(activity) {
+        // 1. 앱이 처음 켜졌을 때 담겨온 Intent 확인
+        activity?.intent?.data?.let { uri ->
+            if (uri.scheme == "fisherlotto" && uri.host == "auth") {
+                uri.getQueryParameter("code")?.let { code ->
+                    Log.e("!!@@", "code1: $code")
+                    myPageViewModel.onAuthCodeReceived(code)
+                    // 코드를 중복으로 처리하지 않도록 초기화
+                    activity.intent.data = null
+                }
+            }
+        }
+
+        // 2. 앱이 켜져 있는 상태에서(singleTask) 새로운 Intent가 들어올 때 감지하는 리스너
+        val listener = Consumer<Intent> { newIntent ->
+            newIntent.data?.let { uri ->
+                if (uri.scheme == "fisherlotto" && uri.host == "auth") {
+                    uri.getQueryParameter("code")?.let { code ->
+                        Log.e("!!@@", "code2: $code")
+                        myPageViewModel.onAuthCodeReceived(code)
+                        newIntent.data = null
+                    }
+                }
+            }
+        }
+        activity?.addOnNewIntentListener(listener)
+    }
 
     MyPageContent(
         state = state,
@@ -103,8 +139,17 @@ private fun InitMyPageScreen(
             }
 
             is MyPageSideEffect.OpenBankAuth -> {
-                // TODO: WebView나 Custom Tab으로 인증 URL 오픈
-                Toast.makeText(context, "은행 인증 페이지로 이동합니다.", Toast.LENGTH_SHORT).show()
+                try {
+                    val customTabsIntent = CustomTabsIntent.Builder()
+                        .setShowTitle(true) // 상단 타이틀바 표시
+                        .build()
+
+                    // context와 url(Uri 형태)을 넘겨주면 은행 인증 브라우저가 팝업됩니다.
+                    customTabsIntent.launchUrl(context, Uri.parse(sideEffect.url))
+                } catch (e: Exception) {
+                    // 기기에 크롬이나 커스텀 탭 지원 브라우저가 아예 없는 예외 상황 대비
+                    Toast.makeText(context, "브라우저를 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
