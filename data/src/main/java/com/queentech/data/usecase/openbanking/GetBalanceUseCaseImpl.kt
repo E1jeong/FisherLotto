@@ -18,11 +18,11 @@ class GetBalanceUseCaseImpl @Inject constructor(
             fintechUseNum = fintechUseNum,
         )
         return AccountBalance(
-            bankName = res.bankName,
-            accountNumMasked = res.accountNumMasked,
-            balanceAmt = res.balanceAmt.toLongOrNull() ?: 0L,
-            availableAmt = res.availableAmt.toLongOrNull() ?: 0L,
-            productName = res.productName,
+            bankName = res.bankName ?: "알 수 없음",
+            accountNumMasked = res.accountNumMasked ?: "계좌번호 없음",
+            balanceAmt = res.balanceAmt?.toLongOrNull() ?: 0L,
+            availableAmt = res.availableAmt?.toLongOrNull() ?: 0L,
+            productName = res.productName ?: "상품명 없음",
         )
     }
 }
