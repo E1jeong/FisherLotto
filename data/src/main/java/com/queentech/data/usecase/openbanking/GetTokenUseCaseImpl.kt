@@ -1,5 +1,6 @@
 package com.queentech.data.usecase.openbanking
 
+import com.queentech.data.database.datastore.OpenBankingLocalDataSource
 import com.queentech.data.model.openbanking.TokenRequest
 import com.queentech.data.model.service.OpenBankingService
 import com.queentech.domain.model.openbanking.TokenResult
@@ -8,6 +9,7 @@ import javax.inject.Inject
 
 class GetTokenUseCaseImpl @Inject constructor(
     private val openBankingService: OpenBankingService,
+    private val localDataSource: OpenBankingLocalDataSource
 ) : GetTokenUseCase {
 
     override suspend fun invoke(
@@ -20,6 +22,12 @@ class GetTokenUseCaseImpl @Inject constructor(
                 refreshToken = refreshToken,
             )
         )
+
+        localDataSource.saveTokens(
+            accessToken = res.accessToken,
+            userSeqNo = res.userSeqNo
+        )
+
         return TokenResult(
             accessToken = res.accessToken,
             tokenType = res.tokenType,

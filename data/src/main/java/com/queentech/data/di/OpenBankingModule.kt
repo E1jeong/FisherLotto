@@ -3,11 +3,13 @@ package com.queentech.data.di
 import com.queentech.data.usecase.openbanking.GetAccountsUseCaseImpl
 import com.queentech.data.usecase.openbanking.GetAuthorizeUrlUseCaseImpl
 import com.queentech.data.usecase.openbanking.GetBalanceUseCaseImpl
+import com.queentech.data.usecase.openbanking.GetSavedTokenUseCaseImpl
 import com.queentech.data.usecase.openbanking.GetTokenUseCaseImpl
 import com.queentech.data.usecase.openbanking.TransferUseCaseImpl
 import com.queentech.domain.usecase.openbanking.GetAccountsUseCase
 import com.queentech.domain.usecase.openbanking.GetAuthorizeUrlUseCase
 import com.queentech.domain.usecase.openbanking.GetBalanceUseCase
+import com.queentech.domain.usecase.openbanking.GetSavedTokenUseCase
 import com.queentech.domain.usecase.openbanking.GetTokenUseCase
 import com.queentech.domain.usecase.openbanking.TransferUseCase
 import dagger.Binds
@@ -49,4 +51,10 @@ abstract class OpenBankingModule {
     abstract fun bindTransferUseCase(
         impl: TransferUseCaseImpl,
     ): TransferUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindGetSavedTokenUseCase(
+        impl: GetSavedTokenUseCaseImpl,
+    ): GetSavedTokenUseCase
 }

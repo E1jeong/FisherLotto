@@ -87,7 +87,7 @@ fun MyPageScreen(
     InitMyPageScreen(context, navController, myPageViewModel)
 
     LaunchedEffect(activity) {
-        // 1. 앱이 처음 켜졌을 때 담겨온 Intent 확인
+        // 앱이 처음 켜졌을 때 담겨온 Intent 확인
         activity?.intent?.data?.let { uri ->
             if (uri.scheme == "fisherlotto" && uri.host == "auth") {
                 uri.getQueryParameter("code")?.let { code ->
@@ -99,7 +99,7 @@ fun MyPageScreen(
             }
         }
 
-        // 2. 앱이 켜져 있는 상태에서(singleTask) 새로운 Intent가 들어올 때 감지하는 리스너
+        // 앱이 켜져 있는 상태에서(singleTask) 새로운 Intent가 들어올 때 감지하는 리스너
         val listener = Consumer<Intent> { newIntent ->
             newIntent.data?.let { uri ->
                 if (uri.scheme == "fisherlotto" && uri.host == "auth") {

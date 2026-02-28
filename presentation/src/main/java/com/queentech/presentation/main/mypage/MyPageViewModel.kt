@@ -10,10 +10,12 @@ import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.openbanking.GetAccountsUseCase
 import com.queentech.domain.usecase.openbanking.GetAuthorizeUrlUseCase
 import com.queentech.domain.usecase.openbanking.GetBalanceUseCase
+import com.queentech.domain.usecase.openbanking.GetSavedTokenUseCase
 import com.queentech.domain.usecase.openbanking.GetTokenUseCase
 import com.queentech.domain.usecase.openbanking.TransferUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.collectLatest
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -30,6 +32,7 @@ class MyPageViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getBalanceUseCase: GetBalanceUseCase,
     private val transferUseCase: TransferUseCase,
+    private val getSavedTokenUseCase: GetSavedTokenUseCase,
 ) : ViewModel(), ContainerHost<MyPageState, MyPageSideEffect> {
 
     override val container: Container<MyPageState, MyPageSideEffect> = container(
@@ -45,6 +48,7 @@ class MyPageViewModel @Inject constructor(
         },
         onCreate = {
             loadUser()
+            checkSavedOpenBankingToken()
         },
     )
 
@@ -59,6 +63,23 @@ class MyPageViewModel @Inject constructor(
         val user = userRepository.currentUser.value
         if (user != null) {
             reduce { state.copy(user = user) }
+        }
+    }
+
+    private fun checkSavedOpenBankingToken() = intent {
+        getSavedTokenUseCase().collectLatest { (token, seqNo) ->
+            if (!token.isNullOrBlank() && !seqNo.isNullOrBlank()) {
+                // 토큰이 존재하면 State를 업데이트하고 은행 연결 상태를 true로 변경
+                reduce {
+                    state.copy(
+                        accessToken = token,
+                        userSeqNo = seqNo,
+                        isBankConnected = true
+                    )
+                }
+                // State가 업데이트 되었으니 즉시 계좌 목록을 불러옵니다!
+                loadAccounts()
+            }
         }
     }
 
