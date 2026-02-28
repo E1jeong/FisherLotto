@@ -1,4 +1,4 @@
-package com.queentech.data.database.local
+package com.queentech.data.database.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences

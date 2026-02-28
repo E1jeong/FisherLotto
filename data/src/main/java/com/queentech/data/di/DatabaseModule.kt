@@ -3,7 +3,7 @@ package com.queentech.data.di
 import android.content.Context
 import androidx.room.Room
 import com.queentech.data.database.AppDatabase
-import com.queentech.data.database.dao.LottoIssueDao
+import com.queentech.data.database.room.dao.LottoIssueDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

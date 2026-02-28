@@ -1,4 +1,4 @@
-package com.queentech.data.database.entity
+package com.queentech.data.database.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

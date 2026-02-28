@@ -1,7 +1,7 @@
 package com.queentech.data.usecase.lotto
 
-import com.queentech.data.database.dao.LottoIssueDao
-import com.queentech.data.database.entity.LottoIssueEntity
+import com.queentech.data.database.room.dao.LottoIssueDao
+import com.queentech.data.database.room.entity.LottoIssueEntity
 import com.queentech.domain.usecase.lotto.LottoIssueRepository
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -1,7 +1,7 @@
 package com.queentech.data.usecase.login
 
-import com.queentech.data.database.dao.LottoIssueDao
-import com.queentech.data.database.local.UserLocalDataSource
+import com.queentech.data.database.room.dao.LottoIssueDao
+import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.service.LottoService
