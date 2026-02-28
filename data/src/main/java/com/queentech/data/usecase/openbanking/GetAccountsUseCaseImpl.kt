@@ -17,7 +17,7 @@ class GetAccountsUseCaseImpl @Inject constructor(
             authorization = "Bearer $accessToken",
             userSeqNo = userSeqNo,
         )
-        return res.accountList.map { item ->
+        return res.accountList?.map { item ->
             Account(
                 fintechUseNum = item.fintechUseNum,
                 accountAlias = item.accountAlias,
@@ -26,6 +26,6 @@ class GetAccountsUseCaseImpl @Inject constructor(
                 accountHolderName = item.accountHolderName,
                 transferAgreeYn = item.transferAgreeYn,
             )
-        }
+        } ?: emptyList()
     }
 }

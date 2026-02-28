@@ -6,9 +6,9 @@ data class AccountListResponse(
     @SerializedName("api_tran_id") val apiTranId: String,
     @SerializedName("rsp_code") val rspCode: String,
     @SerializedName("rsp_message") val rspMessage: String,
-    @SerializedName("user_seq_no") val userSeqNo: String,
+    @SerializedName("user_name") val userName: String,
     @SerializedName("res_cnt") val resCnt: Int,
-    @SerializedName("account_list") val accountList: List<AccountItem>,
+    @SerializedName("res_list") val accountList: List<AccountItem>?,
 )
 
 data class AccountItem(
