@@ -1,4 +1,4 @@
-package com.queentech.presentation
+package com.queentech.fisherlotto
 
 import android.os.Build
 import android.os.Bundle
