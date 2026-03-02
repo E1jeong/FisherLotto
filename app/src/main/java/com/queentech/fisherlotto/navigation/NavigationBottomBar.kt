@@ -1,4 +1,4 @@
-package com.queentech.presentation.navigation
+package com.queentech.fisherlotto.navigation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
@@ -16,7 +16,6 @@ import com.queentech.presentation.theme.DividerColor
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
-import com.queentech.presentation.util.NavigationHelper
 
 @Composable
 fun NavigationBottomBar(

@@ -1,11 +1,6 @@
-package com.queentech.presentation.util
+package com.queentech.fisherlotto.navigation
 
 import androidx.navigation.NavHostController
-import com.queentech.presentation.navigation.Destination
-import com.queentech.presentation.navigation.LoginNav
-import com.queentech.presentation.navigation.MainNav
-import com.queentech.presentation.navigation.RouteName
-import com.queentech.presentation.navigation.SignUpNav
 
 object NavigationHelper {
     fun navigate(
@@ -35,20 +30,6 @@ object NavigationHelper {
             }
             launchSingleTop = true
             restoreState = false    // 이전 상태 복원 X
-        }
-    }
-
-    fun findDestination(route: String?): Destination {
-        return when {
-            route == null -> MainNav.Information
-            route.contains(RouteName.CAMERA) -> MainNav.Camera
-            route.contains(RouteName.MY_PAGE) -> MainNav.MyPage
-            route.contains(RouteName.INFORMATION) -> MainNav.Information
-            route.contains(RouteName.EXPECT_NUMBER) -> MainNav.ExpectNumber
-            route.contains(RouteName.STATISTIC) -> MainNav.Statistic
-            route.contains(RouteName.LOGIN) -> LoginNav
-            route.contains(RouteName.SIGNUP) -> SignUpNav
-            else -> MainNav.Information
         }
     }
 }

@@ -42,7 +42,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.CardBg
@@ -56,16 +55,12 @@ import com.queentech.presentation.util.ColorHelper
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
-fun ExpectNumberScreen(
-    navController: NavHostController,
-    viewModel: ExpectNumberViewModel = hiltViewModel()
-) {
+fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
 
     InitExpectNumberScreen(
         context = context,
-        navController = navController,
         viewModel = viewModel
     )
 
@@ -80,7 +75,6 @@ fun ExpectNumberScreen(
 @Composable
 private fun InitExpectNumberScreen(
     context: Context,
-    navController: NavHostController,
     viewModel: ExpectNumberViewModel
 ) {
     viewModel.collectSideEffect { sideEffect ->

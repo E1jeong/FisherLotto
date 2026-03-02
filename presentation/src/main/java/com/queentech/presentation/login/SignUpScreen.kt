@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.queentech.presentation.component.textfield.DefaultTextField
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
@@ -39,7 +38,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @OptIn(OrbitExperimental::class)
 @Composable
 fun SignUpScreen(
-    navController: NavHostController,
+    popBackStack: () ->Unit,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
@@ -47,7 +46,7 @@ fun SignUpScreen(
 
     InitSignUpScreen(
         context = context,
-        navController = navController,
+        popBackStack = popBackStack,
         viewModel = viewModel
     )
 
@@ -92,7 +91,7 @@ fun SignUpScreen(
 @Composable
 private fun InitSignUpScreen(
     context: Context,
-    navController: NavHostController,
+    popBackStack: () ->Unit,
     viewModel: SignUpViewModel
 ) {
     viewModel.collectSideEffect { sideEffect ->
@@ -101,9 +100,7 @@ private fun InitSignUpScreen(
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
 
-            is SignUpSideEffect.SignUpDoneNavigateToLogin -> {
-                navController.popBackStack()
-            }
+            is SignUpSideEffect.SignUpDoneNavigateToLogin -> popBackStack()
         }
     }
 }

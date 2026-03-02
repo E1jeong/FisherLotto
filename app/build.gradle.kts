@@ -75,6 +75,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.material.icon.extended)
 
     implementation(project(":domain"))
     implementation(project(":data"))
@@ -83,10 +85,13 @@ dependencies {
     implementation(libs.google.hilt)
     kapt(libs.google.hilt.compiler)
 
-    implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     implementation(libs.kakao.common)
+
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.compose.hilt)
 }
 
 kapt {

@@ -1,4 +1,4 @@
-package com.queentech.presentation.util
+package com.queentech.fisherlotto.utils
 
 import android.app.Activity
 import android.content.Context

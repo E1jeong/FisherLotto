@@ -30,7 +30,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -38,15 +37,14 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.queentech.presentation.R
 import com.queentech.presentation.component.textfield.DefaultTextField
-import com.queentech.presentation.navigation.RouteName
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
-import com.queentech.presentation.util.NavigationHelper
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
 fun LoginScreen(
-    navController: NavHostController,
+    moveToSignUp: () -> Unit,
+    moveToHome: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
@@ -56,7 +54,7 @@ fun LoginScreen(
         viewModel.loadCachedUser()
     }
 
-    InitLoginScreen(context, navController, viewModel)
+    InitLoginScreen(context, moveToSignUp, moveToHome, viewModel)
 
     LoginContent(
         email = state.userEmail.ifEmpty { state.emailInput },
@@ -71,19 +69,18 @@ fun LoginScreen(
 @Composable
 private fun InitLoginScreen(
     context: Context,
-    navController: NavHostController,
-    viewModel: LoginViewModel
+    moveToSignUp: () -> Unit,
+    moveToHome: () -> Unit,
+    viewModel: LoginViewModel,
 ) {
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is LoginSideEffect.Toast ->
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
 
-            is LoginSideEffect.NavigateToSignUp ->
-                NavigationHelper.navigate(navController, RouteName.SIGNUP)
+            is LoginSideEffect.NavigateToSignUp -> moveToSignUp()
 
-            is LoginSideEffect.NavigateToInformation ->
-                NavigationHelper.navigate(navController, RouteName.INFORMATION)
+            is LoginSideEffect.NavigateToInformation -> moveToHome()
         }
     }
 }

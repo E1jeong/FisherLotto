@@ -1,4 +1,4 @@
-package com.queentech.presentation.navigation
+package com.queentech.fisherlotto.navigation
 
 import android.Manifest
 import android.os.Build
@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.queentech.fisherlotto.utils.PermissionState
+import com.queentech.fisherlotto.utils.permissionRequest
 import com.queentech.presentation.login.LoginScreen
 import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
@@ -24,11 +26,7 @@ import com.queentech.presentation.main.expect_number.ExpectNumberScreen
 import com.queentech.presentation.main.information.InformationScreen
 import com.queentech.presentation.main.mypage.MyPageScreen
 import com.queentech.presentation.main.statistic.StatisticScreen
-import com.queentech.presentation.util.PermissionState
-import com.queentech.presentation.util.permissionRequest
-import org.orbitmvi.orbit.annotation.OrbitExperimental
 
-@OptIn(OrbitExperimental::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun NavigationHost() {
@@ -66,16 +64,36 @@ fun NavigationHost() {
                             CameraScreen()
                         }
                         composable(route = MainNav.ExpectNumber.route) {
-                            ExpectNumberScreen(navController = navController)
+                            ExpectNumberScreen()
                         }
                         composable(route = MainNav.MyPage.route) {
-                            MyPageScreen(navController = navController)
+                            MyPageScreen(
+                                onLogoutClick = {
+                                    NavigationHelper.navigateToLoginAfterLogout(
+                                        navController,
+                                        RouteName.LOGIN
+                                    )
+                                }
+                            )
                         }
                         composable(route = LoginNav.route) {
-                            LoginScreen(navController = navController)
+                            LoginScreen(
+                                moveToSignUp = {
+                                    NavigationHelper.navigate(
+                                        navController,
+                                        RouteName.SIGNUP
+                                    )
+                                },
+                                moveToHome = {
+                                    NavigationHelper.navigate(
+                                        navController,
+                                        RouteName.INFORMATION
+                                    )
+                                }
+                            )
                         }
                         composable(route = SignUpNav.route) {
-                            SignUpScreen(navController = navController)
+                            SignUpScreen(popBackStack = { navController.popBackStack() })
                         }
                         composable(route = MainNav.Statistic.route) {
                             StatisticScreen()

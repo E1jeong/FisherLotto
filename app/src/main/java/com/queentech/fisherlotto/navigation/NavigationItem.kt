@@ -1,4 +1,4 @@
-package com.queentech.presentation.navigation
+package com.queentech.fisherlotto.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -7,13 +7,13 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.queentech.presentation.navigation.RouteName.CAMERA
-import com.queentech.presentation.navigation.RouteName.EXPECT_NUMBER
-import com.queentech.presentation.navigation.RouteName.INFORMATION
-import com.queentech.presentation.navigation.RouteName.LOGIN
-import com.queentech.presentation.navigation.RouteName.MY_PAGE
-import com.queentech.presentation.navigation.RouteName.SIGNUP
-import com.queentech.presentation.navigation.RouteName.STATISTIC
+import com.queentech.fisherlotto.navigation.RouteName.CAMERA
+import com.queentech.fisherlotto.navigation.RouteName.EXPECT_NUMBER
+import com.queentech.fisherlotto.navigation.RouteName.INFORMATION
+import com.queentech.fisherlotto.navigation.RouteName.LOGIN
+import com.queentech.fisherlotto.navigation.RouteName.MY_PAGE
+import com.queentech.fisherlotto.navigation.RouteName.SIGNUP
+import com.queentech.fisherlotto.navigation.RouteName.STATISTIC
 
 sealed class MainNav(
     override val route: String,
