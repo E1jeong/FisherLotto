@@ -1,11 +1,13 @@
 package com.queentech.data.di
 
+import com.queentech.data.usecase.fcm.FcmRepositoryImpl
 import com.queentech.data.usecase.login.GetUserUseCaseImpl
 import com.queentech.data.usecase.login.SignUpUserUseCaseImpl
 import com.queentech.data.usecase.login.UserRepositoryImpl
 import com.queentech.data.usecase.lotto.GetExpectNumberUseCaseImpl
 import com.queentech.data.usecase.lotto.GetLottoNumberUseCaseImpl
 import com.queentech.data.usecase.lotto.LottoIssueRepositoryImpl
+import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.GetUserUseCase
 import com.queentech.domain.usecase.login.SignUpUserUseCase
 import com.queentech.domain.usecase.login.UserRepository
@@ -41,4 +43,8 @@ abstract class LottoModule {
     @Binds
     @Singleton
     abstract fun bindLottoIssueRepository(impl: LottoIssueRepositoryImpl): LottoIssueRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFcmRepository(impl: FcmRepositoryImpl): FcmRepository
 }

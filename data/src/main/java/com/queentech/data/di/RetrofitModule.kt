@@ -1,5 +1,6 @@
 package com.queentech.data.di
 
+import com.queentech.data.model.service.FcmService
 import com.queentech.data.model.service.LottoService
 import com.queentech.data.model.service.OpenBankingService
 import com.queentech.data.model.service.PaymentsService
@@ -77,5 +78,11 @@ object RetrofitModule {
     @Provides
     fun provideOpenBankingService(@Named("lotto-sub") retrofit: Retrofit): OpenBankingService {
         return retrofit.create(OpenBankingService::class.java)
+    }
+
+    // --- FCM 서비스 (lotto-sub 서버 사용) ---
+    @Provides
+    fun provideFcmService(@Named("lotto-sub") retrofit: Retrofit): FcmService {
+        return retrofit.create(FcmService::class.java)
     }
 }
