@@ -195,6 +195,7 @@ fabric.properties
 
 # Custom
 .claude
+CLAUDE.md
 protocol_text
 
 # End of https://www.toptal.com/developers/gitignore/api/androidstudio,kotlin,gradle
