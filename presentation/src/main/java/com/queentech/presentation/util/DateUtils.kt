@@ -1,27 +1,26 @@
 package com.queentech.presentation.util
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 import java.util.TimeZone
 
 object DateUtils {
+    private const val KOREA_ZONE_ID = "Asia/Seoul"
+
     private fun getKoreaCalendar(): Calendar {
-        return Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
+        return Calendar.getInstance(TimeZone.getTimeZone(KOREA_ZONE_ID))
     }
 
     /**
      * 이번 주 일요일 00:00:00 KST의 timestamp를 반환
-     *
-     * 예: 현재가 2026-02-25 (수요일) → 2026-02-22 (일요일) 00:00 반환
-     * 예: 현재가 2026-02-22 (일요일) → 2026-02-22 (일요일) 00:00 반환
      */
     fun getCurrentWeekStartMillis(): Long {
         val cal = getKoreaCalendar()
-        // 이번 주 일요일로 이동 (Calendar.SUNDAY = 1)
-        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) // 일=1, 월=2, ..., 토=7
-        // 현재 요일에서 일요일까지의 차이
-        val diff = dayOfWeek - Calendar.SUNDAY // 일요일이면 0, 월요일이면 1, ... 토요일이면 6
+        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+        val diff = dayOfWeek - Calendar.SUNDAY
         cal.add(Calendar.DAY_OF_YEAR, -diff)
-        // 시간을 00:00:00.000으로 초기화
+        
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
@@ -47,5 +46,35 @@ object DateUtils {
         cal.timeInMillis = getCurrentWeekStartMillis()
         cal.add(Calendar.WEEK_OF_YEAR, -2)
         return cal.timeInMillis
+    }
+
+    /**
+     * 주어진 시작 시간(일요일)부터 토요일까지의 범위를 "yy.MM.dd ~ MM.dd" 형식으로 반환
+     * 연도가 바뀌는 경우 "yy.MM.dd ~ yy.MM.dd" 형식으로 반환합니다.
+     */
+    fun getWeekRangeString(startMillis: Long): String {
+        val sdfShortYear = SimpleDateFormat("yy.MM.dd", Locale.KOREA).apply {
+            timeZone = TimeZone.getTimeZone(KOREA_ZONE_ID)
+        }
+        val sdfMonthDay = SimpleDateFormat("MM.dd", Locale.KOREA).apply {
+            timeZone = TimeZone.getTimeZone(KOREA_ZONE_ID)
+        }
+        
+        val startCal = getKoreaCalendar().apply { timeInMillis = startMillis }
+        val endCal = getKoreaCalendar().apply {
+            timeInMillis = startMillis
+            add(Calendar.DAY_OF_YEAR, 6)
+        }
+
+        val startStr = sdfShortYear.format(startCal.time)
+        val endStr = if (startCal.get(Calendar.YEAR) == endCal.get(Calendar.YEAR)) {
+            // 같은 연도인 경우 월.일만 표시
+            sdfMonthDay.format(endCal.time)
+        } else {
+            // 연도가 바뀌는 경우 연도 뒤 2자리까지 표시
+            sdfShortYear.format(endCal.time)
+        }
+
+        return "$startStr ~ $endStr"
     }
 }

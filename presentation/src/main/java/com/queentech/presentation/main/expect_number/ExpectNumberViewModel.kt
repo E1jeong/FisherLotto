@@ -74,7 +74,9 @@ class ExpectNumberViewModel @Inject constructor(
             state.copy(
                 thisWeekNumbers = thisWeek,
                 lastWeekNumbers = lastWeek,
-                isThisWeekIssued = thisWeek.isNotEmpty()
+                isThisWeekIssued = thisWeek.isNotEmpty(),
+                thisWeekRange = DateUtils.getWeekRangeString(thisWeekStart),
+                lastWeekRange = DateUtils.getWeekRangeString(lastWeekStart)
             )
         }
     }
@@ -121,6 +123,8 @@ data class ExpectNumberState(
     val lastWeekNumbers: List<String> = emptyList(),  // 저번주 번호 (10개)
     val thisWeekNumbers: List<String> = emptyList(),  // 이번주 번호 (10개)
     val isThisWeekIssued: Boolean = false,            // 이번주 발급 여부
+    val thisWeekRange: String = "",                  // 이번주 범위 (02.22 ~ 02.28)
+    val lastWeekRange: String = "",                  // 저번주 범위 (02.15 ~ 02.21)
     val userEmail: String = "",
     val userName: String = "",
     val userBirth: String = "",

@@ -68,6 +68,8 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         lastWeekNumbers = state.lastWeekNumbers,
         thisWeekNumbers = state.thisWeekNumbers,
         isThisWeekIssued = state.isThisWeekIssued,
+        lastWeekRange = state.lastWeekRange,
+        thisWeekRange = state.thisWeekRange,
         onNumberIssueClick = viewModel::onExpectNumberClick
     )
 }
@@ -91,6 +93,8 @@ private fun ExpectNumberContent(
     lastWeekNumbers: List<String>,
     thisWeekNumbers: List<String>,
     isThisWeekIssued: Boolean,
+    lastWeekRange: String,
+    thisWeekRange: String,
     onNumberIssueClick: () -> Unit,
 ) {
     Column(
@@ -103,6 +107,7 @@ private fun ExpectNumberContent(
             modifier = Modifier.weight(1f),
             label = "LAST WEEK",
             labelKor = "저번주 예상 번호",
+            dateRange = lastWeekRange,
             accentColor = LastWeekAccent,
             numbers = lastWeekNumbers,
             isIssued = lastWeekNumbers.isNotEmpty(),
@@ -127,6 +132,7 @@ private fun ExpectNumberContent(
             modifier = Modifier.weight(1f),
             label = "THIS WEEK",
             labelKor = "이번주 예상 번호",
+            dateRange = thisWeekRange,
             accentColor = AccentBlue,
             numbers = thisWeekNumbers,
             isIssued = isThisWeekIssued,
@@ -143,6 +149,7 @@ private fun WeekSection(
     modifier: Modifier = Modifier,
     label: String,
     labelKor: String,
+    dateRange: String,
     accentColor: Color,
     numbers: List<String>,
     isIssued: Boolean,
@@ -176,13 +183,24 @@ private fun WeekSection(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
-                    Text(
-                        text = label,
-                        color = accentColor,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = label,
+                            color = accentColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                        if (dateRange.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "($dateRange)",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                     Text(
                         text = labelKor,
                         color = TextPrimary,
@@ -334,6 +352,8 @@ fun ExpectNumberScreenPreview() {
                     "4,8,22,30,37,40"
                 ),
                 isThisWeekIssued = true,
+                lastWeekRange = "02.15 ~ 02.21",
+                thisWeekRange = "02.22 ~ 02.28",
                 onNumberIssueClick = {}
             )
         }
