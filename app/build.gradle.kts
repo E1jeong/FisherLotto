@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
     id("dagger.hilt.android.plugin")
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -83,7 +83,7 @@ dependencies {
     implementation(project(":presentation"))
 
     implementation(libs.google.hilt)
-    kapt(libs.google.hilt.compiler)
+    ksp(libs.google.hilt.compiler)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
@@ -92,8 +92,4 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)
-}
-
-kapt {
-    correctErrorTypes = true
 }

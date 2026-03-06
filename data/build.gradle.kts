@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("dagger.hilt.android.plugin")
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -49,13 +49,13 @@ dependencies {
     implementation(project(":domain"))
 
     implementation(libs.google.hilt)
-    kapt(libs.google.hilt.compiler)
+    ksp(libs.google.hilt.compiler)
     androidTestImplementation(libs.google.hilt.testing)
-    kaptAndroidTest(libs.google.hilt.compiler)
+    kspAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.google.gson)
     testImplementation(libs.androidx.room.testing)
 
@@ -73,8 +73,4 @@ dependencies {
     implementation(libs.datastore)
 
     implementation(libs.jsoup)
-}
-
-kapt {
-    correctErrorTypes = true
 }

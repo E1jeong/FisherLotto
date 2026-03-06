@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     id("dagger.hilt.android.plugin")
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -65,11 +65,11 @@ dependencies {
     implementation(project(":domain"))
 
     implementation(libs.google.hilt)
-    kapt(libs.google.hilt.compiler)
+    ksp(libs.google.hilt.compiler)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)
     androidTestImplementation(libs.google.hilt.testing)
-    kaptAndroidTest(libs.google.hilt.compiler)
+    kspAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.google.gson)
 
@@ -95,8 +95,4 @@ dependencies {
     implementation(libs.beetablescompose)
 
     implementation(libs.lottie.compose)
-}
-
-kapt {
-    correctErrorTypes = true
 }
