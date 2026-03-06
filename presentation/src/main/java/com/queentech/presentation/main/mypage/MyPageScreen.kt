@@ -1,15 +1,8 @@
 package com.queentech.presentation.main.mypage
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,22 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,21 +37,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.util.Consumer
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.login.User
-import com.queentech.domain.model.openbanking.Account
-import com.queentech.domain.model.openbanking.AccountBalance
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
-import com.queentech.presentation.theme.AccentGreen
 import com.queentech.presentation.theme.AccentRed
 import com.queentech.presentation.theme.BgDark
-import com.queentech.presentation.theme.CardBg
 import com.queentech.presentation.theme.DividerColor
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
@@ -79,52 +59,7 @@ fun MyPageScreen(
 ) {
     val state by myPageViewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
-    val activity = context as? ComponentActivity
 
-    InitMyPageScreen(context, onLogoutClick, myPageViewModel)
-
-    LaunchedEffect(activity) {
-        // 앱이 처음 켜졌을 때 담겨온 Intent 확인
-        activity?.intent?.data?.let { uri ->
-            if (uri.scheme == "fisherlotto" && uri.host == "auth") {
-                uri.getQueryParameter("code")?.let { code ->
-                    Log.e("!!@@", "code1: $code")
-                    myPageViewModel.onAuthCodeReceived(code)
-                    // 코드를 중복으로 처리하지 않도록 초기화
-                    activity.intent.data = null
-                }
-            }
-        }
-
-        // 앱이 켜져 있는 상태에서(singleTask) 새로운 Intent가 들어올 때 감지하는 리스너
-        val listener = Consumer<Intent> { newIntent ->
-            newIntent.data?.let { uri ->
-                if (uri.scheme == "fisherlotto" && uri.host == "auth") {
-                    uri.getQueryParameter("code")?.let { code ->
-                        Log.e("!!@@", "code2: $code")
-                        myPageViewModel.onAuthCodeReceived(code)
-                        newIntent.data = null
-                    }
-                }
-            }
-        }
-        activity?.addOnNewIntentListener(listener)
-    }
-
-    MyPageContent(
-        state = state,
-        onLogoutClick = myPageViewModel::onLogoutClick,
-        onConnectBankClick = myPageViewModel::onConnectBankClick,
-        onCheckBalanceClick = myPageViewModel::onCheckBalanceClick,
-    )
-}
-
-@Composable
-private fun InitMyPageScreen(
-    context: Context,
-    onLogoutClick: () -> Unit,
-    myPageViewModel: MyPageViewModel,
-) {
     myPageViewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is MyPageSideEffect.Toast -> {
@@ -132,30 +67,19 @@ private fun InitMyPageScreen(
             }
 
             is MyPageSideEffect.NavigateToLogin -> onLogoutClick()
-
-            is MyPageSideEffect.OpenBankAuth -> {
-                try {
-                    val customTabsIntent = CustomTabsIntent.Builder()
-                        .setShowTitle(true) // 상단 타이틀바 표시
-                        .build()
-
-                    // context와 url(Uri 형태)을 넘겨주면 은행 인증 브라우저가 팝업됩니다.
-                    customTabsIntent.launchUrl(context, Uri.parse(sideEffect.url))
-                } catch (e: Exception) {
-                    // 기기에 크롬이나 커스텀 탭 지원 브라우저가 아예 없는 예외 상황 대비
-                    Toast.makeText(context, "브라우저를 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                }
-            }
         }
     }
+
+    MyPageContent(
+        state = state,
+        onLogoutClick = myPageViewModel::onLogoutClick,
+    )
 }
 
 @Composable
 private fun MyPageContent(
     state: MyPageState,
     onLogoutClick: () -> Unit = {},
-    onConnectBankClick: () -> Unit = {},
-    onCheckBalanceClick: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -168,18 +92,6 @@ private fun MyPageContent(
 
         // ── User Profile Section ──
         UserProfileSection(user = state.user)
-
-        Spacer(Modifier.height(16.dp))
-
-        // ── Banking Section ──
-        BankingSection(
-            isLoading = state.isLoading,
-            isBankConnected = state.isBankConnected,
-            accounts = state.accounts,
-            selectedBalance = state.selectedBalance,
-            onConnectBankClick = onConnectBankClick,
-            onCheckBalanceClick = onCheckBalanceClick,
-        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -226,7 +138,6 @@ private fun UserProfileSection(user: User?) {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 프로필 아이콘
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -308,211 +219,6 @@ private fun UserInfoRow(icon: ImageVector, label: String, value: String) {
     }
 }
 
-// ── Banking Section ──
-
-@Composable
-private fun BankingSection(
-    isLoading: Boolean,
-    isBankConnected: Boolean,
-    accounts: List<Account>,
-    selectedBalance: AccountBalance?,
-    onConnectBankClick: () -> Unit,
-    onCheckBalanceClick: (String) -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SectionBg),
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AccountBalance,
-                    contentDescription = "계좌",
-                    tint = AccentGreen,
-                    modifier = Modifier.size(22.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "오픈뱅킹",
-                    color = TextPrimary,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = AccentBlue, strokeWidth = 2.dp)
-                }
-            } else if (!isBankConnected) {
-                // 아직 은행 연결 안 됨
-                BankNotConnectedContent(onConnectBankClick = onConnectBankClick)
-            } else {
-                // 연결된 계좌 목록
-                if (accounts.isEmpty()) {
-                    Text(
-                        text = "등록된 계좌가 없습니다.",
-                        color = TextSecondary,
-                        fontSize = 14.sp,
-                    )
-                } else {
-                    accounts.forEach { account ->
-                        AccountItem(
-                            account = account,
-                            onCheckBalanceClick = onCheckBalanceClick,
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
-                }
-
-                // 잔액 조회 결과
-                if (selectedBalance != null) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        color = DividerColor,
-                        thickness = 1.dp,
-                    )
-                    BalanceInfoCard(balance = selectedBalance)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BankNotConnectedContent(onConnectBankClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = "계좌를 연결하고\n잔액 조회 · 송금 기능을 이용하세요",
-            color = TextSecondary,
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp,
-        )
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = onConnectBankClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AccentBlue,
-                contentColor = TextPrimary,
-            ),
-            shape = RoundedCornerShape(10.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.AccountBalance,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(text = "계좌 연결하기", fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
-
-@Composable
-private fun AccountItem(
-    account: Account,
-    onCheckBalanceClick: (String) -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = account.bankName,
-                    color = AccentGold,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = account.accountNumMasked,
-                    color = TextPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = account.accountHolderName,
-                    color = TextSecondary,
-                    fontSize = 12.sp,
-                )
-            }
-
-            IconButton(
-                onClick = { onCheckBalanceClick(account.fintechUseNum) }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "잔액 조회",
-                    tint = AccentBlue,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BalanceInfoCard(balance: AccountBalance) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "${balance.bankName} ${balance.accountNumMasked}",
-                color = TextSecondary,
-                fontSize = 12.sp,
-            )
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = "%,d".format(balance.availableAmt),
-                    color = AccentGreen,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = "원",
-                    color = TextSecondary,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 2.dp),
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "출금 가능 잔액",
-                color = TextSecondary,
-                fontSize = 12.sp,
-            )
-        }
-    }
-}
-
 // ── Logout ──
 
 @Composable
@@ -561,39 +267,14 @@ private fun MyPageScreenPreview() {
                 birth = "1990-01-01",
                 phone = "010-1234-5678",
             ),
-            isBankConnected = true,
-            accounts = listOf(
-                Account(
-                    fintechUseNum = "1234567890",
-                    accountAlias = "주거래통장",
-                    bankName = "국민은행",
-                    accountNumMasked = "***-****-1234",
-                    accountHolderName = "홍길동",
-                    transferAgreeYn = "Y",
-                ),
-            ),
-            selectedBalance = AccountBalance(
-                bankName = "국민은행",
-                accountNumMasked = "***-****-1234",
-                balanceAmt = 1500000,
-                availableAmt = 1450000,
-                productName = "KB스타통장",
-            ),
         ),
     )
 }
 
 @Composable
 @Preview
-private fun MyPageNotConnectedPreview() {
+private fun MyPageNotLoggedInPreview() {
     MyPageContent(
-        state = MyPageState(
-            user = User(
-                name = "홍길동",
-                email = "hong@example.com",
-                birth = "1990-01-01",
-                phone = "010-1234-5678",
-            ),
-        ),
+        state = MyPageState(),
     )
 }

@@ -2,8 +2,6 @@ package com.queentech.data.di
 
 import com.queentech.data.model.service.FcmService
 import com.queentech.data.model.service.LottoService
-import com.queentech.data.model.service.OpenBankingService
-import com.queentech.data.model.service.PaymentsService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +36,7 @@ object RetrofitModule {
             .build()
     }
 
-    // --- 로또용 Retrofit ---
+    // --- 메인서버 Retrofit ---
     @Provides
     @Named("lotto")
     fun provideRetrofit(client: OkHttpClient): Retrofit {
@@ -56,7 +54,7 @@ object RetrofitModule {
         return retrofit.create(LottoService::class.java)
     }
 
-    // --- 결제 서버용 Retrofit ---
+    // --- 서브서버 Retrofit ---
     @Provides
     @Named("lotto-sub")
     fun providePaymentsRetrofit(client: OkHttpClient): Retrofit {
@@ -67,17 +65,6 @@ object RetrofitModule {
             .addConverterFactory(gsonConverterFactory)
             .client(client)
             .build()
-    }
-
-    @Provides
-    fun providePaymentsService(@Named("lotto-sub") retrofit: Retrofit): PaymentsService {
-        return retrofit.create(PaymentsService::class.java)
-    }
-
-    // --- 오픈뱅킹 서비스 (lotto-sub 서버 사용) ---
-    @Provides
-    fun provideOpenBankingService(@Named("lotto-sub") retrofit: Retrofit): OpenBankingService {
-        return retrofit.create(OpenBankingService::class.java)
     }
 
     // --- FCM 서비스 (lotto-sub 서버 사용) ---
