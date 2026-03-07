@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -130,6 +131,28 @@ private fun MyPageContent(
 
         // ── Logout Button ──
         LogoutButton(onLogoutClick = onLogoutClick)
+
+        Spacer(Modifier.height(24.dp))
+
+        // ── App Version ──
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            val context = LocalContext.current
+            val versionName = remember {
+                try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                } catch (_: Exception) {
+                    "-"
+                }
+            }
+            Text(
+                text = "v$versionName",
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
+        }
 
         Spacer(Modifier.height(32.dp))
     }
