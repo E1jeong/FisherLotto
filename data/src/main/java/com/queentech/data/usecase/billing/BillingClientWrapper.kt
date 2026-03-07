@@ -18,6 +18,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -35,27 +37,28 @@ class BillingClientWrapper @Inject constructor(
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
 
+    private val connectionMutex = Mutex()
+
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         _purchasesUpdated.tryEmit(billingResult to purchases)
     }
 
-    suspend fun ensureConnected(): Boolean = suspendCancellableCoroutine { cont ->
-        if (billingClient.isReady) {
-            cont.resume(true)
-            return@suspendCancellableCoroutine
-        }
+    suspend fun ensureConnected(): Boolean = connectionMutex.withLock {
+        if (billingClient.isReady) return@withLock true
 
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (cont.isActive) {
-                    cont.resume(billingResult.responseCode == BillingClient.BillingResponseCode.OK)
+        suspendCancellableCoroutine { cont ->
+            billingClient.startConnection(object : BillingClientStateListener {
+                override fun onBillingSetupFinished(billingResult: BillingResult) {
+                    if (cont.isActive) {
+                        cont.resume(billingResult.responseCode == BillingClient.BillingResponseCode.OK)
+                    }
                 }
-            }
 
-            override fun onBillingServiceDisconnected() {
-                Log.w(TAG, "Billing service disconnected")
-            }
-        })
+                override fun onBillingServiceDisconnected() {
+                    Log.w(TAG, "Billing service disconnected")
+                }
+            })
+        }
     }
 
     suspend fun queryProductDetails(productIds: List<String>): List<ProductDetails> {
@@ -74,6 +77,9 @@ class BillingClientWrapper @Inject constructor(
 
         return suspendCancellableCoroutine { cont ->
             billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+                Log.d(TAG, "queryProductDetails responseCode=${billingResult.responseCode}, " +
+                        "debugMessage=${billingResult.debugMessage}, " +
+                        "products=${productDetailsList.map { it.productId }}")
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     cont.resume(productDetailsList)
                 } else {
