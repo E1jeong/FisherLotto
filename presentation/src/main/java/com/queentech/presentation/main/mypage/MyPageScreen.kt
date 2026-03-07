@@ -1,8 +1,10 @@
 package com.queentech.presentation.main.mypage
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,13 +22,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,9 +49,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.queentech.domain.model.billing.SubscriptionProduct
+import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.login.User
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
+import com.queentech.presentation.theme.AccentGreen
 import com.queentech.presentation.theme.AccentRed
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.DividerColor
@@ -67,12 +78,21 @@ fun MyPageScreen(
             }
 
             is MyPageSideEffect.NavigateToLogin -> onLogoutClick()
+
+            is MyPageSideEffect.LaunchBillingFlow -> {
+                val activity = context as? Activity
+                if (activity != null) {
+                    myPageViewModel.launchBillingFlow(activity, sideEffect.productId)
+                }
+            }
         }
     }
 
     MyPageContent(
         state = state,
         onLogoutClick = myPageViewModel::onLogoutClick,
+        onSubscribeClick = myPageViewModel::onSubscribeClick,
+        onRestorePurchasesClick = myPageViewModel::onRestorePurchasesClick,
     )
 }
 
@@ -80,6 +100,8 @@ fun MyPageScreen(
 private fun MyPageContent(
     state: MyPageState,
     onLogoutClick: () -> Unit = {},
+    onSubscribeClick: (String) -> Unit = {},
+    onRestorePurchasesClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -92,6 +114,17 @@ private fun MyPageContent(
 
         // ── User Profile Section ──
         UserProfileSection(user = state.user)
+
+        Spacer(Modifier.height(16.dp))
+
+        // ── Subscription Section ──
+        SubscriptionSection(
+            subscriptionStatus = state.subscriptionStatus,
+            products = state.subscriptionProducts,
+            isBillingLoading = state.isBillingLoading,
+            onSubscribeClick = onSubscribeClick,
+            onRestorePurchasesClick = onRestorePurchasesClick,
+        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -219,6 +252,205 @@ private fun UserInfoRow(icon: ImageVector, label: String, value: String) {
     }
 }
 
+// ── Subscription ──
+
+@Composable
+private fun SubscriptionSection(
+    subscriptionStatus: SubscriptionStatus,
+    products: List<SubscriptionProduct>,
+    isBillingLoading: Boolean,
+    onSubscribeClick: (String) -> Unit,
+    onRestorePurchasesClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SectionBg),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "구독",
+                    tint = AccentGold,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "프리미엄 구독",
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            if (isBillingLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = AccentBlue,
+                        strokeWidth = 2.dp,
+                    )
+                }
+            } else if (subscriptionStatus.isActive) {
+                ActiveSubscriptionContent(subscriptionStatus = subscriptionStatus)
+            } else {
+                InactiveSubscriptionContent(
+                    products = products,
+                    onSubscribeClick = onSubscribeClick,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (!subscriptionStatus.isActive) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TextButton(onClick = onRestorePurchasesClick) {
+                        Text(
+                            text = "구독 복원",
+                            color = TextSecondary,
+                            fontSize = 13.sp,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(AccentGreen.copy(alpha = 0.15f))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = "구독 중",
+            tint = AccentGreen,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Column {
+            Text(
+                text = "구독 중",
+                color = AccentGreen,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            val productName = when (subscriptionStatus.productId) {
+                "fisherlotto_monthly" -> "월간 구독"
+                "fisherlotto_yearly" -> "연간 구독"
+                else -> subscriptionStatus.productId ?: ""
+            }
+            if (productName.isNotEmpty()) {
+                Text(
+                    text = productName,
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                )
+            }
+            if (subscriptionStatus.autoRenewing) {
+                Text(
+                    text = "자동 갱신 활성화",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InactiveSubscriptionContent(
+    products: List<SubscriptionProduct>,
+    onSubscribeClick: (String) -> Unit,
+) {
+    if (products.isEmpty()) {
+        Text(
+            text = "구독 상품을 불러오는 중입니다...",
+            color = TextSecondary,
+            fontSize = 13.sp,
+        )
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            products.forEach { product ->
+                SubscriptionProductCard(
+                    product = product,
+                    onSubscribeClick = { onSubscribeClick(product.productId) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubscriptionProductCard(
+    product: SubscriptionProduct,
+    onSubscribeClick: () -> Unit,
+) {
+    val periodLabel = when (product.billingPeriod) {
+        "P1M" -> "월간"
+        "P1Y" -> "연간"
+        else -> product.billingPeriod
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = BgDark),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "$periodLabel 구독",
+                    color = TextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = product.formattedPrice,
+                    color = AccentGold,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            Button(
+                onClick = onSubscribeClick,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+            ) {
+                Text(
+                    text = "구독하기",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+}
+
 // ── Logout ──
 
 @Composable
@@ -266,6 +498,31 @@ private fun MyPageScreenPreview() {
                 email = "hong@example.com",
                 birth = "1990-01-01",
                 phone = "010-1234-5678",
+            ),
+            subscriptionProducts = listOf(
+                SubscriptionProduct("fisherlotto_monthly", "월간 구독", "매월 자동 결제", "₩4,900", "P1M"),
+                SubscriptionProduct("fisherlotto_yearly", "연간 구독", "매년 자동 결제", "₩49,000", "P1Y"),
+            ),
+        ),
+    )
+}
+
+@Composable
+@Preview
+private fun MyPageSubscribedPreview() {
+    MyPageContent(
+        state = MyPageState(
+            user = User(
+                name = "홍길동",
+                email = "hong@example.com",
+                birth = "1990-01-01",
+                phone = "010-1234-5678",
+            ),
+            subscriptionStatus = SubscriptionStatus(
+                isActive = true,
+                productId = "fisherlotto_monthly",
+                expiryTimeMillis = null,
+                autoRenewing = true,
             ),
         ),
     )

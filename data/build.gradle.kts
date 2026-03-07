@@ -73,4 +73,6 @@ dependencies {
     implementation(libs.datastore)
 
     implementation(libs.jsoup)
+
+    implementation(libs.google.billing)
 }
