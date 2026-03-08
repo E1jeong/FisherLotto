@@ -43,7 +43,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("config")
+//            signingConfig = signingConfigs.getByName("config") // github actions 자동 배포를 위해 주석처리
         }
     }
     compileOptions {
