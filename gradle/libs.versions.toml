@@ -28,7 +28,6 @@ mlkit = "17.3.0"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 jsoup = "1.15.3"
-beetablescompose = "1.2.0"
 okhttp = "4.12.0"
 turbine = "1.1.0"
 mockk = "1.13.12"
@@ -109,7 +108,6 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
-beetablescompose = { group = "com.github.Breens-Mbaka", name = "BeeTablesCompose", version.ref = "beetablescompose" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk"}
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine"}
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi"}

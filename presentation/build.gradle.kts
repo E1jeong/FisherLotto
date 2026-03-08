@@ -92,7 +92,5 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
 
-    implementation(libs.beetablescompose)
-
     implementation(libs.lottie.compose)
 }
