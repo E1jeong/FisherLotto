@@ -71,7 +71,7 @@ fun NavigationHost() {
                         }
                         composable(route = MainNav.MyPage.route) {
                             MyPageScreen(
-                                onLogoutClick = {
+                                onNavigateToLogin = {
                                     NavigationHelper.navigateToLoginAfterLogout(
                                         navController,
                                         RouteName.LOGIN

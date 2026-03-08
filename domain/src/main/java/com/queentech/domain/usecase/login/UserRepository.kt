@@ -9,4 +9,5 @@ interface UserRepository {
     suspend fun login(name: String, birth: String, phone: String, email: String): Result<User>
     suspend fun loadCachedUser()
     suspend fun logout()
+    suspend fun deleteAccount(): Result<Unit>
 }

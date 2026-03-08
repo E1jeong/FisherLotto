@@ -101,10 +101,15 @@ class MyPageViewModel @Inject constructor(
         reduce { state.copy(isBillingLoading = false) }
     }
 
-    fun onLogoutClick() = intent {
-        userRepository.logout()
-        reduce { state.copy(user = null) }
-        postSideEffect(MyPageSideEffect.NavigateToLogin)
+    fun onDeleteAccountClick() = intent {
+        userRepository.deleteAccount()
+            .onSuccess {
+                reduce { state.copy(user = null) }
+                postSideEffect(MyPageSideEffect.NavigateToLogin)
+            }
+            .onFailure { e ->
+                postSideEffect(MyPageSideEffect.Toast(e.message ?: "회원탈퇴 중 오류가 발생했습니다."))
+            }
     }
 }
 

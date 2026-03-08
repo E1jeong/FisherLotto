@@ -66,7 +66,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
 fun MyPageScreen(
-    onLogoutClick: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     myPageViewModel: MyPageViewModel = hiltViewModel(),
 ) {
     val state by myPageViewModel.container.stateFlow.collectAsState()
@@ -78,7 +78,7 @@ fun MyPageScreen(
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
 
-            is MyPageSideEffect.NavigateToLogin -> onLogoutClick()
+            is MyPageSideEffect.NavigateToLogin -> onNavigateToLogin()
 
             is MyPageSideEffect.LaunchBillingFlow -> {
                 val activity = context as? Activity
@@ -91,7 +91,7 @@ fun MyPageScreen(
 
     MyPageContent(
         state = state,
-        onLogoutClick = myPageViewModel::onLogoutClick,
+        onDeleteAccountClick = myPageViewModel::onDeleteAccountClick,
         onSubscribeClick = myPageViewModel::onSubscribeClick,
         onRestorePurchasesClick = myPageViewModel::onRestorePurchasesClick,
     )
@@ -100,7 +100,7 @@ fun MyPageScreen(
 @Composable
 private fun MyPageContent(
     state: MyPageState,
-    onLogoutClick: () -> Unit = {},
+    onDeleteAccountClick: () -> Unit = {},
     onSubscribeClick: (String) -> Unit = {},
     onRestorePurchasesClick: () -> Unit = {},
 ) {
@@ -129,8 +129,8 @@ private fun MyPageContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // ── Logout Button ──
-        LogoutButton(onLogoutClick = onLogoutClick)
+        // ── Delete Account Button ──
+        DeleteAccountButton(onDeleteAccountClick = onDeleteAccountClick)
 
         Spacer(Modifier.height(24.dp))
 
@@ -474,15 +474,15 @@ private fun SubscriptionProductCard(
     }
 }
 
-// ── Logout ──
+// ── Delete Account ──
 
 @Composable
-private fun LogoutButton(onLogoutClick: () -> Unit) {
+private fun DeleteAccountButton(onDeleteAccountClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable { onLogoutClick() },
+            .clickable { onDeleteAccountClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SectionBg),
     ) {
@@ -494,13 +494,13 @@ private fun LogoutButton(onLogoutClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                contentDescription = "로그아웃",
+                contentDescription = "회원탈퇴",
                 tint = AccentRed,
                 modifier = Modifier.size(20.dp),
             )
             Spacer(Modifier.width(12.dp))
             Text(
-                text = "로그아웃",
+                text = "회원탈퇴",
                 color = AccentRed,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,

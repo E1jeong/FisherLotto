@@ -7,6 +7,7 @@ import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.service.LottoService
 import com.queentech.domain.model.login.SignUpResultStatus
 import com.queentech.domain.model.login.User
+import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val lottoService: LottoService,
     private val localDataSource: UserLocalDataSource,
-    private val lottoIssueDao: LottoIssueDao
+    private val lottoIssueDao: LottoIssueDao,
+    private val fcmRepository: FcmRepository,
 ) : UserRepository {
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -97,5 +99,18 @@ class UserRepositoryImpl @Inject constructor(
         _currentUser.value = null
         localDataSource.clear()
         lottoIssueDao.deleteAll()
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> {
+        val email = _currentUser.value?.email
+            ?: return Result.failure(Exception("로그인된 사용자가 없습니다."))
+
+        return try {
+            fcmRepository.deleteUser(email).getOrThrow()
+            logout()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

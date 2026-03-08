@@ -9,4 +9,7 @@ interface FcmRepository {
 
     // Next.js 서브 서버로 토큰 전송
     suspend fun sendTokenToServer(email: String, fcmToken: String): Result<Unit>
+
+    // 서브 서버에서 유저 데이터 삭제
+    suspend fun deleteUser(email: String): Result<Unit>
 }
