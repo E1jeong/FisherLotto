@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,8 +42,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.presentation.theme.AccentBlue
+import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.CardBg
 import com.queentech.presentation.theme.DividerColor
@@ -68,9 +71,12 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         lastWeekNumbers = state.lastWeekNumbers,
         thisWeekNumbers = state.thisWeekNumbers,
         isThisWeekIssued = state.isThisWeekIssued,
+        isDeadlineClosed = state.isDeadlineClosed,
+        showDeadlineDialog = state.showDeadlineDialog,
         lastWeekRange = state.lastWeekRange,
         thisWeekRange = state.thisWeekRange,
-        onNumberIssueClick = viewModel::onExpectNumberClick
+        onNumberIssueClick = viewModel::onExpectNumberClick,
+        onDismissDeadlineDialog = viewModel::dismissDeadlineDialog
     )
 }
 
@@ -93,10 +99,17 @@ private fun ExpectNumberContent(
     lastWeekNumbers: List<String>,
     thisWeekNumbers: List<String>,
     isThisWeekIssued: Boolean,
+    isDeadlineClosed: Boolean = false,
+    showDeadlineDialog: Boolean = false,
     lastWeekRange: String,
     thisWeekRange: String,
     onNumberIssueClick: () -> Unit,
+    onDismissDeadlineDialog: () -> Unit = {},
 ) {
+    if (showDeadlineDialog) {
+        DeadlineClosedDialog(onDismiss = onDismissDeadlineDialog)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -139,6 +152,7 @@ private fun ExpectNumberContent(
             emptyMessage = "발급하기를 눌러보세요",
             emptyEmoji = "🎣",
             showIssueButton = true,
+            isButtonDisabled = isDeadlineClosed,
             onIssueClick = onNumberIssueClick
         )
     }
@@ -156,6 +170,7 @@ private fun WeekSection(
     emptyMessage: String,
     emptyEmoji: String,
     showIssueButton: Boolean = false,
+    isButtonDisabled: Boolean = false,
     onIssueClick: () -> Unit = {},
 ) {
     Column(
@@ -214,14 +229,16 @@ private fun WeekSection(
             if (showIssueButton) {
                 Button(
                     onClick = onIssueClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isButtonDisabled) Color.Gray else AccentBlue
+                    ),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
-                    elevation = ButtonDefaults.buttonElevation(4.dp)
+                    elevation = ButtonDefaults.buttonElevation(if (isButtonDisabled) 0.dp else 4.dp)
                 ) {
                     Text(
-                        text = "발급하기",
-                        color = Color.White,
+                        text = if (isButtonDisabled) "마감" else "발급하기",
+                        color = if (isButtonDisabled) Color.LightGray else Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -357,5 +374,103 @@ fun ExpectNumberScreenPreview() {
                 onNumberIssueClick = {}
             )
         }
+    }
+}
+
+@Composable
+private fun DeadlineClosedDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        DeadlineClosedDialogContent(onDismiss = onDismiss)
+    }
+}
+
+@Composable
+private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(BgDark)
+            .padding(20.dp)
+    ) {
+        // ── 헤더 ──
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(AccentGold)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = "NOTICE",
+                    color = AccentGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                )
+                Text(
+                    text = "발급 마감 안내",
+                    color = TextPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ── 본문 ──
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(SectionBg)
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "이번회차는 마감됐습니다.",
+                color = TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "토요일 20:30 이후에는 발급이 불가합니다.",
+                color = TextSecondary,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ── 닫기 버튼 ──
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text(
+                text = "확인",
+                color = AccentBlue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+@Preview
+fun DeadlineDialogPreview() {
+    FisherLottoTheme {
+        DeadlineClosedDialogContent()
     }
 }

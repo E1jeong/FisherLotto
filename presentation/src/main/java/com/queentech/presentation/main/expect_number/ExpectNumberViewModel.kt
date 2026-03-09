@@ -37,6 +37,7 @@ class ExpectNumberViewModel @Inject constructor(
         onCreate = {
             loadCachedUser()
             loadSavedNumbers()
+            checkDeadline()
         },
     )
 
@@ -81,7 +82,17 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
+    private fun checkDeadline() = intent {
+        reduce { state.copy(isDeadlineClosed = DateUtils.isSaturdayDeadline()) }
+    }
+
     fun onExpectNumberClick() = intent {
+        // 토요일 마감 시간대 체크
+        if (DateUtils.isSaturdayDeadline()) {
+            reduce { state.copy(isDeadlineClosed = true, showDeadlineDialog = true) }
+            return@intent
+        }
+
         val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
 
         // 이미 이번주에 발급했으면 토스트 + 리턴
@@ -115,6 +126,10 @@ class ExpectNumberViewModel @Inject constructor(
             }
         }
     }
+
+    fun dismissDeadlineDialog() = intent {
+        reduce { state.copy(showDeadlineDialog = false) }
+    }
 }
 
 @Immutable
@@ -122,13 +137,15 @@ data class ExpectNumberState(
     val count: Int = 0,
     val lastWeekNumbers: List<String> = emptyList(),  // 저번주 번호 (10개)
     val thisWeekNumbers: List<String> = emptyList(),  // 이번주 번호 (10개)
-    val isThisWeekIssued: Boolean = false,            // 이번주 발급 여부
-    val thisWeekRange: String = "",                  // 이번주 범위 (02.22 ~ 02.28)
-    val lastWeekRange: String = "",                  // 저번주 범위 (02.15 ~ 02.21)
+    val isThisWeekIssued: Boolean = false,             // 이번주 발급 여부
+    val thisWeekRange: String = "",                    // 이번주 범위 (02.22 ~ 02.28)
+    val lastWeekRange: String = "",                    // 저번주 범위 (02.15 ~ 02.21)
     val userEmail: String = "",
     val userName: String = "",
     val userBirth: String = "",
     val userPhone: String = "",
+    val isDeadlineClosed: Boolean = false,
+    val showDeadlineDialog: Boolean = false,
 )
 
 sealed interface ExpectNumberSideEffect {

@@ -77,4 +77,15 @@ object DateUtils {
 
         return "$startStr ~ $endStr"
     }
+
+    /**
+     * 토요일 20:30 ~ 23:59 (KST) 인지 확인
+     */
+    fun isSaturdayDeadline(): Boolean {
+        val cal = getKoreaCalendar()
+        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) return false
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+        return (hour > 20 || (hour == 20 && minute >= 30))
+    }
 }
