@@ -96,7 +96,7 @@ class BillingRepositoryImpl @Inject constructor(
         refreshSubscriptionStatus()
     }
 
-    private suspend fun refreshSubscriptionStatus() {
+    override suspend fun refreshSubscriptionStatus() {
         val purchases = billingClientWrapper.queryPurchases()
         val activePurchase = purchases.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
 
