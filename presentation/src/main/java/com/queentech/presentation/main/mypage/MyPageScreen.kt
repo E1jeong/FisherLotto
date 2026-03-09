@@ -353,25 +353,28 @@ private fun SubscriptionSection(
 
 @Composable
 private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
+    val isCanceled = !subscriptionStatus.autoRenewing
+    val statusColor = if (isCanceled) AccentGold else AccentGreen
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(AccentGreen.copy(alpha = 0.15f))
+            .background(statusColor.copy(alpha = 0.15f))
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
-            contentDescription = "구독 중",
-            tint = AccentGreen,
+            contentDescription = if (isCanceled) "구독 취소됨" else "구독 중",
+            tint = statusColor,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(10.dp))
         Column {
             Text(
-                text = "구독 중",
-                color = AccentGreen,
+                text = if (isCanceled) "구독 취소됨" else "구독 중",
+                color = statusColor,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -387,13 +390,11 @@ private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
                     fontSize = 12.sp,
                 )
             }
-            if (subscriptionStatus.autoRenewing) {
-                Text(
-                    text = "자동 갱신 활성화",
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                )
-            }
+            Text(
+                text = if (isCanceled) "만료일까지 이용 가능" else "자동 갱신 활성화",
+                color = TextSecondary,
+                fontSize = 11.sp,
+            )
         }
     }
 }
