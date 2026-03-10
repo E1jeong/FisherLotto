@@ -1,11 +1,11 @@
-# 🎱 Fisher Lotto
+# Fisher Lotto
 
-로또 당첨 결과 조회, QR 코드 당첨 확인, 뉴스 및 통계를 제공하는 Android 앱
+로또 당첨 결과 조회, QR 코드 당첨 확인, 예상 번호 발급, 뉴스 및 통계를 제공하는 Android 앱
 
 ## 프로젝트 소개
 
 Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
-최신 당첨 번호 확인부터 QR 코드 스캔을 통한 즉시 당첨 확인, 로또 관련 뉴스, 통계 분석, 소셜 로그인, 오픈뱅킹 연동까지 다양한 기능을 한 곳에서 이용할 수 있습니다.
+최신 당첨 번호 확인부터 QR 코드 스캔을 통한 즉시 당첨 확인, AI 예상 번호 발급, 로또 관련 뉴스, 통계 분석, 구독 서비스까지 다양한 기능을 한 곳에서 이용할 수 있습니다.
 
 ## 주요 기능
 
@@ -14,11 +14,12 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 | **홈 (당첨 정보)** | 최신 회차 당첨 번호 및 등수별 당첨금 조회 + 로또 뉴스 | ✅ |
 | **QR 당첨 확인** | 로또 용지의 QR 코드를 카메라로 스캔하여 당첨 여부 즉시 확인 | ✅ |
 | **로또 뉴스** | Google News RSS 기반 로또 관련 최신 뉴스 제공 (30분 캐싱) | ✅ |
+| **예상 번호** | 리워드 광고 시청 후 주간 예상 번호 발급 (주 1회, 토요일 마감) | ✅ |
 | **당첨 통계** | 회차별 등수 당첨자 수 통계 테이블 | ✅ |
 | **로그인 / 회원가입** | 이메일 + 소셜 로그인 (Kakao, Google) | ✅ |
-| **마이페이지** | 사용자 정보 관리 + 오픈뱅킹 연동 | ✅ |
-| **오픈뱅킹** | OAuth 인증, 계좌 조회, 잔액 확인, 출금이체(송금) | ✅ |
-| **예상 번호** | 번호 생성 기능 | 🚧 |
+| **마이페이지** | 사용자 정보 관리 + 구독 관리 + 회원탈퇴 | ✅ |
+| **구독 서비스** | Google Play Billing 기반 구독 상품 결제 및 상태 관리 | ✅ |
+| **푸시 알림** | Firebase Cloud Messaging 기반 알림 수신 | ✅ |
 
 ## 기술 스택
 
@@ -39,20 +40,23 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 - **Retrofit + OkHttp** — REST API 통신 (타임아웃 30초, 로깅 인터셉터)
 - **@Named 다중 Retrofit** — lotto 서버 / lotto-sub 서버 분리 관리
 - **Kotlinx Serialization / Gson** — JSON 직렬화
-- **Room** — 로컬 데이터베이스
-- **DataStore** — 설정 및 캐시 저장
+- **Room** — 로컬 데이터베이스 (예상 번호 발급 이력 관리)
+- **DataStore** — 사용자 정보 캐시 저장
 - **Jsoup** — Google News RSS 파싱
 
 ### Camera & ML
 - **CameraX** — 실시간 카메라 프리뷰
 - **ML Kit Barcode Scanning** — QR 코드 인식 및 로또 당첨 결과 파싱
 
+### Billing & Ads
+- **Google Play Billing** (v7.1.1) — 구독 상품 결제, 상태 관리, 구매 복원
+- **Google AdMob** (v23.0.0) — 리워드 광고 (예상 번호 발급 시)
+
 ### Backend & Auth
 - **Firebase** Auth / Realtime Database / Cloud Messaging / Analytics
 - **Kakao SDK** — 카카오 소셜 로그인
 - **Google Play Services Auth** — 구글 소셜 로그인
-- **오픈뱅킹 API** — 계좌 조회, 잔액 확인, 출금이체
-- **Sub Backend (Vercel)** — 결제 및 오픈뱅킹 프록시 서버
+- **Sub Backend (Vercel)** — FCM 푸시 프록시 서버
 
 ### Testing
 - **JUnit** + **MockK** — 단위 테스트
@@ -64,7 +68,7 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 
 ```
 FisherLotto/
-├── app/                # Application 클래스, Hilt 설정, Firebase/Kakao 초기화
+├── app/                # Application 클래스, Hilt 설정, Firebase/Kakao/AdMob 초기화
 ├── domain/             # UseCase 인터페이스, Model 정의 (순수 Kotlin)
 ├── data/               # UseCase 구현, API Service, Repository, DI 모듈
 ├── presentation/       # Compose UI, ViewModel, Navigation, Theme
@@ -84,7 +88,7 @@ data → domain
 ## 아키텍처 설계 포인트
 
 - **DIP (의존성 역전 원칙)** — UseCase 인터페이스를 `domain`에 정의, 구현체는 `data`에 위치
-- **Hilt @Binds** — UseCase 인터페이스와 구현체를 연결 (`LottoModule`)
+- **Hilt @Binds** — UseCase 인터페이스와 구현체를 연결 (`LottoModule`, `NewsModule`, `BillingModule`)
 - **@Named Retrofit** — 다중 서버(`lotto` / `lotto-sub`) 인스턴스를 분리 관리
 - **Orbit MVI** — ViewModel의 상태 관리를 단방향으로 통일하여 예측 가능한 UI 상태 유지
 - **Version Catalog** — `libs.versions.toml`로 라이브러리 버전 중앙 관리
@@ -93,9 +97,7 @@ data → domain
 
 | 홈 | QR 당첨 확인 | 예상 번호 | 통계 | 내 정보 |
 |:---:|:---:|:---:|:---:|:---:|
-| 당첨 번호 + 뉴스 | 카메라 스캔 | 번호 생성 | 회차별 통계 | 사용자 + 오픈뱅킹 |
-
-> 📸 스크린샷 추가 예정
+| 당첨 번호 + 뉴스 | 카메라 스캔 | 리워드 광고 + 번호 발급 | 회차별 통계 | 사용자 + 구독 관리 |
 
 ## 실행 환경
 
@@ -109,4 +111,4 @@ data → domain
 
 개발 과정에서의 기술적 경험과 문제 해결 기록을 블로그에 정리하고 있습니다.
 
-👉 [Still Coding — 기술 블로그](https://still-coding.tistory.com)
+[Still Coding — 기술 블로그](https://still-coding.tistory.com)
