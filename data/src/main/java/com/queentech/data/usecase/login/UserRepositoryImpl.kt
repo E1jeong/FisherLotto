@@ -107,10 +107,12 @@ class UserRepositoryImpl @Inject constructor(
 
         return try {
             fcmRepository.deleteUser(email).getOrThrow()
-            logout()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            // FCM 삭제 성공/실패와 무관하게 로컬 데이터는 항상 정리
+            logout()
         }
     }
 }
