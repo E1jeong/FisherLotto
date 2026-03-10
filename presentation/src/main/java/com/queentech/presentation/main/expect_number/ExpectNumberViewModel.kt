@@ -87,15 +87,24 @@ class ExpectNumberViewModel @Inject constructor(
     }
 
     fun onExpectNumberClick() = intent {
-        // 토요일 마감 시간대 체크
         if (DateUtils.isSaturdayDeadline()) {
             reduce { state.copy(isDeadlineClosed = true, showDeadlineDialog = true) }
             return@intent
         }
 
         val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+        if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
+            postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
+            return@intent
+        }
 
-        // 이미 이번주에 발급했으면 토스트 + 리턴
+        postSideEffect(ExpectNumberSideEffect.ShowRewardAd)
+    }
+
+    fun onAdWatchedSuccessfully() = intent {
+        val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+
+        // 이중 발급 방어: 광고 콜백 중복 호출 등 예외 상황 대비
         if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
             postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
             return@intent
@@ -106,13 +115,11 @@ class ExpectNumberViewModel @Inject constructor(
         )
 
         if (result.count != 0) {
-            // Room에 저장
             lottoIssueRepository.saveIssue(
                 numbers = result.lotto,
                 weekStartMillis = thisWeekStart
             )
 
-            // UI 갱신
             val lastWeekStart = DateUtils.getLastWeekStartMillis()
             val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
 
@@ -124,6 +131,8 @@ class ExpectNumberViewModel @Inject constructor(
                     isThisWeekIssued = true
                 )
             }
+        } else {
+            postSideEffect(ExpectNumberSideEffect.Toast("번호 발급에 실패했습니다."))
         }
     }
 
@@ -150,4 +159,5 @@ data class ExpectNumberState(
 
 sealed interface ExpectNumberSideEffect {
     data class Toast(val message: String) : ExpectNumberSideEffect
+    object ShowRewardAd : ExpectNumberSideEffect
 }

@@ -3,6 +3,7 @@ package com.queentech.fisherlotto
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import com.google.android.gms.ads.MobileAds
 import com.kakao.sdk.common.KakaoSdk
 import dagger.hilt.android.HiltAndroidApp
 
@@ -18,6 +19,7 @@ class App : Application() {
 
         KakaoSdk.init(this, "e5fa846df764dbac35336e403aca8222")
         createNotificationChannel()
+        MobileAds.initialize(this)
     }
 
     private fun createNotificationChannel() {

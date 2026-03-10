@@ -92,4 +92,6 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)
+
+    implementation(libs.google.ads)
 }

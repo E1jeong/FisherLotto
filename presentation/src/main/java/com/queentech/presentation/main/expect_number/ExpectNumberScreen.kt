@@ -1,5 +1,6 @@
 package com.queentech.presentation.main.expect_number
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -28,8 +29,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.BgDark
@@ -61,10 +70,36 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+    val activity = context as? Activity
+
+    // 보상형 광고 객체를 담을 상태
+    val rewardedAdState = remember { mutableStateOf<RewardedAd?>(null) }
+    val isAdLoading = remember { mutableStateOf(false) }
+
+    // 화면 진입 시 광고 최초 1회 로드
+    LaunchedEffect(Unit) {
+        isAdLoading.value = true
+        loadRewardedAd(context) { ad ->
+            rewardedAdState.value = ad
+            isAdLoading.value = false
+        }
+    }
 
     InitExpectNumberScreen(
         context = context,
-        viewModel = viewModel
+        activity = activity,
+        viewModel = viewModel,
+        rewardedAd = rewardedAdState.value,
+        onAdConsumed = {
+            rewardedAdState.value = null
+            if (!isAdLoading.value) {
+                isAdLoading.value = true
+                loadRewardedAd(context) { ad ->
+                    rewardedAdState.value = ad
+                    isAdLoading.value = false
+                }
+            }
+        }
     )
 
     ExpectNumberContent(
@@ -83,15 +118,58 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
 @Composable
 private fun InitExpectNumberScreen(
     context: Context,
-    viewModel: ExpectNumberViewModel
+    activity: Activity?,
+    viewModel: ExpectNumberViewModel,
+    rewardedAd: RewardedAd?,
+    onAdConsumed: () -> Unit
 ) {
+    // collectSideEffect 람다 내에서 최신 상태를 읽기 위한 장치입니다.
+    val currentRewardedAd by rememberUpdatedState(rewardedAd)
+    val currentActivity by rememberUpdatedState(activity)
+    val currentOnAdConsumed by rememberUpdatedState(onAdConsumed)
+
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is ExpectNumberSideEffect.Toast -> {
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
+            is ExpectNumberSideEffect.ShowRewardAd -> {
+                // 광고가 준비되었는지 확인 후 띄우기
+                if (currentRewardedAd != null && currentActivity != null) {
+                    currentRewardedAd?.show(currentActivity!!) { _ ->
+                        // 유저가 광고 시청을 완료하여 보상(Reward)을 획득했을 때 호출됨
+                        viewModel.onAdWatchedSuccessfully()
+                    }
+                    currentOnAdConsumed()
+                } else {
+                    // 인터넷 문제 등으로 아직 광고가 로드되지 않은 경우
+                    Toast.makeText(context, "광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    currentOnAdConsumed() // 재시도를 위해 상태 초기화 및 로드 함수 호출
+                }
+            }
         }
     }
+}
+
+private fun loadRewardedAd(
+    context: Context,
+    onAdLoaded: (RewardedAd?) -> Unit
+) {
+    val adRequest = AdRequest.Builder().build()
+    // 보상형 광고 테스트 ID입니다.
+    RewardedAd.load(
+        context,
+        "ca-app-pub-3940256099942544/5224354917",
+        adRequest,
+        object : RewardedAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                onAdLoaded(null)
+            }
+            override fun onAdLoaded(ad: RewardedAd) {
+                onAdLoaded(ad)
+            }
+        }
+    )
 }
 
 @Composable
