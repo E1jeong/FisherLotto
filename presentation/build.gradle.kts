@@ -72,6 +72,8 @@ dependencies {
     kspAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.google.gson)
+    implementation(libs.google.ads)
+    implementation(libs.google.guava)
 
     implementation(libs.coil.compose)
 
