@@ -3,6 +3,7 @@ package com.queentech.presentation.main.information
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.lotto.GetLottoNumber
 import com.queentech.domain.model.news.NewsArticle
@@ -40,6 +41,7 @@ class InformationViewModel @Inject constructor(
         },
         onCreate = {
             loadLottoNumber()
+            loadNews(force = false)
         }
     )
 
@@ -59,9 +61,7 @@ class InformationViewModel @Inject constructor(
         if (canUseCache) {
             val cachedTitles = prefs.getStringSet(KEY_NEWS_CACHE_TITLES, emptySet()).orEmpty()
             val cachedLinks = prefs.getStringSet(KEY_NEWS_CACHE_LINKS, emptySet()).orEmpty()
-            // 캐시를 아주 단순하게(제목/링크)만 저장한 버전. (원하면 JSON으로 고도화 가능)
             if (cachedTitles.isNotEmpty() && cachedLinks.isNotEmpty()) {
-                // 제목/링크 개수 mismatch 방지
                 val pairs = cachedTitles.zip(cachedLinks)
                 val cached = pairs.map { (t, l) ->
                     NewsArticle(
@@ -79,19 +79,24 @@ class InformationViewModel @Inject constructor(
 
         reduce { state.copy(isNewsLoading = true) }
 
-        val news = getLotteryNewsUseCase(maxResults = 20).getOrThrow()
-
-        // 캐시(간단 버전)
-        prefs.edit().apply {
-            putLong(KEY_NEWS_FETCH_AT, now)
-            putStringSet(KEY_NEWS_CACHE_TITLES, news.map { it.title }.toSet())
-            putStringSet(KEY_NEWS_CACHE_LINKS, news.map { it.link }.toSet())
-        }.apply()
-
-        reduce { state.copy(news = news, isNewsLoading = false) }
+        getLotteryNewsUseCase(maxResults = 20)
+            .onSuccess { news ->
+                prefs.edit {
+                    putLong(KEY_NEWS_FETCH_AT, now)
+                    putStringSet(KEY_NEWS_CACHE_TITLES, news.map { it.title }.toSet())
+                    putStringSet(KEY_NEWS_CACHE_LINKS, news.map { it.link }.toSet())
+                }
+                reduce { state.copy(news = news, isNewsLoading = false) }
+            }
+            .onFailure { e ->
+                Log.e(TAG, "뉴스 로딩 실패", e)
+                reduce { state.copy(isNewsLoading = false) }
+                postSideEffect(InformationSideEffect.Toast("뉴스를 불러오지 못했습니다."))
+            }
     }
 
     companion object {
+        private const val TAG = "InformationViewModel"
         private const val KEY_NEWS_FETCH_AT = "news_fetch_at"
         private const val KEY_NEWS_CACHE_TITLES = "news_cache_titles"
         private const val KEY_NEWS_CACHE_LINKS = "news_cache_links"
