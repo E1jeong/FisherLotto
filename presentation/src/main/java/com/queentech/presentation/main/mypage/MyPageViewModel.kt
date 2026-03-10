@@ -102,12 +102,22 @@ class MyPageViewModel @Inject constructor(
     }
 
     fun onDeleteAccountClick() = intent {
+        reduce { state.copy(showDeleteAccountDialog = true) }
+    }
+
+    fun dismissDeleteAccountDialog() = intent {
+        reduce { state.copy(showDeleteAccountDialog = false) }
+    }
+
+    fun onDeleteAccountConfirm() = intent {
+        reduce { state.copy(isDeleting = true) }
         userRepository.deleteAccount()
             .onSuccess {
-                reduce { state.copy(user = null) }
+                reduce { state.copy(user = null, isDeleting = false, showDeleteAccountDialog = false) }
                 postSideEffect(MyPageSideEffect.NavigateToLogin)
             }
             .onFailure { e ->
+                reduce { state.copy(isDeleting = false, showDeleteAccountDialog = false) }
                 postSideEffect(MyPageSideEffect.Toast(e.message ?: "회원탈퇴 중 오류가 발생했습니다."))
             }
     }
@@ -122,6 +132,8 @@ data class MyPageState(
     ),
     val subscriptionProducts: List<SubscriptionProduct> = emptyList(),
     val isBillingLoading: Boolean = false,
+    val showDeleteAccountDialog: Boolean = false,
+    val isDeleting: Boolean = false,
 )
 
 sealed interface MyPageSideEffect {

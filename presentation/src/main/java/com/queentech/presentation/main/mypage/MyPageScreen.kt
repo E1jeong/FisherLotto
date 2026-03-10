@@ -62,6 +62,7 @@ import com.queentech.presentation.theme.DividerColor
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
+import com.queentech.presentation.component.dialog.ConfirmDialog
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
@@ -94,6 +95,16 @@ fun MyPageScreen(
         onDeleteAccountClick = myPageViewModel::onDeleteAccountClick,
         onSubscribeClick = myPageViewModel::onSubscribeClick,
         onRestorePurchasesClick = myPageViewModel::onRestorePurchasesClick,
+    )
+
+    ConfirmDialog(
+        visible = state.showDeleteAccountDialog,
+        headerLabel = "WARNING",
+        title = "회원탈퇴",
+        message = "정말 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.",
+        isLoading = state.isDeleting,
+        onConfirm = myPageViewModel::onDeleteAccountConfirm,
+        onDismiss = myPageViewModel::dismissDeleteAccountDialog,
     )
 }
 
