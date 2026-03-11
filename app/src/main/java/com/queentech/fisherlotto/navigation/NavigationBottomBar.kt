@@ -25,7 +25,7 @@ fun NavigationBottomBar(
     val mainBottomNavigationItems = listOf(
         MainNav.Camera,
         MainNav.ExpectNumber,
-        MainNav.Information,
+        MainNav.Home,
         MainNav.Statistic,
         MainNav.MyPage,
     )

@@ -1,4 +1,4 @@
-package com.queentech.presentation.main.information
+package com.queentech.presentation.main.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.news.NewsArticle
-import com.queentech.presentation.main.information.component.LatestDrawInfo
+import com.queentech.presentation.main.home.component.LatestDrawInfo
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.DividerColor
@@ -52,8 +52,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun InformationScreen(
-    viewModel: InformationViewModel = hiltViewModel()
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
 
@@ -67,7 +67,7 @@ fun InformationScreen(
         state.getLottoNumberResponse.bonusInt
     )
 
-    InformationContent(
+    HomeContent(
         latestDrawNumber = state.getLottoNumberResponse.roundInt,
         latestDrawDate = state.getLottoNumberResponse.pdate,
         winningNumbers = winningNumbers,
@@ -80,7 +80,7 @@ fun InformationScreen(
 }
 
 @Composable
-private fun InformationContent(
+private fun HomeContent(
     latestDrawNumber: Int,
     latestDrawDate: String,
     winningNumbers: List<Int>,
@@ -254,10 +254,10 @@ private fun Long.toDisplayDate(): String {
 
 @Composable
 @Preview
-fun InformationScreenPreview() {
+fun HomeScreenPreview() {
     FisherLottoTheme {
         Surface {
-            InformationContent(
+            HomeContent(
                 latestDrawNumber = 1,
                 latestDrawDate = "2023-08-01",
                 winningNumbers = listOf(1, 2, 3, 4, 5, 6, 7),

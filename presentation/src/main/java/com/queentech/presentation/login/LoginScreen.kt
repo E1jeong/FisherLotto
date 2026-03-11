@@ -80,7 +80,7 @@ private fun InitLoginScreen(
 
             is LoginSideEffect.NavigateToSignUp -> moveToSignUp()
 
-            is LoginSideEffect.NavigateToInformation -> moveToHome()
+            is LoginSideEffect.NavigateToHome -> moveToHome()
         }
     }
 }
@@ -104,7 +104,7 @@ private fun LoginContent(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             LoginBottomBar(
-                fullWidth = fullWidth,
+                modifier = fullWidth,
                 email = email,
                 isVisibleSignUp = isVisibleSignUp,
                 onLoginClick = onLoginClick,
@@ -158,7 +158,7 @@ private fun LoginContent(
 
 @Composable
 private fun LoginBottomBar(
-    fullWidth: Modifier,
+    modifier: Modifier,
     isVisibleSignUp: Boolean,
     email: String,
     onLoginClick: () -> Unit,
@@ -171,7 +171,7 @@ private fun LoginBottomBar(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            modifier = fullWidth.height(48.dp),
+            modifier = modifier.height(48.dp),
             onClick = onLoginClick,
             enabled = email.isNotBlank(),
             colors = ButtonDefaults.buttonColors(

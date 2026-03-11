@@ -73,7 +73,7 @@ class LoginViewModel @Inject constructor(
 
         result.onSuccess {
             reduce { state.copy(userEmail = email) }
-            postSideEffect(LoginSideEffect.NavigateToInformation)
+            postSideEffect(LoginSideEffect.NavigateToHome)
             registerFcmToken(email)
         }.onFailure {
             postSideEffect(LoginSideEffect.Toast(it.message ?: "로그인에 실패했습니다."))
@@ -131,5 +131,5 @@ data class LoginState(
 sealed interface LoginSideEffect {
     data class Toast(val message: String) : LoginSideEffect
     data object NavigateToSignUp : LoginSideEffect
-    data object NavigateToInformation : LoginSideEffect
+    data object NavigateToHome : LoginSideEffect
 }

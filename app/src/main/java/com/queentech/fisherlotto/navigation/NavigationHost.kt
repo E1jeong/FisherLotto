@@ -23,7 +23,7 @@ import com.queentech.presentation.login.LoginScreen
 import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
 import com.queentech.presentation.main.expect_number.ExpectNumberScreen
-import com.queentech.presentation.main.information.InformationScreen
+import com.queentech.presentation.main.home.HomeScreen
 import com.queentech.presentation.main.mypage.MyPageScreen
 import com.queentech.presentation.main.statistic.StatisticScreen
 
@@ -60,8 +60,8 @@ fun NavigationHost() {
                         navController = navController,
                         startDestination = LoginNav.route
                     ) {
-                        composable(route = MainNav.Information.route) {
-                            InformationScreen()
+                        composable(route = MainNav.Home.route) {
+                            HomeScreen()
                         }
                         composable(route = MainNav.Camera.route) {
                             CameraScreen()
@@ -90,7 +90,7 @@ fun NavigationHost() {
                                 moveToHome = {
                                     NavigationHelper.navigate(
                                         navController,
-                                        RouteName.INFORMATION
+                                        RouteName.HOME
                                     )
                                 }
                             )

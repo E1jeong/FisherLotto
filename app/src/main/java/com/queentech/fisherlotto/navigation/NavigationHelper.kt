@@ -25,7 +25,7 @@ object NavigationHelper {
     fun navigateToLoginAfterLogout(controller: NavHostController, loginRoute: String) {
         // 바텀 네비게이션의 saveState로 저장된 이전 탭 상태(ViewModel 포함) 제거
         listOf(
-            RouteName.INFORMATION,
+            RouteName.HOME,
             RouteName.CAMERA,
             RouteName.EXPECT_NUMBER,
             RouteName.STATISTIC,

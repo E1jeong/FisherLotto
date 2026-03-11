@@ -14,7 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import org.junit.Rule
 import org.junit.Test
 
-class InformationScreenTest {
+class HomeScreenTest {
     @get:Rule
     val rule = createComposeRule()
 

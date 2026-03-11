@@ -1,4 +1,4 @@
-package com.queentech.presentation.main.information.component
+package com.queentech.presentation.main.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

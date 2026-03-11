@@ -1,4 +1,4 @@
-package com.queentech.presentation.main.information
+package com.queentech.presentation.main.home
 
 import android.content.SharedPreferences
 import android.util.Log
@@ -23,18 +23,18 @@ import javax.inject.Inject
 
 @OptIn(OrbitExperimental::class)
 @HiltViewModel
-class InformationViewModel @Inject constructor(
+class HomeViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
     private val getLotteryNewsUseCase: GetLotteryNewsUseCase,
     private val prefs: SharedPreferences,
-) : ViewModel(), ContainerHost<InformationState, InformationSideEffect> {
+) : ViewModel(), ContainerHost<HomeState, HomeSideEffect> {
 
-    override val container: Container<InformationState, InformationSideEffect> = container(
-        initialState = InformationState(),
+    override val container: Container<HomeState, HomeSideEffect> = container(
+        initialState = HomeState(),
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(InformationSideEffect.Toast(throwable.message ?: "Unknown Error"))
+                    postSideEffect(HomeSideEffect.Toast(throwable.message ?: "Unknown Error"))
                     Log.e("!!@@", "error handler: ${throwable.message}")
                 }
             }
@@ -91,12 +91,12 @@ class InformationViewModel @Inject constructor(
             .onFailure { e ->
                 Log.e(TAG, "뉴스 로딩 실패", e)
                 reduce { state.copy(isNewsLoading = false) }
-                postSideEffect(InformationSideEffect.Toast("뉴스를 불러오지 못했습니다."))
+                postSideEffect(HomeSideEffect.Toast("뉴스를 불러오지 못했습니다."))
             }
     }
 
     companion object {
-        private const val TAG = "InformationViewModel"
+        private const val TAG = "HomeViewModel"
         private const val KEY_NEWS_FETCH_AT = "news_fetch_at"
         private const val KEY_NEWS_CACHE_TITLES = "news_cache_titles"
         private const val KEY_NEWS_CACHE_LINKS = "news_cache_links"
@@ -105,7 +105,7 @@ class InformationViewModel @Inject constructor(
 
 
 @Immutable
-data class InformationState(
+data class HomeState(
     val getLottoNumberResponse: GetLottoNumber = GetLottoNumber(
         firstCount = "0",
         firstMoney = "0",
@@ -132,6 +132,6 @@ data class InformationState(
     val isNewsLoading: Boolean = false,
 )
 
-sealed interface InformationSideEffect {
-    class Toast(val message: String) : InformationSideEffect
+sealed interface HomeSideEffect {
+    class Toast(val message: String) : HomeSideEffect
 }
