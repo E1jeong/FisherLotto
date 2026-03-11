@@ -4,6 +4,9 @@ import android.app.Activity
 import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
+import com.queentech.data.database.datastore.UserLocalDataSource
+import com.queentech.data.model.billing.ReceiptRequest
+import com.queentech.data.model.service.BillingService
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.usecase.billing.BillingRepository
@@ -13,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,6 +24,8 @@ import javax.inject.Singleton
 @Singleton
 class BillingRepositoryImpl @Inject constructor(
     private val billingClientWrapper: BillingClientWrapper,
+    private val billingService: BillingService,
+    private val userLocalDataSource: UserLocalDataSource,
 ) : BillingRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -88,12 +94,36 @@ class BillingRepositoryImpl @Inject constructor(
         for (purchase in purchases) {
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
                 val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
-                if (!acknowledged) {
+                if (acknowledged) {
+                    sendReceiptToServer(purchase)
+                } else {
                     Log.e(TAG, "Failed to acknowledge purchase: ${purchase.orderId}")
                 }
             }
         }
         refreshSubscriptionStatus()
+    }
+
+    private suspend fun sendReceiptToServer(purchase: Purchase) {
+        try {
+            val email = userLocalDataSource.userFlow.firstOrNull()?.email
+            val request = ReceiptRequest(
+                orderId = purchase.orderId ?: "",
+                productId = purchase.products.firstOrNull() ?: "",
+                purchaseToken = purchase.purchaseToken,
+                purchaseTime = purchase.purchaseTime,
+                autoRenewing = purchase.isAutoRenewing,
+                email = email,
+            )
+            val response = billingService.sendReceipt(request)
+            if (response.success) {
+                Log.d(TAG, "Receipt sent successfully: ${purchase.orderId}")
+            } else {
+                Log.e(TAG, "Receipt send failed: ${response.message}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send receipt to server", e)
+        }
     }
 
     override suspend fun refreshSubscriptionStatus() {

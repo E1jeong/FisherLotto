@@ -1,5 +1,6 @@
 package com.queentech.data.di
 
+import com.queentech.data.model.service.BillingService
 import com.queentech.data.model.service.FcmService
 import com.queentech.data.model.service.LottoService
 import dagger.Module
@@ -71,5 +72,11 @@ object RetrofitModule {
     @Provides
     fun provideFcmService(@Named("lotto-sub") retrofit: Retrofit): FcmService {
         return retrofit.create(FcmService::class.java)
+    }
+
+    // --- Billing 서비스 (lotto-sub 서버 사용) ---
+    @Provides
+    fun provideBillingService(@Named("lotto-sub") retrofit: Retrofit): BillingService {
+        return retrofit.create(BillingService::class.java)
     }
 }
