@@ -2,7 +2,6 @@ package com.queentech.fisherlotto
 
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -14,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -23,6 +23,7 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
     lateinit var fcmRepository: FcmRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val notificationId = AtomicInteger(0)
 
     override fun onDestroy() {
         super.onDestroy()
@@ -58,7 +59,7 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .build()
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(System.currentTimeMillis().toInt(), notification)
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(notificationId.getAndIncrement(), notification)
     }
 }
