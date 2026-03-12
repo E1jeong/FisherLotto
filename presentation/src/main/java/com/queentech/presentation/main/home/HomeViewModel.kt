@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.queentech.domain.model.lotto.GetLottoNumber
 import com.queentech.domain.model.news.NewsArticle
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
@@ -59,21 +61,14 @@ class HomeViewModel @Inject constructor(
         // 예: 30분 캐시
         val canUseCache = !force && (now - lastFetch) < 30 * 60 * 1000L
         if (canUseCache) {
-            val cachedTitles = prefs.getStringSet(KEY_NEWS_CACHE_TITLES, emptySet()).orEmpty()
-            val cachedLinks = prefs.getStringSet(KEY_NEWS_CACHE_LINKS, emptySet()).orEmpty()
-            if (cachedTitles.isNotEmpty() && cachedLinks.isNotEmpty()) {
-                val pairs = cachedTitles.zip(cachedLinks)
-                val cached = pairs.map { (t, l) ->
-                    NewsArticle(
-                        title = t,
-                        link = l,
-                        source = "",
-                        publishedAtEpochMillis = 0L,
-                        summary = "",
-                    )
+            val cachedJson = prefs.getString(KEY_NEWS_CACHE, null)
+            if (!cachedJson.isNullOrEmpty()) {
+                val type = object : TypeToken<List<NewsArticle>>() {}.type
+                val cached = gson.fromJson<List<NewsArticle>>(cachedJson, type)
+                if (cached.isNotEmpty()) {
+                    reduce { state.copy(news = cached, isNewsLoading = false) }
+                    return@intent
                 }
-                reduce { state.copy(news = cached, isNewsLoading = false) }
-                return@intent
             }
         }
 
@@ -83,8 +78,7 @@ class HomeViewModel @Inject constructor(
             .onSuccess { news ->
                 prefs.edit {
                     putLong(KEY_NEWS_FETCH_AT, now)
-                    putStringSet(KEY_NEWS_CACHE_TITLES, news.map { it.title }.toSet())
-                    putStringSet(KEY_NEWS_CACHE_LINKS, news.map { it.link }.toSet())
+                    putString(KEY_NEWS_CACHE, gson.toJson(news))
                 }
                 reduce { state.copy(news = news, isNewsLoading = false) }
             }
@@ -98,8 +92,8 @@ class HomeViewModel @Inject constructor(
     companion object {
         private const val TAG = "HomeViewModel"
         private const val KEY_NEWS_FETCH_AT = "news_fetch_at"
-        private const val KEY_NEWS_CACHE_TITLES = "news_cache_titles"
-        private const val KEY_NEWS_CACHE_LINKS = "news_cache_links"
+        private const val KEY_NEWS_CACHE = "news_cache"
+        private val gson = Gson()
     }
 }
 
