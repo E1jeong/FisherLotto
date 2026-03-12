@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,6 +44,8 @@ fun SignUpScreen(
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+
+    BackHandler(enabled = state.isSignUpComplete) {}
 
     InitSignUpScreen(
         context = context,
