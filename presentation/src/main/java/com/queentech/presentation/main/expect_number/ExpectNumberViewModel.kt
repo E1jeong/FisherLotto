@@ -10,6 +10,7 @@ import com.queentech.domain.usecase.lotto.LottoIssueRepository
 import com.queentech.presentation.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.sync.Mutex
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -40,6 +41,8 @@ class ExpectNumberViewModel @Inject constructor(
             checkDeadline()
         },
     )
+
+    private val issueMutex = Mutex()
 
     companion object {
         const val TAG = "ExpectNumberViewModel"
@@ -102,37 +105,43 @@ class ExpectNumberViewModel @Inject constructor(
     }
 
     fun onAdWatchedSuccessfully() = intent {
-        val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+        if (!issueMutex.tryLock()) return@intent
 
-        // 이중 발급 방어: 광고 콜백 중복 호출 등 예외 상황 대비
-        if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
-            postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
-            return@intent
-        }
+        try {
+            val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
 
-        val result = getExpectNumberUseCase(state.userEmail, state.userPhone).getOrDefault(
-            GetExpectNumber(count = 0, lotto = emptyList())
-        )
+            // 이중 발급 방어: 광고 콜백 중복 호출 등 예외 상황 대비
+            if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
+                postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
+                return@intent
+            }
 
-        if (result.count != 0) {
-            lottoIssueRepository.saveIssue(
-                numbers = result.lotto,
-                weekStartMillis = thisWeekStart
+            val result = getExpectNumberUseCase(state.userEmail, state.userPhone).getOrDefault(
+                GetExpectNumber(count = 0, lotto = emptyList())
             )
 
-            val lastWeekStart = DateUtils.getLastWeekStartMillis()
-            val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
-
-            reduce {
-                state.copy(
-                    count = result.count,
-                    lastWeekNumbers = lastWeek,
-                    thisWeekNumbers = result.lotto,
-                    isThisWeekIssued = true
+            if (result.count != 0) {
+                lottoIssueRepository.saveIssue(
+                    numbers = result.lotto,
+                    weekStartMillis = thisWeekStart
                 )
+
+                val lastWeekStart = DateUtils.getLastWeekStartMillis()
+                val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
+                reduce {
+                    state.copy(
+                        count = result.count,
+                        lastWeekNumbers = lastWeek,
+                        thisWeekNumbers = result.lotto,
+                        isThisWeekIssued = true
+                    )
+                }
+            } else {
+                postSideEffect(ExpectNumberSideEffect.Toast("번호 발급에 실패했습니다."))
             }
-        } else {
-            postSideEffect(ExpectNumberSideEffect.Toast("번호 발급에 실패했습니다."))
+        } finally {
+            if (issueMutex.isLocked) issueMutex.unlock()
         }
     }
 
