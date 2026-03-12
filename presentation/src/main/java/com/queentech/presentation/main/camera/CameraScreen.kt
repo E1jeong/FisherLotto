@@ -1,17 +1,19 @@
 package com.queentech.presentation.main.camera
 
 import android.os.Build
-import android.util.Size
 import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +27,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -35,9 +38,14 @@ fun CameraScreen(
     val state by viewModel.container.stateFlow.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var qrCodeValueDialogVisible by remember { mutableStateOf(false) }
+    val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+    DisposableEffect(Unit) {
+        onDispose { analysisExecutor.shutdown() }
+    }
 
     CameraPreview(
         lifecycleOwner = lifecycleOwner,
+        analysisExecutor = analysisExecutor,
         onQrCodeValueDetect = {
             viewModel.onQrCodeScanned(it)
             qrCodeValueDialogVisible = true
@@ -56,6 +64,7 @@ fun CameraScreen(
 @Composable
 private fun CameraPreview(
     lifecycleOwner: LifecycleOwner,
+    analysisExecutor: ExecutorService,
     onQrCodeValueDetect: (String) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -70,11 +79,15 @@ private fun CameraPreview(
                     .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                     .build()
                 val imageAnalysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(previewView.width, previewView.height))
+                    .setResolutionSelector(
+                        ResolutionSelector.Builder()
+                            .setAspectRatioStrategy(AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY)
+                            .build()
+                    )
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also {
-                        it.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                        it.setAnalyzer(analysisExecutor) { imageProxy ->
                             processImageProxy(imageProxy, onQrCodeValueDetect)
                         }
                     }
