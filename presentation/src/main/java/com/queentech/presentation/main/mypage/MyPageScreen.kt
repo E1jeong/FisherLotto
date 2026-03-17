@@ -232,8 +232,8 @@ private fun UserProfileSection(user: User?) {
                     if (user != null) {
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = "Fisher Lotto 회원",
-                            color = AccentGold,
+                            text = if (user.isPremium) "Premium 회원" else "Free 회원",
+                            color = if (user.isPremium) AccentGold else TextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                         )

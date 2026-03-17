@@ -101,6 +101,11 @@ class UserRepositoryImpl @Inject constructor(
         lottoIssueDao.deleteAll()
     }
 
+    override suspend fun updateTier(tier: String) {
+        _currentUser.value = _currentUser.value?.copy(tier = tier)
+        localDataSource.updateTier(tier)
+    }
+
     override suspend fun deleteAccount(): Result<Unit> {
         val email = _currentUser.value?.email
             ?: return Result.failure(Exception("로그인된 사용자가 없습니다."))

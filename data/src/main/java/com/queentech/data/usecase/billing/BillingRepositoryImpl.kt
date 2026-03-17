@@ -9,7 +9,9 @@ import com.queentech.data.model.billing.ReceiptRequest
 import com.queentech.data.model.service.BillingService
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
+import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.billing.BillingRepository
+import com.queentech.domain.usecase.login.UserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +28,7 @@ class BillingRepositoryImpl @Inject constructor(
     private val billingClientWrapper: BillingClientWrapper,
     private val billingService: BillingService,
     private val userLocalDataSource: UserLocalDataSource,
+    private val userRepository: UserRepository,
 ) : BillingRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -130,6 +133,8 @@ class BillingRepositoryImpl @Inject constructor(
         val purchases = billingClientWrapper.queryPurchases()
         val activePurchase = purchases.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
 
+        val isActive = activePurchase != null
+
         if (activePurchase != null) {
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = true,
@@ -145,6 +150,9 @@ class BillingRepositoryImpl @Inject constructor(
                 autoRenewing = false,
             )
         }
+
+        val tier = if (isActive) User.TIER_PREMIUM else User.TIER_FREE
+        userRepository.updateTier(tier)
     }
 
     companion object {

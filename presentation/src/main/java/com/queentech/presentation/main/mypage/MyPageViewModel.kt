@@ -50,8 +50,7 @@ class MyPageViewModel @Inject constructor(
 
     private fun loadUser() = intent {
         userRepository.loadCachedUser()
-        val user = userRepository.currentUser.value
-        if (user != null) {
+        userRepository.currentUser.collect { user ->
             reduce { state.copy(user = user) }
         }
     }

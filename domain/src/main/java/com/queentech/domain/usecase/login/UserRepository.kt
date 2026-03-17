@@ -10,4 +10,5 @@ interface UserRepository {
     suspend fun loadCachedUser()
     suspend fun logout()
     suspend fun deleteAccount(): Result<Unit>
+    suspend fun updateTier(tier: String)
 }

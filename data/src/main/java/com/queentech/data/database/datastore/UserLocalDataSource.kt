@@ -17,6 +17,7 @@ class UserLocalDataSource @Inject constructor(
         private val KEY_BIRTH = stringPreferencesKey("birth")
         private val KEY_PHONE = stringPreferencesKey("phone")
         private val KEY_EMAIL = stringPreferencesKey("email")
+        private val KEY_TIER = stringPreferencesKey("tier")
     }
 
     // 저장
@@ -26,6 +27,7 @@ class UserLocalDataSource @Inject constructor(
             prefs[KEY_EMAIL] = user.email
             prefs[KEY_BIRTH] = user.birth
             prefs[KEY_PHONE] = user.phone
+            prefs[KEY_TIER] = user.tier
         }
     }
 
@@ -36,8 +38,16 @@ class UserLocalDataSource @Inject constructor(
             name = prefs[KEY_NAME] ?: "",
             birth = prefs[KEY_BIRTH] ?: "",
             phone = prefs[KEY_PHONE] ?: "",
-            email = email
+            email = email,
+            tier = prefs[KEY_TIER] ?: User.TIER_FREE,
         )
+    }
+
+    // 등급 업데이트
+    suspend fun updateTier(tier: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_TIER] = tier
+        }
     }
 
     // 삭제 (로그아웃 시)
