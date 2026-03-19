@@ -1,6 +1,7 @@
 package com.queentech.data.usecase.login
 
 import com.queentech.data.database.room.dao.LottoIssueDao
+import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
@@ -19,6 +20,7 @@ class UserRepositoryImpl @Inject constructor(
     private val lottoService: LottoService,
     private val localDataSource: UserLocalDataSource,
     private val lottoIssueDao: LottoIssueDao,
+    private val scanHistoryDao: ScanHistoryDao,
     private val fcmRepository: FcmRepository,
 ) : UserRepository {
 
@@ -99,6 +101,7 @@ class UserRepositoryImpl @Inject constructor(
         _currentUser.value = null
         localDataSource.clear()
         lottoIssueDao.deleteAll()
+        scanHistoryDao.deleteAll()
     }
 
     override suspend fun updateTier(tier: String) {

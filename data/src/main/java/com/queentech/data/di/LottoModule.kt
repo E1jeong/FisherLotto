@@ -7,6 +7,7 @@ import com.queentech.data.usecase.login.UserRepositoryImpl
 import com.queentech.data.usecase.lotto.GetExpectNumberUseCaseImpl
 import com.queentech.data.usecase.lotto.GetLottoNumberUseCaseImpl
 import com.queentech.data.usecase.lotto.LottoIssueRepositoryImpl
+import com.queentech.data.usecase.lotto.ScanHistoryRepositoryImpl
 import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.GetUserUseCase
 import com.queentech.domain.usecase.login.SignUpUserUseCase
@@ -14,6 +15,7 @@ import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import com.queentech.domain.usecase.lotto.LottoIssueRepository
+import com.queentech.domain.usecase.lotto.ScanHistoryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -47,4 +49,8 @@ abstract class LottoModule {
     @Binds
     @Singleton
     abstract fun bindFcmRepository(impl: FcmRepositoryImpl): FcmRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindScanHistoryRepository(impl: ScanHistoryRepositoryImpl): ScanHistoryRepository
 }

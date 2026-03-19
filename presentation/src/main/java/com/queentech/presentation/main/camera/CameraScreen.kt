@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +41,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import com.queentech.presentation.theme.BgDark
+import com.queentech.presentation.theme.TextPrimary
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -69,15 +78,35 @@ fun CameraScreen(
             }
         }
     } else {
-        CameraPreview(
-            lifecycleOwner = lifecycleOwner,
-            analysisExecutor = analysisExecutor,
-            onQrCodeValueDetect = {
-                viewModel.onQrCodeScanned(it)
-                qrCodeValueDialogVisible = true
-            },
-            onCameraError = { cameraError = it }
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            CameraPreview(
+                lifecycleOwner = lifecycleOwner,
+                analysisExecutor = analysisExecutor,
+                onQrCodeValueDetect = {
+                    viewModel.onQrCodeScanned(it)
+                    qrCodeValueDialogVisible = true
+                },
+                onCameraError = { cameraError = it }
+            )
+
+            // 스캔 이력 버튼
+            IconButton(
+                onClick = { viewModel.loadScanHistory() },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(44.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = BgDark.copy(alpha = 0.7f),
+                    contentColor = TextPrimary,
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = "스캔 이력",
+                )
+            }
+        }
     }
 
     QrResultDialog(
@@ -86,6 +115,30 @@ fun CameraScreen(
         winning = state.winningNumbers,
         onDismissRequest = { qrCodeValueDialogVisible = false }
     )
+
+    // 스캔 이력 바텀시트
+    if (state.showHistorySheet) {
+        ScanHistoryBottomSheet(
+            historyList = state.scanHistoryList,
+            onDismiss = { viewModel.dismissHistorySheet() },
+            onItemClick = { viewModel.onHistoryItemClick(it) },
+            onDelete = { viewModel.deleteHistoryItem(it) },
+        )
+    }
+
+    // 이력 상세 보기 (기존 QrResultDialog 재활용)
+    val selectedHistory = state.selectedHistory
+    if (selectedHistory != null) {
+        QrResultDialog(
+            visible = true,
+            result = LottoQrResult(
+                drawNo = selectedHistory.drawNo,
+                games = selectedHistory.games,
+            ),
+            winning = state.selectedHistoryWinning,
+            onDismissRequest = { viewModel.dismissHistoryDetail() }
+        )
+    }
 }
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
