@@ -28,9 +28,10 @@ android {
 
     signingConfigs {
         create("config") {
-            keyAlias = "fisherlotto"
-            keyPassword = "1q2w3e4r"
-            storePassword = "1q2w3e4r"
+            val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+            keyAlias = localProperties.getProperty("KEYSTORE_KEY_ALIAS", "fisherlotto")
+            keyPassword = localProperties.getProperty("KEYSTORE_KEY_PASSWORD", "")
+            storePassword = localProperties.getProperty("KEYSTORE_STORE_PASSWORD", "")
             storeFile = rootProject.file("fisherlotto.jks")
         }
     }
