@@ -1,6 +1,7 @@
 package com.queentech.presentation.main.camera
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -10,8 +11,12 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -19,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,19 +45,40 @@ fun CameraScreen(
     val state by viewModel.container.stateFlow.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     var qrCodeValueDialogVisible by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf<String?>(null) }
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(Unit) {
         onDispose { analysisExecutor.shutdown() }
     }
 
-    CameraPreview(
-        lifecycleOwner = lifecycleOwner,
-        analysisExecutor = analysisExecutor,
-        onQrCodeValueDetect = {
-            viewModel.onQrCodeScanned(it)
-            qrCodeValueDialogVisible = true
+    if (cameraError != null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "카메라를 시작할 수 없습니다",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = "카메라 권한을 확인해 주세요",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-    )
+    } else {
+        CameraPreview(
+            lifecycleOwner = lifecycleOwner,
+            analysisExecutor = analysisExecutor,
+            onQrCodeValueDetect = {
+                viewModel.onQrCodeScanned(it)
+                qrCodeValueDialogVisible = true
+            },
+            onCameraError = { cameraError = it }
+        )
+    }
 
     QrResultDialog(
         visible = qrCodeValueDialogVisible,
@@ -66,6 +94,7 @@ private fun CameraPreview(
     lifecycleOwner: LifecycleOwner,
     analysisExecutor: ExecutorService,
     onQrCodeValueDetect: (String) -> Unit,
+    onCameraError: (String) -> Unit = {},
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -105,7 +134,8 @@ private fun CameraPreview(
                             imageAnalysis
                         )
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e("CameraScreen", "카메라 초기화 실패", e)
+                        onCameraError(e.message ?: "카메라 초기화 실패")
                     }
                 }, ContextCompat.getMainExecutor(context))
 
