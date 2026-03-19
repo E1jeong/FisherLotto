@@ -4,9 +4,11 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.lotto.GetExpectNumber
+import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
 import com.queentech.domain.usecase.lotto.LottoIssueRepository
+import kotlinx.coroutines.flow.firstOrNull
 import com.queentech.presentation.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -24,6 +26,7 @@ class ExpectNumberViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val getExpectNumberUseCase: GetExpectNumberUseCase,
     private val lottoIssueRepository: LottoIssueRepository,
+    private val billingRepository: BillingRepository,
 ) : ViewModel(), ContainerHost<ExpectNumberState, ExpectNumberSideEffect> {
     override val container: Container<ExpectNumberState, ExpectNumberSideEffect> = container(
         initialState = ExpectNumberState(),
@@ -101,7 +104,12 @@ class ExpectNumberViewModel @Inject constructor(
             return@intent
         }
 
-        postSideEffect(ExpectNumberSideEffect.ShowRewardAd)
+        val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
+        if (isSubscribed) {
+            onAdWatchedSuccessfully()
+        } else {
+            postSideEffect(ExpectNumberSideEffect.ShowRewardAd)
+        }
     }
 
     fun onAdWatchedSuccessfully() = intent {
