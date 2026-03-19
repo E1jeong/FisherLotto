@@ -26,7 +26,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: 4. 앱 서명하기 (금고에서 키 꺼내서 도장 찍기)
-        uses: r0adkll/sign-android-release@v1
+        uses: ilharp/sign-android-release@v2
         id: sign_app
         with:
           releaseDirectory: app/build/outputs/bundle/release
