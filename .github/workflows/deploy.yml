@@ -36,9 +36,9 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: 5. 구글 플레이 스토어에 업로드하기! 🚀
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
-          packageName: com.queentech.fisherlotto # ★여기를 어부로또 실제 패키지명으로 꼭! 바꿔주세요★
+          packageName: com.queentech.fisherlotto
           releaseFiles: ${{steps.sign_app.outputs.signedFile}}
-          track: internal # 처음엔 안전하게 '내부 테스트(internal)' 트랙으로 올립니다.
+          track: internal
