@@ -40,5 +40,5 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.queentech.fisherlotto # ★여기를 어부로또 실제 패키지명으로 꼭! 바꿔주세요★
-          releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}
+          releaseFiles: ${{steps.sign_app.outputs.signedFile}}
           track: internal # 처음엔 안전하게 '내부 테스트(internal)' 트랙으로 올립니다.
