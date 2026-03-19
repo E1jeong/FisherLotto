@@ -141,7 +141,7 @@ class ExpectNumberViewModel @Inject constructor(
                 postSideEffect(ExpectNumberSideEffect.Toast("번호 발급에 실패했습니다."))
             }
         } finally {
-            issueMutex.unlock()
+            if (issueMutex.isLocked) issueMutex.unlock()
         }
     }
 
