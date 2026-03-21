@@ -55,6 +55,8 @@ import com.queentech.presentation.theme.Paddings
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
+import java.text.NumberFormat
+import java.util.Locale
 
 // 탭 상태를 정의하는 Enum Class
 enum class StatisticTab(val title: String) {
@@ -323,6 +325,9 @@ private fun StatisticCountTableHeader(modifier: Modifier = Modifier) {
     }
 }
 
+private fun formatCount(count: Int): String =
+    NumberFormat.getInstance(Locale.KOREA).format(count)
+
 @Composable
 private fun StatisticCountTableRow(
     modifier: Modifier = Modifier,
@@ -349,7 +354,7 @@ private fun StatisticCountTableRow(
             )
             Box(modifier = Modifier.width(1.dp).height(24.dp).background(DividerColor))
             Text(
-                text = "${data.firstCountInt}",
+                text = formatCount(data.firstCountInt),
                 modifier = Modifier.weight(countColumnWeights[1]),
                 textAlign = TextAlign.Center,
                 color = AccentGold,
@@ -357,7 +362,7 @@ private fun StatisticCountTableRow(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = "${data.secondCountInt}",
+                text = formatCount(data.secondCountInt),
                 modifier = Modifier.weight(countColumnWeights[2]),
                 textAlign = TextAlign.Center,
                 color = AccentGreen,
@@ -365,7 +370,7 @@ private fun StatisticCountTableRow(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "${data.thirdCountInt}",
+                text = formatCount(data.thirdCountInt),
                 modifier = Modifier.weight(countColumnWeights[3]),
                 textAlign = TextAlign.Center,
                 color = AccentRed,
@@ -373,14 +378,14 @@ private fun StatisticCountTableRow(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "${data.fourthCountInt}",
+                text = formatCount(data.fourthCountInt),
                 modifier = Modifier.weight(countColumnWeights[4]),
                 textAlign = TextAlign.Center,
                 color = TextSecondary,
                 fontSize = 13.sp,
             )
             Text(
-                text = "${data.fifthCountInt}",
+                text = formatCount(data.fifthCountInt),
                 modifier = Modifier.weight(countColumnWeights[5]),
                 textAlign = TextAlign.Center,
                 color = TextSecondary,
