@@ -7,6 +7,12 @@ interface FcmRepository {
     // 내부 저장소에 토큰 저장
     suspend fun saveTokenToCache(token: String)
 
+    // 내부 저장소에서 이메일 읽기
+    suspend fun getCachedEmail(): String?
+
+    // 내부 저장소에 이메일 저장
+    suspend fun saveEmailToCache(email: String)
+
     // Next.js 서브 서버로 토큰 전송
     suspend fun sendTokenToServer(email: String, fcmToken: String): Result<Unit>
 

@@ -94,12 +94,16 @@ class LoginViewModel @Inject constructor(
             return
         }
         val cachedToken = fcmRepository.getCachedToken()
-        if (token == cachedToken) {
-            Log.d(TAG, "FCM 토큰이 동일합니다. 서버 전송을 생략합니다.")
+        val cachedEmail = fcmRepository.getCachedEmail()
+        if (token == cachedToken && email == cachedEmail) {
+            Log.d(TAG, "FCM 토큰과 이메일이 동일합니다. 서버 전송을 생략합니다.")
             return
         }
         fcmRepository.sendTokenToServer(email, token)
-            .onSuccess { fcmRepository.saveTokenToCache(token) }
+            .onSuccess {
+                fcmRepository.saveTokenToCache(token)
+                fcmRepository.saveEmailToCache(email)
+            }
             .onFailure { Log.e(TAG, "FCM 토큰 서버 전송 실패", it) }
     }
 

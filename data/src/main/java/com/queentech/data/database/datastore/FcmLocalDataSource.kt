@@ -12,6 +12,7 @@ class FcmLocalDataSource @Inject constructor(
 ) {
     companion object {
         private val KEY_FCM_TOKEN = stringPreferencesKey("fcm_token")
+        private val KEY_FCM_EMAIL = stringPreferencesKey("fcm_email")
     }
 
     suspend fun saveToken(token: String) {
@@ -22,5 +23,15 @@ class FcmLocalDataSource @Inject constructor(
 
     suspend fun getToken(): String? {
         return dataStore.data.first()[KEY_FCM_TOKEN]
+    }
+
+    suspend fun saveEmail(email: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_FCM_EMAIL] = email
+        }
+    }
+
+    suspend fun getEmail(): String? {
+        return dataStore.data.first()[KEY_FCM_EMAIL]
     }
 }

@@ -20,6 +20,14 @@ class FcmRepositoryImpl @Inject constructor(
         fcmLocalDataSource.saveToken(token)
     }
 
+    override suspend fun getCachedEmail(): String? {
+        return fcmLocalDataSource.getEmail()
+    }
+
+    override suspend fun saveEmailToCache(email: String) {
+        fcmLocalDataSource.saveEmail(email)
+    }
+
     override suspend fun sendTokenToServer(email: String, fcmToken: String): Result<Unit> {
         return try {
             fcmService.registerToken(FcmTokenRequest(email = email, fcmToken = fcmToken))
