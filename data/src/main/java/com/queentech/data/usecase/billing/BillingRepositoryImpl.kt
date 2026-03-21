@@ -130,7 +130,10 @@ class BillingRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshSubscriptionStatus() {
-        val purchases = billingClientWrapper.queryPurchases()
+        val purchases = billingClientWrapper.queryPurchases() ?: run {
+            Log.w(TAG, "Failed to query purchases, keeping current status")
+            return
+        }
         val activePurchase = purchases.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
 
         val isActive = activePurchase != null

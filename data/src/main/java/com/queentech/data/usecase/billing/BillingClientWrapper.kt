@@ -105,8 +105,8 @@ class BillingClientWrapper @Inject constructor(
         return billingClient.launchBillingFlow(activity, billingFlowParams)
     }
 
-    suspend fun queryPurchases(): List<Purchase> {
-        if (!ensureConnected()) return emptyList()
+    suspend fun queryPurchases(): List<Purchase>? {
+        if (!ensureConnected()) return null
 
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
@@ -118,7 +118,7 @@ class BillingClientWrapper @Inject constructor(
                     cont.resume(purchasesList)
                 } else {
                     Log.e(TAG, "queryPurchases failed: ${billingResult.debugMessage}")
-                    cont.resume(emptyList())
+                    cont.resume(null)
                 }
             }
         }
