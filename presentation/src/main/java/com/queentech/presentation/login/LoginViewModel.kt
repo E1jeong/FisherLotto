@@ -73,8 +73,8 @@ class LoginViewModel @Inject constructor(
 
         result.onSuccess {
             reduce { state.copy(userEmail = email) }
-            postSideEffect(LoginSideEffect.NavigateToHome)
             registerFcmToken(email)
+            postSideEffect(LoginSideEffect.NavigateToHome)
         }.onFailure {
             postSideEffect(LoginSideEffect.Toast(it.message ?: "로그인에 실패했습니다."))
         }
@@ -88,18 +88,18 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun registerFcmToken(email: String) = intent {
+    private suspend fun registerFcmToken(email: String) {
         val token = getFirebaseToken() ?: run {
             Log.w(TAG, "FCM 토큰을 가져오지 못했습니다.")
-            return@intent
+            return
         }
         val cachedToken = fcmRepository.getCachedToken()
         if (token == cachedToken) {
             Log.d(TAG, "FCM 토큰이 동일합니다. 서버 전송을 생략합니다.")
-            return@intent
+            return
         }
-        fcmRepository.saveTokenToCache(token)
         fcmRepository.sendTokenToServer(email, token)
+            .onSuccess { fcmRepository.saveTokenToCache(token) }
             .onFailure { Log.e(TAG, "FCM 토큰 서버 전송 실패", it) }
     }
 
