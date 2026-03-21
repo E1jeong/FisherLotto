@@ -110,6 +110,7 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         showDeadlineDialog = state.showDeadlineDialog,
         lastWeekRange = state.lastWeekRange,
         thisWeekRange = state.thisWeekRange,
+        winningNumbers = state.winningNumbers,
         onNumberIssueClick = viewModel::onExpectNumberClick,
         onDismissDeadlineDialog = viewModel::dismissDeadlineDialog
     )
@@ -181,6 +182,7 @@ private fun ExpectNumberContent(
     showDeadlineDialog: Boolean = false,
     lastWeekRange: String,
     thisWeekRange: String,
+    winningNumbers: List<Int> = emptyList(),
     onNumberIssueClick: () -> Unit,
     onDismissDeadlineDialog: () -> Unit = {},
 ) {
@@ -204,6 +206,7 @@ private fun ExpectNumberContent(
             isIssued = lastWeekNumbers.isNotEmpty(),
             emptyMessage = "저번주 번호가 없어요",
             emptyEmoji = "📭",
+            winningNumbers = winningNumbers,
         )
 
         // ── 구분선 ──
@@ -250,6 +253,7 @@ private fun WeekSection(
     showIssueButton: Boolean = false,
     isButtonDisabled: Boolean = false,
     onIssueClick: () -> Unit = {},
+    winningNumbers: List<Int> = emptyList(),
 ) {
     Column(
         modifier = modifier
@@ -338,7 +342,11 @@ private fun WeekSection(
                     verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
                     itemsIndexed(numbers) { index, numberSet ->
-                        LottoNumberRow(index = index + 1, numberSet = numberSet)
+                        LottoNumberRow(
+                            index = index + 1,
+                            numberSet = numberSet,
+                            winningNumbers = winningNumbers
+                        )
                     }
                 }
             }
@@ -347,7 +355,11 @@ private fun WeekSection(
 }
 
 @Composable
-private fun LottoNumberRow(index: Int, numberSet: String) {
+private fun LottoNumberRow(
+    index: Int,
+    numberSet: String,
+    winningNumbers: List<Int> = emptyList(),
+) {
     val numbers = numberSet.split(",").mapNotNull { it.trim().toIntOrNull() }
 
     Row(
@@ -377,38 +389,62 @@ private fun LottoNumberRow(index: Int, numberSet: String) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             numbers.forEach { number ->
-                LottoBall(number = number)
+                val isMatch = if (winningNumbers.isNotEmpty()) {
+                    number in winningNumbers
+                } else {
+                    null
+                }
+                LottoBall(number = number, isMatch = isMatch)
             }
         }
     }
 }
 
 @Composable
-private fun LottoBall(number: Int) {
-    val ballColor = ColorHelper.selectBallColor(number)
+private fun LottoBall(number: Int, isMatch: Boolean? = null) {
+    val showDark = isMatch == false
 
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .shadow(3.dp, CircleShape)
-            .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        ballColor.copy(alpha = 1f),
-                        ballColor.copy(alpha = 0.75f)
+    if (showDark) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(DividerColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number.toString(),
+                color = TextSecondary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+        }
+    } else {
+        val ballColor = ColorHelper.selectBallColor(number)
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .shadow(3.dp, CircleShape)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            ballColor.copy(alpha = 1f),
+                            ballColor.copy(alpha = 0.75f)
+                        )
                     )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = number.toString(),
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number.toString(),
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import com.queentech.domain.model.lotto.GetExpectNumber
 import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
+import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import com.queentech.domain.usecase.lotto.LottoIssueRepository
 import kotlinx.coroutines.flow.firstOrNull
 import com.queentech.presentation.util.DateUtils
@@ -25,6 +26,7 @@ import javax.inject.Inject
 class ExpectNumberViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val getExpectNumberUseCase: GetExpectNumberUseCase,
+    private val getLottoNumberUseCase: GetLottoNumberUseCase,
     private val lottoIssueRepository: LottoIssueRepository,
     private val billingRepository: BillingRepository,
 ) : ViewModel(), ContainerHost<ExpectNumberState, ExpectNumberSideEffect> {
@@ -42,6 +44,7 @@ class ExpectNumberViewModel @Inject constructor(
             loadCachedUser()
             loadSavedNumbers()
             checkDeadline()
+            loadWinningStatus()
         },
     )
 
@@ -153,6 +156,23 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
+    private fun loadWinningStatus() = intent {
+        val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
+        if (!isSubscribed) return@intent
+
+        reduce { state.copy(isSubscribed = true) }
+
+        getLottoNumberUseCase(round = 0)
+            .onSuccess { result ->
+                val winningNumbers = listOf(
+                    result.num1Int, result.num2Int, result.num3Int,
+                    result.num4Int, result.num5Int, result.num6Int,
+                    result.bonusInt
+                )
+                reduce { state.copy(winningNumbers = winningNumbers) }
+            }
+    }
+
     fun dismissDeadlineDialog() = intent {
         reduce { state.copy(showDeadlineDialog = false) }
     }
@@ -172,6 +192,8 @@ data class ExpectNumberState(
     val userPhone: String = "",
     val isDeadlineClosed: Boolean = false,
     val showDeadlineDialog: Boolean = false,
+    val winningNumbers: List<Int> = emptyList(),
+    val isSubscribed: Boolean = false,
 )
 
 sealed interface ExpectNumberSideEffect {
