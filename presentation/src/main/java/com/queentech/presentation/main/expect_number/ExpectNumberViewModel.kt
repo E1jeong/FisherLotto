@@ -157,20 +157,22 @@ class ExpectNumberViewModel @Inject constructor(
     }
 
     private fun loadWinningStatus() = intent {
-        val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
-        if (!isSubscribed) return@intent
+        billingRepository.subscriptionStatus.collect { status ->
+            val isSubscribed = status.isActive
+            reduce { state.copy(isSubscribed = isSubscribed) }
 
-        reduce { state.copy(isSubscribed = true) }
-
-        getLottoNumberUseCase(round = 0)
-            .onSuccess { result ->
-                val winningNumbers = listOf(
-                    result.num1Int, result.num2Int, result.num3Int,
-                    result.num4Int, result.num5Int, result.num6Int,
-                    result.bonusInt
-                )
-                reduce { state.copy(winningNumbers = winningNumbers) }
+            if (isSubscribed && state.winningNumbers.isEmpty()) {
+                getLottoNumberUseCase(round = 0)
+                    .onSuccess { result ->
+                        val winningNumbers = listOf(
+                            result.num1Int, result.num2Int, result.num3Int,
+                            result.num4Int, result.num5Int, result.num6Int,
+                            result.bonusInt
+                        )
+                        reduce { state.copy(winningNumbers = winningNumbers) }
+                    }
             }
+        }
     }
 
     fun dismissDeadlineDialog() = intent {
