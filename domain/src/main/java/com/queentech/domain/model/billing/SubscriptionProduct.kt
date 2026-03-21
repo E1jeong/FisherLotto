@@ -6,4 +6,5 @@ data class SubscriptionProduct(
     val description: String,
     val formattedPrice: String,
     val billingPeriod: String,
+    val priceAmountMicros: Long = 0L,
 )

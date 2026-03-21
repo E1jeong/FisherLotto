@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -67,6 +68,7 @@ class BillingRepositoryImpl @Inject constructor(
                 description = details.description,
                 formattedPrice = pricingPhase.formattedPrice,
                 billingPeriod = pricingPhase.billingPeriod,
+                priceAmountMicros = pricingPhase.priceAmountMicros,
             )
         }
     }
@@ -139,10 +141,12 @@ class BillingRepositoryImpl @Inject constructor(
         val isActive = activePurchase != null
 
         if (activePurchase != null) {
+            val productId = activePurchase.products.firstOrNull()
+            val expiryMillis = estimateExpiryTime(activePurchase.purchaseTime, productId)
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = true,
-                productId = activePurchase.products.firstOrNull(),
-                expiryTimeMillis = null,
+                productId = productId,
+                expiryTimeMillis = expiryMillis,
                 autoRenewing = activePurchase.isAutoRenewing,
             )
         } else {
@@ -156,6 +160,15 @@ class BillingRepositoryImpl @Inject constructor(
 
         val tier = if (isActive) User.TIER_PREMIUM else User.TIER_FREE
         userRepository.updateTier(tier)
+    }
+
+    private fun estimateExpiryTime(purchaseTimeMillis: Long, productId: String?): Long {
+        val calendar = Calendar.getInstance().apply { timeInMillis = purchaseTimeMillis }
+        when (productId) {
+            "fisherlotto_monthly" -> calendar.add(Calendar.MONTH, 1)
+            "fisherlotto_yearly" -> calendar.add(Calendar.YEAR, 1)
+        }
+        return calendar.timeInMillis
     }
 
     companion object {

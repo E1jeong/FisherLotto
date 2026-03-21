@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,6 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.login.User
+import com.queentech.presentation.component.dialog.ConfirmDialog
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.AccentGreen
@@ -62,7 +64,6 @@ import com.queentech.presentation.theme.DividerColor
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
-import com.queentech.presentation.component.dialog.ConfirmDialog
 import org.orbitmvi.orbit.compose.collectSideEffect
 
 @Composable
@@ -319,6 +320,12 @@ private fun SubscriptionSection(
                     fontWeight = FontWeight.SemiBold,
                 )
             }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "광고제거, 발급 게임수 증가, 지난주 예상번호 당첨 확인",
+                color = TextSecondary,
+                fontSize = 12.sp,
+            )
 
             Spacer(Modifier.height(16.dp))
 
@@ -366,6 +373,7 @@ private fun SubscriptionSection(
 private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
     val isCanceled = !subscriptionStatus.autoRenewing
     val statusColor = if (isCanceled) AccentGold else AccentGreen
+    val dateFormat = remember { java.text.SimpleDateFormat("yyyy.MM.dd", java.util.Locale.KOREA) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -401,6 +409,13 @@ private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
                     fontSize = 12.sp,
                 )
             }
+            subscriptionStatus.expiryTimeMillis?.let { expiry ->
+                Text(
+                    text = "구독 기간: ~${dateFormat.format(java.util.Date(expiry))}",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                )
+            }
             Text(
                 text = if (isCanceled) "만료일까지 이용 가능" else "자동 갱신 활성화",
                 color = TextSecondary,
@@ -422,10 +437,12 @@ private fun InactiveSubscriptionContent(
             fontSize = 13.sp,
         )
     } else {
+        val monthlyProduct = products.find { it.billingPeriod == "P1M" }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             products.forEach { product ->
                 SubscriptionProductCard(
                     product = product,
+                    monthlyPriceMicros = if (product.billingPeriod == "P1Y") monthlyProduct?.priceAmountMicros else null,
                     onSubscribeClick = { onSubscribeClick(product.productId) },
                 )
             }
@@ -436,6 +453,7 @@ private fun InactiveSubscriptionContent(
 @Composable
 private fun SubscriptionProductCard(
     product: SubscriptionProduct,
+    monthlyPriceMicros: Long? = null,
     onSubscribeClick: () -> Unit,
 ) {
     val periodLabel = when (product.billingPeriod) {
@@ -456,31 +474,49 @@ private fun SubscriptionProductCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "$periodLabel 구독",
-                    color = TextPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = product.formattedPrice,
-                    color = AccentGold,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+                    Text(
+                        text = "$periodLabel 구독",
+                        color = TextPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    if (monthlyPriceMicros != null && monthlyPriceMicros > 0) {
+                        val originalYearlyPrice = monthlyPriceMicros * 12 / 1_000_000
+                        val numberFormat = java.text.NumberFormat.getNumberInstance(java.util.Locale.KOREA)
+                        Text(
+                            text = "₩${numberFormat.format(originalYearlyPrice)}",
+                            color = TextSecondary,
+                            fontSize = 13.sp,
+                            textDecoration = TextDecoration.LineThrough,
+                        )
+                        Spacer(Modifier.height(1.dp))
+                        Text(
+                            text = product.formattedPrice,
+                            color = AccentGold,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    } else {
+                        Text(
+                            text = product.formattedPrice,
+                            color = AccentGold,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
 
-            Button(
-                onClick = onSubscribeClick,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-            ) {
-                Text(
-                    text = "구독하기",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
+                Button(
+                    onClick = onSubscribeClick,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                ) {
+                    Text(
+                        text = "구독하기",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
             }
         }
     }
