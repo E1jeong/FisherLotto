@@ -6,6 +6,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.billing.ReceiptRequest
+import com.queentech.data.model.billing.SubscriptionQueryRequest
 import com.queentech.data.model.service.BillingService
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
@@ -112,9 +113,10 @@ class BillingRepositoryImpl @Inject constructor(
     private suspend fun sendReceiptToServer(purchase: Purchase) {
         try {
             val email = userLocalDataSource.userFlow.firstOrNull()?.email
+            val productId = purchase.products.firstOrNull() ?: ""
             val request = ReceiptRequest(
                 orderId = purchase.orderId ?: "",
-                productId = purchase.products.firstOrNull() ?: "",
+                productId = productId,
                 purchaseToken = purchase.purchaseToken,
                 purchaseTime = purchase.purchaseTime,
                 autoRenewing = purchase.isAutoRenewing,
@@ -123,6 +125,15 @@ class BillingRepositoryImpl @Inject constructor(
             val response = billingService.sendReceipt(request)
             if (response.success) {
                 Log.d(TAG, "Receipt sent successfully: ${purchase.orderId}")
+                // 서버에서 반환한 정확한 만료일로 구독 상태 즉시 업데이트
+                val expiryMillis = response.expiryTimeMillis
+                    ?: estimateExpiryTime(purchase.purchaseTime, productId)
+                _subscriptionStatus.value = SubscriptionStatus(
+                    isActive = true,
+                    productId = productId,
+                    expiryTimeMillis = expiryMillis,
+                    autoRenewing = purchase.isAutoRenewing,
+                )
             } else {
                 Log.e(TAG, "Receipt send failed: ${response.message}")
             }
@@ -142,7 +153,22 @@ class BillingRepositoryImpl @Inject constructor(
 
         if (activePurchase != null) {
             val productId = activePurchase.products.firstOrNull()
-            val expiryMillis = estimateExpiryTime(activePurchase.purchaseTime, productId)
+
+            // 서버를 통해 Google Play Developer API에서 정확한 만료일 조회
+            val serverExpiry = try {
+                val response = billingService.querySubscription(
+                    SubscriptionQueryRequest(
+                        purchaseToken = activePurchase.purchaseToken,
+                        productId = productId ?: "",
+                    )
+                )
+                if (response.success) response.expiryTimeMillis else null
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to query subscription from server, using estimate", e)
+                null
+            }
+
+            val expiryMillis = serverExpiry ?: estimateExpiryTime(activePurchase.purchaseTime, productId)
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = true,
                 productId = productId,
