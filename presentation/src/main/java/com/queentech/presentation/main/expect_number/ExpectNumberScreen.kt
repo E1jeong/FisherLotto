@@ -134,6 +134,7 @@ private fun InitExpectNumberScreen(
             is ExpectNumberSideEffect.Toast -> {
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
+
             is ExpectNumberSideEffect.ShowRewardAd -> {
                 // 광고가 준비되었는지 확인 후 띄우기
                 if (currentRewardedAd != null && currentActivity != null) {
@@ -144,7 +145,8 @@ private fun InitExpectNumberScreen(
                     currentOnAdConsumed()
                 } else {
                     // 인터넷 문제 등으로 아직 광고가 로드되지 않은 경우
-                    Toast.makeText(context, "광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT)
+                        .show()
                     currentOnAdConsumed() // 재시도를 위해 상태 초기화 및 로드 함수 호출
                 }
             }
@@ -166,6 +168,7 @@ private fun loadRewardedAd(
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 onAdLoaded(null)
             }
+
             override fun onAdLoaded(ad: RewardedAd) {
                 onAdLoaded(ad)
             }
@@ -319,7 +322,7 @@ private fun WeekSection(
                     elevation = ButtonDefaults.buttonElevation(if (isButtonDisabled) 0.dp else 4.dp)
                 ) {
                     Text(
-                        text = if (isButtonDisabled) "마감" else "발급하기",
+                        text = if (isButtonDisabled) "마감" else "번호발급",
                         color = if (isButtonDisabled) Color.LightGray else Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
