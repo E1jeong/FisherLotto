@@ -83,8 +83,13 @@ fun CameraScreen(
                 lifecycleOwner = lifecycleOwner,
                 analysisExecutor = analysisExecutor,
                 onQrCodeValueDetect = {
-                    viewModel.onQrCodeScanned(it)
-                    qrCodeValueDialogVisible = true
+                    if (!qrCodeValueDialogVisible) {
+                        if (state.showHistorySheet) {
+                            viewModel.dismissHistorySheet()
+                        }
+                        viewModel.onQrCodeScanned(it)
+                        qrCodeValueDialogVisible = true
+                    }
                 },
                 onCameraError = { cameraError = it }
             )
