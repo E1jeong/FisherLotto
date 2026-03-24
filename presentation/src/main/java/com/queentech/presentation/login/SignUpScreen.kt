@@ -2,6 +2,7 @@ package com.queentech.presentation.login
 
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,7 +39,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @OptIn(OrbitExperimental::class)
 @Composable
 fun SignUpScreen(
-    popBackStack: () ->Unit,
+    popBackStack: () -> Unit,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
@@ -94,7 +94,7 @@ fun SignUpScreen(
 @Composable
 private fun InitSignUpScreen(
     context: Context,
-    popBackStack: () ->Unit,
+    popBackStack: () -> Unit,
     viewModel: SignUpViewModel
 ) {
     viewModel.collectSideEffect { sideEffect ->
@@ -133,7 +133,7 @@ private fun SignUpContent(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             SignUpBottomBar(
-                fullWidth = fullWidth,
+                modifier = fullWidth,
                 enableSubmit = enableSubmit,
                 onSubmitClick = onSubmitClick,
             )
@@ -148,12 +148,12 @@ private fun SignUpContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Sign Up",
-                style = MaterialTheme.typography.displaySmall,
+                text = "회원가입",
+                style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Create your account",
+                text = "계정을 생성하세요",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -163,7 +163,7 @@ private fun SignUpContent(
             DefaultTextField(
                 modifier = fullWidth,
                 value = name,
-                placeholder = "Name",
+                placeholder = "이름",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
@@ -189,7 +189,7 @@ private fun SignUpContent(
             DefaultTextField(
                 modifier = fullWidth,
                 value = birth,
-                placeholder = "Birth (YYYYMMDD)",
+                placeholder = "생일 (19700101)",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
@@ -204,7 +204,7 @@ private fun SignUpContent(
             DefaultTextField(
                 modifier = fullWidth,
                 value = phone,
-                placeholder = "Phone (digits only)",
+                placeholder = "핸드폰번호 (01012124545)",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Done
@@ -219,7 +219,7 @@ private fun SignUpContent(
 
 @Composable
 private fun SignUpBottomBar(
-    fullWidth: Modifier,
+    modifier: Modifier,
     enableSubmit: Boolean,
     onSubmitClick: () -> Unit,
 ) {
@@ -230,7 +230,7 @@ private fun SignUpBottomBar(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            modifier = fullWidth.height(48.dp),
+            modifier = modifier.height(48.dp),
             onClick = onSubmitClick,
             enabled = enableSubmit,
             colors = ButtonDefaults.buttonColors(

@@ -121,12 +121,12 @@ private fun LoginContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Fisher Lotto",
-                style = MaterialTheme.typography.displaySmall,
+                text = "어부 로또",
+                style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Your favorite lotto app",
+                text = "인생의 월척을 낚아주는 파트너",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -143,7 +143,7 @@ private fun LoginContent(
                 modifier = fullWidth,
                 enabled = enabledTextInput,
                 value = email,
-                placeholder = "Email (ID)",
+                placeholder = "Email",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
@@ -189,17 +189,17 @@ private fun LoginBottomBar(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (isVisibleSignUp) {
                 Text(
-                    text = "Don't have an account? ",
+                    text = "계정이 없으신가요? ",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     modifier = Modifier.clickable { onSignUpClick() },
-                    text = "Sign up",
+                    text = "회원가입",
                     color = MaterialTheme.colorScheme.secondary
                 )
             } else {
                 Text(
-                    text = "Already sign up account",
+                    text = "이미 계정이 있습니다",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
