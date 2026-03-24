@@ -1,6 +1,7 @@
 package com.queentech.presentation.main.camera
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -31,6 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.queentech.domain.model.lotto.GetLottoNumber
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
+import com.queentech.presentation.theme.AccentGreen
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.CardBg
 import com.queentech.presentation.theme.DividerColor
@@ -177,6 +181,16 @@ fun QrResultDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 result.games.forEachIndexed { index, game ->
+                    val rank = calculateLottoRank(game, mainWinningNumbers, bonusNumber)
+                    val isWinning = rank != "낙첨"
+                    val borderColor = when (rank) {
+                        "1등" -> AccentGold
+                        "2등" -> AccentBlue
+                        "3등" -> AccentGreen
+                        "4등", "5등" -> TextSecondary
+                        else -> Color.Transparent
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -184,6 +198,10 @@ fun QrResultDialog(
                                 if (index > 0) Modifier.padding(top = 8.dp) else Modifier
                             )
                             .clip(RoundedCornerShape(10.dp))
+                            .then(
+                                if (isWinning) Modifier.border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                                else Modifier
+                            )
                             .background(CardBg)
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -198,10 +216,10 @@ fun QrResultDialog(
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             game.forEach { number ->
@@ -212,7 +230,7 @@ fun QrResultDialog(
                                     // 미당첨 번호 → 어두운 스타일
                                     Box(
                                         modifier = Modifier
-                                            .size(30.dp)
+                                            .size(28.dp)
                                             .clip(CircleShape)
                                             .background(DividerColor),
                                         contentAlignment = Alignment.Center
@@ -228,6 +246,10 @@ fun QrResultDialog(
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        RankBadge(rank = rank)
                     }
                 }
             }
@@ -247,6 +269,69 @@ fun QrResultDialog(
                 )
             }
         }
+    }
+}
+
+private fun calculateLottoRank(
+    game: List<Int>,
+    mainWinningNumbers: List<Int>,
+    bonusNumber: Int,
+): String {
+    val mainMatchCount = game.count { it in mainWinningNumbers }
+    val hasBonusMatch = bonusNumber in game
+
+    return when {
+        mainMatchCount == 6 -> "1등"
+        mainMatchCount == 5 && hasBonusMatch -> "2등"
+        mainMatchCount == 5 -> "3등"
+        mainMatchCount == 4 -> "4등"
+        mainMatchCount == 3 -> "5등"
+        else -> "낙첨"
+    }
+}
+
+@Composable
+private fun RankBadge(rank: String) {
+    val bgColor: Color
+    val textColor: Color
+
+    when (rank) {
+        "1등" -> {
+            bgColor = AccentGold; textColor = Color.DarkGray
+        }
+        "2등" -> {
+            bgColor = AccentBlue; textColor = Color.White
+        }
+
+        "3등" -> {
+            bgColor = AccentGreen; textColor = Color.White
+        }
+
+        "4등", "5등" -> {
+            bgColor = DividerColor; textColor = TextPrimary
+        }
+
+        else -> {
+            bgColor = Color.Transparent; textColor = TextSecondary
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .then(
+                if (rank != "낙첨") Modifier.background(bgColor) else Modifier
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = rank,
+            color = textColor,
+            fontSize = 10.sp,
+            fontWeight = if (rank == "낙첨") FontWeight.Normal else FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -276,5 +361,108 @@ private fun LottoBallSmall(number: Int) {
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0D1B2A)
+@Composable
+private fun RankBadgePreview() {
+    Surface(color = BgDark) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            listOf("1등", "2등", "3등", "4등", "5등", "낙첨").forEach { rank ->
+                RankBadge(rank = rank)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF152536, widthDp = 360)
+@Composable
+private fun GameRowPreview() {
+    // 당첨번호: 3, 11, 15, 23, 34, 40 / 보너스: 7
+    val mainWinning = listOf(3, 11, 15, 23, 34, 40)
+    val bonus = 7
+    val allWinning = mainWinning + bonus
+
+    // 각 등수별 시나리오
+    val games = listOf(
+        listOf(3, 11, 15, 23, 34, 40),  // A: 6개 일치 → 1등
+        listOf(3, 11, 15, 23, 34, 7),   // B: 5개 + 보너스 → 2등
+        listOf(3, 11, 15, 23, 34, 9),   // C: 5개 일치 → 3등
+        listOf(3, 11, 15, 23, 8, 9),    // D: 4개 일치 → 4등
+        listOf(3, 11, 15, 5, 8, 9),     // E: 3개 일치 → 5등
+        listOf(3, 11, 5, 6, 8, 9),      // F: 2개 일치 → 낙첨
+    )
+
+    Surface(color = SectionBg) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            games.forEachIndexed { index, game ->
+                val rank = calculateLottoRank(game, mainWinning, bonus)
+                val isWinning = rank != "낙첨"
+                val borderColor = when (rank) {
+                    "1등" -> AccentGold
+                    "2등" -> AccentBlue
+                    "3등" -> AccentGreen
+                    "4등", "5등" -> TextSecondary
+                    else -> Color.Transparent
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (index > 0) Modifier.padding(top = 8.dp) else Modifier)
+                        .clip(RoundedCornerShape(10.dp))
+                        .then(
+                            if (isWinning) Modifier.border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                            else Modifier
+                        )
+                        .background(CardBg)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${'A' + index}",
+                        color = AccentBlue,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(20.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        game.forEach { number ->
+                            if (allWinning.contains(number)) {
+                                LottoBallSmall(number = number)
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(DividerColor),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = number.toString(),
+                                        color = TextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    RankBadge(rank = rank)
+                }
+            }
+        }
     }
 }
