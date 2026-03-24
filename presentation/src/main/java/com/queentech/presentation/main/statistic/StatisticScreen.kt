@@ -107,30 +107,57 @@ private fun StatisticContent(
             )
         }
 
-        // 2. 탭 선택 섹션
+        // 2. 동행복권 섹션 (헤더 + 탭 + 테이블을 하나의 카드로 묶음)
+        // 2-1. 섹션 상단: 제목 + 부제 + 탭 + 테이블 헤더
         item {
-            StatisticTabRow(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                modifier = Modifier.padding(horizontal = Paddings.xlarge, vertical = Paddings.medium)
-            )
-        }
-
-        // 3. 테이블 헤더 (선택된 탭에 따라 다르게 렌더링)
-        item {
-            if (selectedTab == StatisticTab.COUNT) {
-                StatisticCountTableHeader(modifier = Modifier.padding(horizontal = Paddings.xlarge))
-            } else {
-                StatisticMoneyTableHeader(modifier = Modifier.padding(horizontal = Paddings.xlarge))
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = Paddings.xlarge)
+                    .padding(top = Paddings.medium)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(CardBg)
+            ) {
+                Text(
+                    text = "동행복권 회차별 통계",
+                    modifier = Modifier.padding(
+                        start = Paddings.xlarge,
+                        end = Paddings.xlarge,
+                        top = Paddings.xlarge
+                    ),
+                    color = TextPrimary,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(Paddings.medium))
+                Text(
+                    text = "회차별 등수 당첨 인원 및 금액을 확인하세요.",
+                    modifier = Modifier.padding(horizontal = Paddings.xlarge),
+                    color = TextSecondary,
+                    fontSize = 13.sp
+                )
+                Spacer(Modifier.height(Paddings.xlarge))
+                StatisticTabRow(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                    modifier = Modifier.padding(horizontal = Paddings.xlarge)
+                )
+                Spacer(Modifier.height(Paddings.xlarge))
+                if (selectedTab == StatisticTab.COUNT) {
+                    StatisticCountTableHeader()
+                } else {
+                    StatisticMoneyTableHeader()
+                }
             }
         }
 
-        // 4. 테이블 데이터
+        // 2-3. 테이블 데이터
         if (state.lottoList.isEmpty() && !state.isLoading) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = Paddings.xlarge)
+                        .background(CardBg)
                         .padding(Paddings.xlarge),
                     contentAlignment = Alignment.Center
                 ) {
@@ -146,23 +173,26 @@ private fun StatisticContent(
                 items = state.lottoList,
                 key = { _, item -> item.roundInt }
             ) { index, data ->
+                val isLastItem = index == state.lottoList.lastIndex
 
                 if (selectedTab == StatisticTab.COUNT) {
                     StatisticCountTableRow(
                         modifier = Modifier.padding(horizontal = Paddings.xlarge),
                         data = data,
                         isEvenRow = index % 2 == 0,
+                        isLastRow = isLastItem && !state.isPaginating,
                     )
                 } else {
                     StatisticMoneyTableRow(
                         modifier = Modifier.padding(horizontal = Paddings.xlarge),
                         data = data,
                         isEvenRow = index % 2 == 0,
+                        isLastRow = isLastItem && !state.isPaginating,
                     )
                 }
 
                 // 무한 스크롤 트리거
-                if (index == state.lottoList.lastIndex && !state.isLoading && !state.isPaginating) {
+                if (isLastItem && !state.isLoading && !state.isPaginating) {
                     LaunchedEffect(index) {
                         onLoadMore()
                     }
@@ -170,12 +200,14 @@ private fun StatisticContent(
             }
         }
 
-        // 하단 페이징 스피너
+        // 2-4. 하단 페이징 스피너
         if (state.isPaginating) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = Paddings.xlarge)
+                        .background(CardBg)
                         .padding(Paddings.xlarge),
                     contentAlignment = Alignment.Center
                 ) {
@@ -253,7 +285,7 @@ private fun StatisticTabRow(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(CardBg)
+            .background(SectionBg)
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -303,7 +335,6 @@ private fun StatisticCountTableHeader(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
             .background(SectionBg)
             .padding(vertical = Paddings.large, horizontal = Paddings.medium),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -333,9 +364,11 @@ private fun StatisticCountTableRow(
     modifier: Modifier = Modifier,
     data: GetLottoNumber,
     isEvenRow: Boolean,
+    isLastRow: Boolean = false,
 ) {
     val rowBg = if (isEvenRow) CardBg else SectionBg
-    Column(modifier = modifier.fillMaxWidth()) {
+    val shape = if (isLastRow) RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp) else RoundedCornerShape(0.dp)
+    Column(modifier = modifier.fillMaxWidth().clip(shape)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -405,7 +438,6 @@ private fun StatisticMoneyTableHeader(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
             .background(SectionBg)
             .padding(vertical = Paddings.large, horizontal = Paddings.medium),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -432,9 +464,11 @@ private fun StatisticMoneyTableRow(
     modifier: Modifier = Modifier,
     data: GetLottoNumber,
     isEvenRow: Boolean,
+    isLastRow: Boolean = false,
 ) {
     val rowBg = if (isEvenRow) CardBg else SectionBg
-    Column(modifier = modifier.fillMaxWidth()) {
+    val shape = if (isLastRow) RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp) else RoundedCornerShape(0.dp)
+    Column(modifier = modifier.fillMaxWidth().clip(shape)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
