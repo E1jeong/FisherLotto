@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.queentech.domain.model.lotto.ScanHistory
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
+import com.queentech.presentation.theme.AccentGreen
 import com.queentech.presentation.theme.AccentRed
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.CardBg
@@ -201,8 +201,14 @@ private fun ScanHistoryItem(
         }
 
         Text(
-            text = "일치 ${item.matchCount}개",
-            color = if (item.matchCount > 0) AccentGold else TextSecondary,
+            text = if (item.bestRank in 1..5) "${item.bestRank}등" else "낙첨",
+            color = when (item.bestRank) {
+                1 -> AccentGold
+                2 -> AccentBlue
+                3 -> AccentGreen
+                4, 5 -> TextPrimary
+                else -> TextSecondary
+            },
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
         )

@@ -52,15 +52,24 @@ class CameraViewModel @Inject constructor(
         // DB에 스캔 이력 저장 (중복 체크)
         if (winning != null) {
             if (!scanHistoryRepository.exists(result.drawNo, result.games)) {
-                val winningNumbers = listOf(
+                val mainNumbers = listOf(
                     winning.num1Int, winning.num2Int, winning.num3Int,
                     winning.num4Int, winning.num5Int, winning.num6Int,
-                    winning.bonusInt
                 )
-                val matchCount = result.games.sumOf { game ->
-                    game.count { it in winningNumbers }
-                }
-                scanHistoryRepository.save(result.drawNo, result.games, matchCount)
+                val bonus = winning.bonusInt
+                val bestRank = result.games.map { game ->
+                    val mainMatch = game.count { it in mainNumbers }
+                    val hasBonus = bonus in game
+                    when {
+                        mainMatch == 6 -> 1
+                        mainMatch == 5 && hasBonus -> 2
+                        mainMatch == 5 -> 3
+                        mainMatch == 4 -> 4
+                        mainMatch == 3 -> 5
+                        else -> 0
+                    }
+                }.filter { it > 0 }.minOrNull() ?: 0
+                scanHistoryRepository.save(result.drawNo, result.games, bestRank)
             }
         }
     }

@@ -14,13 +14,13 @@ class ScanHistoryRepositoryImpl @Inject constructor(
     private val dao: ScanHistoryDao
 ) : ScanHistoryRepository {
 
-    override suspend fun save(drawNo: Int, games: List<List<Int>>, matchCount: Int) {
+    override suspend fun save(drawNo: Int, games: List<List<Int>>, bestRank: Int) {
         val gamesJson = Json.encodeToString(games)
         dao.insert(
             ScanHistoryEntity(
                 drawNo = drawNo,
                 games = gamesJson,
-                matchCount = matchCount,
+                bestRank = bestRank,
                 scannedAt = System.currentTimeMillis()
             )
         )
@@ -32,7 +32,7 @@ class ScanHistoryRepositoryImpl @Inject constructor(
                 id = entity.id,
                 drawNo = entity.drawNo,
                 games = Json.decodeFromString(entity.games),
-                matchCount = entity.matchCount,
+                bestRank = entity.bestRank,
                 scannedAt = entity.scannedAt,
             )
         }

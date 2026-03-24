@@ -32,6 +32,28 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `scan_history` ADD COLUMN `bestRank` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("UPDATE `scan_history` SET `bestRank` = 0")
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS `scan_history_new` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `drawNo` INTEGER NOT NULL,
+                    `games` TEXT NOT NULL,
+                    `bestRank` INTEGER NOT NULL DEFAULT 0,
+                    `scannedAt` INTEGER NOT NULL
+                )""".trimIndent()
+            )
+            db.execSQL(
+                """INSERT INTO `scan_history_new` (`id`, `drawNo`, `games`, `bestRank`, `scannedAt`)
+                   SELECT `id`, `drawNo`, `games`, `bestRank`, `scannedAt` FROM `scan_history`"""
+            )
+            db.execSQL("DROP TABLE `scan_history`")
+            db.execSQL("ALTER TABLE `scan_history_new` RENAME TO `scan_history`")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(
@@ -41,7 +63,7 @@ object DatabaseModule {
         AppDatabase::class.java,
         "fisher_lotto_db"
     )
-        .addMigrations(MIGRATION_1_2)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
         .build()
 
     @Provides

@@ -9,7 +9,7 @@ import com.queentech.data.database.room.entity.ScanHistoryEntity
 
 @Database(
     entities = [LottoIssueEntity::class, ScanHistoryEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
