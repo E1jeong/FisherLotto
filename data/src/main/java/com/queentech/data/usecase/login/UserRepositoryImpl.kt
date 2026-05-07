@@ -1,11 +1,13 @@
 package com.queentech.data.usecase.login
 
+import android.util.Log
 import com.queentech.data.database.room.dao.LottoIssueDao
 import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.login.TierRequest
+import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.login.SignUpResultStatus
 import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.fcm.FcmRepository
@@ -17,7 +19,7 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
-    private val lottoService: LottoService,
+    private val userService: UserService,
     private val localDataSource: UserLocalDataSource,
     private val lottoIssueDao: LottoIssueDao,
     private val scanHistoryDao: ScanHistoryDao,
@@ -41,7 +43,7 @@ class UserRepositoryImpl @Inject constructor(
                 phone = phone
             )
 
-            val response = lottoService.signUpUser(requestBody)
+            val response = userService.signUpUser(requestBody)
 
             if (response.statusInt == SignUpResultStatus.OK.status) {
                 val user = User(name, email, birth, phone)
@@ -75,7 +77,7 @@ class UserRepositoryImpl @Inject constructor(
             )
 
             // 서버에 유저 존재 여부 조회
-            val response = lottoService.getUser(body)
+            val response = userService.getUser(body)
 
             if (response.statusInt == 8200) {
                 val user = User(name, email, birth, phone)
@@ -107,20 +109,37 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun updateTier(tier: String) {
         _currentUser.value = _currentUser.value?.copy(tier = tier)
         localDataSource.updateTier(tier)
+
+        val user = _currentUser.value ?: return
+        try {
+            userService.updateTier(
+                TierRequest(
+                    email = user.email,
+                    phone = user.phone,
+                    isPremium = tier == User.TIER_PREMIUM,
+                )
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "서버 tier 업데이트 실패 (로컬은 적용됨)", e)
+        }
     }
 
     override suspend fun deleteAccount(): Result<Unit> {
-        val email = _currentUser.value?.email
+        val user = _currentUser.value
             ?: return Result.failure(Exception("로그인된 사용자가 없습니다."))
 
         return try {
-            fcmRepository.deleteUser(email).getOrThrow()
+            userService.withdraw(GetUserRequestBody(email = user.email, phone = user.phone))
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         } finally {
-            // FCM 삭제 성공/실패와 무관하게 로컬 데이터는 항상 정리
+            // 서버 처리 성공/실패와 무관하게 로컬 데이터는 항상 정리
             logout()
         }
+    }
+
+    companion object {
+        private const val TAG = "UserRepositoryImpl"
     }
 }

@@ -3,6 +3,8 @@ package com.queentech.data.di
 import com.queentech.data.model.service.BillingService
 import com.queentech.data.model.service.FcmService
 import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.SubLottoService
+import com.queentech.data.model.service.UserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +18,7 @@ import javax.inject.Named
 
 
 const val LOTTO_SERVER_URL = "http://www.fisherlotto.com:10907/"
-const val LOTTO_SUB_BACKEND_URL = "https://lotto-sub-backend.vercel.app/"
+const val LOTTO_SUB_BACKEND_URL = "http://www.fisherlotto.com:3001/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -78,5 +80,17 @@ object RetrofitModule {
     @Provides
     fun provideBillingService(@Named("lotto-sub") retrofit: Retrofit): BillingService {
         return retrofit.create(BillingService::class.java)
+    }
+
+    // --- User 서비스 (lotto-sub 서버 사용) ---
+    @Provides
+    fun provideUserService(@Named("lotto-sub") retrofit: Retrofit): UserService {
+        return retrofit.create(UserService::class.java)
+    }
+
+    // --- SubLotto 서비스 (lotto-sub 서버 사용) ---
+    @Provides
+    fun provideSubLottoService(@Named("lotto-sub") retrofit: Retrofit): SubLottoService {
+        return retrofit.create(SubLottoService::class.java)
     }
 }

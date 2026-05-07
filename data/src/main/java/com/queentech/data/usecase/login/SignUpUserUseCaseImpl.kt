@@ -1,13 +1,13 @@
 package com.queentech.data.usecase.login
 
 import com.queentech.data.model.login.SignUpUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.common.CommonResponse
 import com.queentech.domain.usecase.login.SignUpUserUseCase
 import javax.inject.Inject
 
 class SignUpUserUseCaseImpl @Inject constructor(
-    private val lottoService: LottoService
+    private val userService: UserService
 ) : SignUpUserUseCase {
     override suspend fun invoke(
         name: String,
@@ -23,6 +23,6 @@ class SignUpUserUseCaseImpl @Inject constructor(
             phone = phone
         )
 
-        lottoService.signUpUser(requestBody)
+        userService.signUpUser(requestBody)
     }
 }
