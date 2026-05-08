@@ -312,8 +312,7 @@ private fun StatisticTabRow(
 }
 
 // 금액을 "OO억 OO만" 형태로 포맷팅하는 유틸 함수
-private fun formatMoney(moneyStr: String): String {
-    val amount = moneyStr.toLongOrNull() ?: return "-"
+private fun formatMoney(amount: Long): String {
     if (amount == 0L) return "0"
 
     val uk = amount / 100_000_000
@@ -488,7 +487,7 @@ private fun StatisticMoneyTableRow(
             Box(modifier = Modifier.width(1.dp).height(24.dp).background(DividerColor))
 
             Text(
-                text = formatMoney(data.firstMoney),
+                text = formatMoney(data.firstMoneyLong),
                 modifier = Modifier.weight(moneyColumnWeights[1]),
                 textAlign = TextAlign.Center,
                 color = AccentGold,
@@ -496,7 +495,7 @@ private fun StatisticMoneyTableRow(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = formatMoney(data.secondMoney),
+                text = formatMoney(data.secondMoneyLong),
                 modifier = Modifier.weight(moneyColumnWeights[2]),
                 textAlign = TextAlign.Center,
                 color = AccentGreen,
@@ -504,7 +503,7 @@ private fun StatisticMoneyTableRow(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = formatMoney(data.thirdMoney),
+                text = formatMoney(data.thirdMoneyLong),
                 modifier = Modifier.weight(moneyColumnWeights[3]),
                 textAlign = TextAlign.Center,
                 color = AccentRed,
