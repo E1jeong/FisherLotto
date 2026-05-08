@@ -1,16 +1,16 @@
 package com.queentech.data.usecase.login
 
 import android.util.Log
+import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.database.room.dao.LottoIssueDao
 import com.queentech.data.database.room.dao.ScanHistoryDao
-import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.login.TierRequest
+import com.queentech.data.model.service.LottoService
 import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.login.SignUpResultStatus
 import com.queentech.domain.model.login.User
-import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,10 +20,10 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val userService: UserService,
+    private val lottoService: LottoService,
     private val localDataSource: UserLocalDataSource,
     private val lottoIssueDao: LottoIssueDao,
     private val scanHistoryDao: ScanHistoryDao,
-    private val fcmRepository: FcmRepository,
 ) : UserRepository {
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -42,6 +42,18 @@ class UserRepositoryImpl @Inject constructor(
                 birth = birth,
                 phone = phone
             )
+
+            val mainResponse = lottoService.registerUser(requestBody)
+            if (mainResponse.statusInt != SignUpResultStatus.OK.status) {
+                val errorMessage = when (mainResponse.statusInt) {
+                    SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
+                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
+                    SignUpResultStatus.ERROR_REGISTER.status -> "등록 중 오류가 발생했습니다."
+                    SignUpResultStatus.ERROR_REQUEST.status -> "요청 오류가 발생했습니다."
+                    else -> "번호 발급 중 오류가 발생했습니다. (${mainResponse.status})"
+                }
+                return Result.failure(Exception(errorMessage))
+            }
 
             val response = userService.signUpUser(requestBody)
 
