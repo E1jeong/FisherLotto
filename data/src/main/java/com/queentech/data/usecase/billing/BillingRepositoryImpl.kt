@@ -93,25 +93,27 @@ class BillingRepositoryImpl @Inject constructor(
 
     override suspend fun restorePurchases(): Result<SubscriptionStatus> = runCatching {
         refreshSubscriptionStatus()
+        val tier = if (_subscriptionStatus.value.isActive) User.TIER_PREMIUM else User.TIER_FREE
+        userRepository.updateTier(tier)
         _subscriptionStatus.value
     }
 
     private suspend fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
-                if (acknowledged) {
-                    sendReceiptToServer(purchase)
-                } else {
-                    Log.e(TAG, "Failed to acknowledge purchase: ${purchase.orderId}")
+                val receiptSent = sendReceiptToServer(purchase)
+                if (receiptSent) {
+                    val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
+                    if (!acknowledged) {
+                        Log.e(TAG, "Failed to acknowledge purchase: ${purchase.orderId}")
+                    }
                 }
             }
         }
-        refreshSubscriptionStatus()
     }
 
-    private suspend fun sendReceiptToServer(purchase: Purchase) {
-        try {
+    private suspend fun sendReceiptToServer(purchase: Purchase): Boolean {
+        return try {
             val email = userLocalDataSource.userFlow.firstOrNull()?.email
             val productId = purchase.products.firstOrNull() ?: ""
             val request = ReceiptRequest(
@@ -125,7 +127,6 @@ class BillingRepositoryImpl @Inject constructor(
             val response = billingService.sendReceipt(request)
             if (response.success) {
                 Log.d(TAG, "Receipt sent successfully: ${purchase.orderId}")
-                // 서버에서 반환한 정확한 만료일로 구독 상태 즉시 업데이트
                 val expiryMillis = response.expiryTimeMillis
                     ?: estimateExpiryTime(purchase.purchaseTime, productId)
                 _subscriptionStatus.value = SubscriptionStatus(
@@ -134,11 +135,15 @@ class BillingRepositoryImpl @Inject constructor(
                     expiryTimeMillis = expiryMillis,
                     autoRenewing = purchase.isAutoRenewing,
                 )
+                userRepository.updateTier(User.TIER_PREMIUM)
+                true
             } else {
                 Log.e(TAG, "Receipt send failed: ${response.message}")
+                false
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send receipt to server", e)
+            false
         }
     }
 
@@ -184,8 +189,6 @@ class BillingRepositoryImpl @Inject constructor(
             )
         }
 
-        val tier = if (isActive) User.TIER_PREMIUM else User.TIER_FREE
-        userRepository.updateTier(tier)
     }
 
     private fun estimateExpiryTime(purchaseTimeMillis: Long, productId: String?): Long {
