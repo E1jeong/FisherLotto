@@ -69,7 +69,7 @@ fun HomeScreen(
 
     HomeContent(
         latestDrawNumber = state.getLottoNumberResponse.roundInt,
-        latestDrawDate = state.getLottoNumberResponse.pdate,
+        latestDrawDate = state.getLottoNumberResponse.pdate.substringBefore('T'),
         winningNumbers = winningNumbers,
         latestWinnerCount = state.getLottoNumberResponse.firstCountInt,
         latestTotalWinnings = state.getLottoNumberResponse.firstMoneyLong,
