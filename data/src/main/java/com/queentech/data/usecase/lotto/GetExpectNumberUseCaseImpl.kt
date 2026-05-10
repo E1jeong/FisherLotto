@@ -1,13 +1,13 @@
 package com.queentech.data.usecase.lotto
 
 import com.queentech.data.model.login.GetUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.SubLottoService
 import com.queentech.domain.model.lotto.GetExpectNumber
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
 import javax.inject.Inject
 
 class GetExpectNumberUseCaseImpl @Inject constructor(
-    private val lottoService: LottoService,
+    private val subLottoService: SubLottoService,
 ) : GetExpectNumberUseCase {
     override suspend fun invoke(
         email: String,
@@ -19,6 +19,6 @@ class GetExpectNumberUseCaseImpl @Inject constructor(
             phone = phone
         )
 
-        lottoService.getExpectNumber(requestBody)
+        subLottoService.getExpectNumber(requestBody)
     }
 }

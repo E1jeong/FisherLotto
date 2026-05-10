@@ -18,7 +18,7 @@ import javax.inject.Named
 
 
 const val LOTTO_SERVER_URL = "http://www.fisherlotto.com:10907/"
-const val LOTTO_SUB_BACKEND_URL = "http://www.fisherlotto.com:3001/"
+const val LOTTO_SUB_BACKEND_URL = "https://www.fisherlotto.com:3001/"
 
 @Module
 @InstallIn(SingletonComponent::class)
