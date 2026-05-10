@@ -95,6 +95,16 @@ class BillingRepositoryImpl @Inject constructor(
         refreshSubscriptionStatus()
         val tier = if (_subscriptionStatus.value.isActive) User.TIER_PREMIUM else User.TIER_FREE
         userRepository.updateTier(tier)
+
+        // 계정 이동 후 복원 시 서버 T_PURCHASES의 email을 현재 계정으로 동기화
+        if (_subscriptionStatus.value.isActive) {
+            val purchases = billingClientWrapper.queryPurchases()
+            val activePurchase = purchases?.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+            if (activePurchase != null) {
+                sendReceiptToServer(activePurchase)
+            }
+        }
+
         _subscriptionStatus.value
     }
 

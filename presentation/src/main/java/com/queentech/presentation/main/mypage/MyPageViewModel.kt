@@ -76,6 +76,10 @@ class MyPageViewModel @Inject constructor(
     }
 
     fun onSubscribeClick(productId: String) = intent {
+        if (state.user?.email.isNullOrBlank()) {
+            postSideEffect(MyPageSideEffect.NavigateToLogin)
+            return@intent
+        }
         postSideEffect(MyPageSideEffect.LaunchBillingFlow(productId))
     }
 
