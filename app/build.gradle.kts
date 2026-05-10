@@ -101,4 +101,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose.hilt)
 
     implementation(libs.google.ads)
+    implementation(libs.androidx.work.runtime.ktx)
 }
