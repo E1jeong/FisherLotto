@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -371,8 +372,22 @@ private fun SubscriptionSection(
 
 @Composable
 private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
-    val isCanceled = !subscriptionStatus.autoRenewing
-    val statusColor = if (isCanceled) AccentGold else AccentGreen
+    val statusColor = when {
+        subscriptionStatus.isOnHold -> AccentRed
+        subscriptionStatus.cancelAtPeriodEnd -> AccentGold
+        else -> AccentGreen
+    }
+    val statusLabel = when {
+        subscriptionStatus.isOnHold -> "결제 실패 (유예 중)"
+        subscriptionStatus.cancelAtPeriodEnd -> "구독 취소됨"
+        else -> "구독 중"
+    }
+    val statusDesc = when {
+        subscriptionStatus.isOnHold -> "결제 수단을 확인해 주세요"
+        subscriptionStatus.cancelAtPeriodEnd -> "만료일까지 이용 가능"
+        else -> "자동 갱신 활성화"
+    }
+    val statusIcon = if (subscriptionStatus.isOnHold) Icons.Default.Warning else Icons.Default.CheckCircle
     val dateFormat = remember { java.text.SimpleDateFormat("yyyy.MM.dd", java.util.Locale.KOREA) }
 
     Row(
@@ -384,15 +399,15 @@ private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = if (isCanceled) "구독 취소됨" else "구독 중",
+            imageVector = statusIcon,
+            contentDescription = statusLabel,
             tint = statusColor,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(10.dp))
         Column {
             Text(
-                text = if (isCanceled) "구독 취소됨" else "구독 중",
+                text = statusLabel,
                 color = statusColor,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -417,7 +432,7 @@ private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
                 )
             }
             Text(
-                text = if (isCanceled) "만료일까지 이용 가능" else "자동 갱신 활성화",
+                text = statusDesc,
                 color = TextSecondary,
                 fontSize = 11.sp,
             )

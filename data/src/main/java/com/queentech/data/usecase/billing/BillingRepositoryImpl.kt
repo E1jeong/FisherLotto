@@ -160,25 +160,28 @@ class BillingRepositoryImpl @Inject constructor(
             val productId = activePurchase.products.firstOrNull()
 
             // 서버를 통해 Google Play Developer API에서 정확한 만료일 조회
-            val serverExpiry = try {
+            val serverResponse = try {
                 val response = billingService.querySubscription(
                     SubscriptionQueryRequest(
                         purchaseToken = activePurchase.purchaseToken,
                         productId = productId ?: "",
                     )
                 )
-                if (response.success) response.expiryTimeMillis else null
+                if (response.success) response else null
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to query subscription from server, using estimate", e)
                 null
             }
 
-            val expiryMillis = serverExpiry ?: estimateExpiryTime(activePurchase.purchaseTime, productId)
+            val expiryMillis = serverResponse?.expiryTimeMillis
+                ?: estimateExpiryTime(activePurchase.purchaseTime, productId)
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = true,
                 productId = productId,
                 expiryTimeMillis = expiryMillis,
                 autoRenewing = activePurchase.isAutoRenewing,
+                cancelAtPeriodEnd = serverResponse?.cancelAtPeriodEnd ?: false,
+                isOnHold = serverResponse?.isOnHold ?: false,
             )
         } else {
             _subscriptionStatus.value = SubscriptionStatus(
