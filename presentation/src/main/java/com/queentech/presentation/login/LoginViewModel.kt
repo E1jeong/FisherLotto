@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.google.firebase.messaging.FirebaseMessaging
+import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
@@ -23,6 +24,7 @@ import kotlin.coroutines.resume
 class LoginViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val fcmRepository: FcmRepository,
+    private val billingRepository: BillingRepository,
 ) : ViewModel(), ContainerHost<LoginState, LoginSideEffect> {
 
     override val container: Container<LoginState, LoginSideEffect> = container(
@@ -74,6 +76,7 @@ class LoginViewModel @Inject constructor(
         result.onSuccess {
             reduce { state.copy(userEmail = email) }
             registerFcmToken(email)
+            billingRepository.restorePurchases()
             postSideEffect(LoginSideEffect.NavigateToHome)
         }.onFailure {
             postSideEffect(LoginSideEffect.Toast(it.message ?: "로그인에 실패했습니다."))
