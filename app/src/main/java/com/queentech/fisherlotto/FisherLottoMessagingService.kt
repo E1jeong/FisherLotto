@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.fcm.FcmRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,9 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var fcmRepository: FcmRepository
 
+    @Inject
+    lateinit var billingRepository: BillingRepository
+
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val notificationId = AtomicInteger(0)
 
@@ -31,6 +35,11 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        if (remoteMessage.data["type"] == "SUBSCRIPTION_UPDATE") {
+            serviceScope.launch {
+                billingRepository.refreshSubscriptionStatus()
+            }
+        }
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: return
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: return
         showNotification(title, body)
