@@ -1,0 +1,12 @@
+{
+  "project": "FisherLotto",
+  "phase": "docs-foundation",
+  "steps": [
+    {
+      "step": 0,
+      "name": "ai-docs-baseline",
+      "status": "completed",
+      "summary": "Introduced AGENTS.md, AI-facing docs, project skills, and phase index for FisherLotto."
+    }
+  ]
+}
