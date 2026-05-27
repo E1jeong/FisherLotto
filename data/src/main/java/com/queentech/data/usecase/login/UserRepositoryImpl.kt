@@ -44,7 +44,11 @@ class UserRepositoryImpl @Inject constructor(
             )
 
             val mainResponse = lottoService.registerUser(requestBody)
-            if (mainResponse.statusInt != SignUpResultStatus.OK.status) {
+            if (mainResponse.statusInt == SignUpResultStatus.OK.status) {
+                val user = User(name, email, birth, phone)
+                localDataSource.saveUser(user) // DataStore에 영속 저장
+                Result.success(user)
+            } else {
                 val errorMessage = when (mainResponse.statusInt) {
                     SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
                     SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
@@ -55,22 +59,21 @@ class UserRepositoryImpl @Inject constructor(
                 return Result.failure(Exception(errorMessage))
             }
 
-            val response = userService.signUpUser(requestBody)
-
-            if (response.statusInt == SignUpResultStatus.OK.status) {
-                val user = User(name, email, birth, phone)
-                localDataSource.saveUser(user) // DataStore에 영속 저장
-                Result.success(user)
-            } else {
-                val errorMessage = when (response.statusInt) {
-                    SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
-                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
-                    SignUpResultStatus.ERROR_REGISTER.status -> "등록 중 오류가 발생했습니다."
-                    SignUpResultStatus.ERROR_REQUEST.status -> "요청 오류가 발생했습니다."
-                    else -> "회원가입에 실패했습니다. (${response.status})"
-                }
-                Result.failure(Exception(errorMessage))
-            }
+//            val response = userService.signUpUser(requestBody)
+//            if (response.statusInt == SignUpResultStatus.OK.status) {
+//                val user = User(name, email, birth, phone)
+//                localDataSource.saveUser(user) // DataStore에 영속 저장
+//                Result.success(user)
+//            } else {
+//                val errorMessage = when (response.statusInt) {
+//                    SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
+//                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
+//                    SignUpResultStatus.ERROR_REGISTER.status -> "등록 중 오류가 발생했습니다."
+//                    SignUpResultStatus.ERROR_REQUEST.status -> "요청 오류가 발생했습니다."
+//                    else -> "회원가입에 실패했습니다. (${response.status})"
+//                }
+//                Result.failure(Exception(errorMessage))
+//            }
         } catch (e: Exception) {
             Result.failure(e)
         }
