@@ -3,6 +3,7 @@ package com.queentech.fisherlotto
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -29,6 +30,10 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val notificationId = AtomicInteger(0)
 
+    companion object {
+        private const val TAG = "FisherLottoMessaging"
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
@@ -36,8 +41,15 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         if (remoteMessage.data["type"] == "SUBSCRIPTION_UPDATE") {
+            Log.d(TAG, "SUBSCRIPTION_UPDATE received")
             serviceScope.launch {
-                billingRepository.refreshSubscriptionStatus()
+                try {
+                    Log.d(TAG, "Refreshing subscription status from FCM")
+                    billingRepository.refreshSubscriptionStatus()
+                    Log.d(TAG, "Subscription status refresh completed")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Subscription status refresh failed", e)
+                }
             }
         }
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: return
