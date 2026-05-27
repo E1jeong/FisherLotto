@@ -185,6 +185,19 @@ class BillingRepositoryImpl @Inject constructor(
 
             val expiryMillis = serverResponse?.expiryTimeMillis
                 ?: estimateExpiryTime(activePurchase.purchaseTime, productId)
+            val isEntitled = expiryMillis > System.currentTimeMillis()
+
+            if (!isEntitled) {
+                _subscriptionStatus.value = SubscriptionStatus(
+                    isActive = false,
+                    productId = null,
+                    expiryTimeMillis = null,
+                    autoRenewing = false,
+                )
+                userRepository.updateTier(User.TIER_FREE)
+                return
+            }
+
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = true,
                 productId = productId,
@@ -193,6 +206,7 @@ class BillingRepositoryImpl @Inject constructor(
                 cancelAtPeriodEnd = serverResponse?.cancelAtPeriodEnd ?: false,
                 isOnHold = serverResponse?.isOnHold ?: false,
             )
+            userRepository.updateTier(User.TIER_PREMIUM)
         } else {
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = false,
@@ -200,6 +214,7 @@ class BillingRepositoryImpl @Inject constructor(
                 expiryTimeMillis = null,
                 autoRenewing = false,
             )
+            userRepository.updateTier(User.TIER_FREE)
         }
 
     }
