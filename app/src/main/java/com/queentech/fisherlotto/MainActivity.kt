@@ -36,7 +36,12 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             billingRepository.subscriptionStatus.collect { status ->
-                status.expiryTimeMillis?.let { scheduleExpiryNotification(it) }
+                if (status.isActive) {
+                    status.expiryTimeMillis?.let { scheduleExpiryNotification(it) }
+                } else {
+                    WorkManager.getInstance(this@MainActivity)
+                        .cancelUniqueWork(SubscriptionExpiryWorker.WORK_NAME)
+                }
             }
         }
     }
