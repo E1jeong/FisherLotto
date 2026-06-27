@@ -64,6 +64,13 @@ FisherLotto is an Android lotto companion app for lotto result lookup, QR result
 - If architecture or technology decisions change, update `docs/ADR.md` before implementation.
 - If module ownership or data flow changes, update `docs/ARCHITECTURE.md`.
 
+## Encoding Rules
+
+- Markdown and source files containing Korean text must be read and written as UTF-8.
+- On Windows PowerShell, use `Get-Content -Encoding UTF8` when reading Korean Markdown files.
+- Do not append to an already mojibake-corrupted document unless the task explicitly requires recovery.
+- Prefer creating a new UTF-8 reference document over editing a corrupted historical note.
+
 ## Verification Commands
 
 Use the smallest command that verifies the change:
