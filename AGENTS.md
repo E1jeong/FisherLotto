@@ -91,3 +91,7 @@ On Windows PowerShell, use:
 ```
 
 If a command cannot be run because of local SDK, emulator, signing, or network constraints, state that clearly with the attempted command.
+
+## Wiki Sync
+
+This project has a maintained Obsidian LLM wiki (`Project/Personal/Fisher Lotto`, shared with the `lotto-sub-backend` repo) tracking feature status, unimplemented plans, bugs, and a per-session `핸드오프.md` handoff. When the user asks to sync, check, or update the wiki, use the `obsidian-sync` skill (`.claude/skills/obsidian-sync/SKILL.md`) rather than guessing paths.
