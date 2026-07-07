@@ -194,9 +194,7 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # Custom
-.claude/*
-!.claude/skills/
-!.claude/skills/**
+.claude
 CLAUDE.md
 reference
 .codex
