@@ -223,13 +223,12 @@ class BillingRepositoryImpl @Inject constructor(
         val calendar = Calendar.getInstance().apply { timeInMillis = purchaseTimeMillis }
         when (productId) {
             "fisherlotto_monthly" -> calendar.add(Calendar.MONTH, 1)
-            "fisherlotto_yearly" -> calendar.add(Calendar.YEAR, 1)
         }
         return calendar.timeInMillis
     }
 
     companion object {
         private const val TAG = "BillingRepositoryImpl"
-        val PRODUCT_IDS = listOf("fisherlotto_monthly", "fisherlotto_yearly")
+        val PRODUCT_IDS = listOf("fisherlotto_monthly")
     }
 }

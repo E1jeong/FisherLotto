@@ -1,5 +1,6 @@
 package com.queentech.data.di
 
+import com.queentech.data.BuildConfig
 import com.queentech.data.model.service.BillingService
 import com.queentech.data.model.service.FcmService
 import com.queentech.data.model.service.LottoService
@@ -25,7 +26,7 @@ const val LOTTO_SUB_BACKEND_URL = "https://www.fisherlotto.com:3001/"
 object RetrofitModule {
 
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY // 로그 레벨 설정 (BODY는 요청과 응답의 모든 정보를 로그로 출력)
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
     @Provides

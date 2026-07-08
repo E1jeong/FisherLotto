@@ -1,7 +1,7 @@
 package com.queentech.data.usecase.lotto
 
 import com.queentech.data.model.login.GetUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.SubLottoService
 import com.queentech.domain.model.lotto.GetExpectNumber
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,14 +13,14 @@ import org.junit.Test
 
 class GetExpectNumberUseCaseImplTest {
 
-    private val lottoService: LottoService = mockk()
-    private val useCase = GetExpectNumberUseCaseImpl(lottoService)
+    private val subLottoService: SubLottoService = mockk()
+    private val useCase = GetExpectNumberUseCaseImpl(subLottoService)
 
     @Test
     fun `invoke returns success with expected numbers`() = runTest {
         // Arrange
         val expected = GetExpectNumber(count = 5, lotto = listOf("1,2,3,4,5,6"))
-        coEvery { lottoService.getExpectNumber(any()) } returns expected
+        coEvery { subLottoService.getExpectNumber(any()) } returns expected
 
         // Act
         val result = useCase.invoke(email = "test@test.com", phone = "01012345678")
@@ -29,7 +29,7 @@ class GetExpectNumberUseCaseImplTest {
         assertTrue(result.isSuccess)
         assertEquals(5, result.getOrThrow().count)
         coVerify {
-            lottoService.getExpectNumber(
+            subLottoService.getExpectNumber(
                 GetUserRequestBody(email = "test@test.com", phone = "01012345678")
             )
         }
@@ -38,7 +38,7 @@ class GetExpectNumberUseCaseImplTest {
     @Test
     fun `invoke returns failure when service throws`() = runTest {
         // Arrange
-        coEvery { lottoService.getExpectNumber(any()) } throws RuntimeException("Server error")
+        coEvery { subLottoService.getExpectNumber(any()) } throws RuntimeException("Server error")
 
         // Act
         val result = useCase.invoke(email = "test@test.com", phone = "01012345678")

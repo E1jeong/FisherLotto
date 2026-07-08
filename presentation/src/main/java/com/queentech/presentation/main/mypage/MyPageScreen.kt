@@ -47,7 +47,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -414,7 +413,6 @@ private fun ActiveSubscriptionContent(subscriptionStatus: SubscriptionStatus) {
             )
             val productName = when (subscriptionStatus.productId) {
                 "fisherlotto_monthly" -> "월간 구독"
-                "fisherlotto_yearly" -> "연간 구독"
                 else -> subscriptionStatus.productId ?: ""
             }
             if (productName.isNotEmpty()) {
@@ -452,12 +450,10 @@ private fun InactiveSubscriptionContent(
             fontSize = 13.sp,
         )
     } else {
-        val monthlyProduct = products.find { it.billingPeriod == "P1M" }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             products.forEach { product ->
                 SubscriptionProductCard(
                     product = product,
-                    monthlyPriceMicros = if (product.billingPeriod == "P1Y") monthlyProduct?.priceAmountMicros else null,
                     onSubscribeClick = { onSubscribeClick(product.productId) },
                 )
             }
@@ -468,12 +464,10 @@ private fun InactiveSubscriptionContent(
 @Composable
 private fun SubscriptionProductCard(
     product: SubscriptionProduct,
-    monthlyPriceMicros: Long? = null,
     onSubscribeClick: () -> Unit,
 ) {
     val periodLabel = when (product.billingPeriod) {
         "P1M" -> "월간"
-        "P1Y" -> "연간"
         else -> product.billingPeriod
     }
 
@@ -496,30 +490,12 @@ private fun SubscriptionProductCard(
                         fontWeight = FontWeight.Medium,
                     )
                     Spacer(Modifier.height(2.dp))
-                    if (monthlyPriceMicros != null && monthlyPriceMicros > 0) {
-                        val originalYearlyPrice = monthlyPriceMicros * 12 / 1_000_000
-                        val numberFormat = java.text.NumberFormat.getNumberInstance(java.util.Locale.KOREA)
-                        Text(
-                            text = "₩${numberFormat.format(originalYearlyPrice)}",
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                            textDecoration = TextDecoration.LineThrough,
-                        )
-                        Spacer(Modifier.height(1.dp))
-                        Text(
-                            text = product.formattedPrice,
-                            color = AccentGold,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    } else {
-                        Text(
-                            text = product.formattedPrice,
-                            color = AccentGold,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                    Text(
+                        text = product.formattedPrice,
+                        color = AccentGold,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
 
                 Button(
@@ -587,7 +563,6 @@ private fun MyPageScreenPreview() {
             ),
             subscriptionProducts = listOf(
                 SubscriptionProduct("fisherlotto_monthly", "월간 구독", "매월 자동 결제", "₩4,900", "P1M"),
-                SubscriptionProduct("fisherlotto_yearly", "연간 구독", "매년 자동 결제", "₩49,000", "P1Y"),
             ),
         ),
     )
