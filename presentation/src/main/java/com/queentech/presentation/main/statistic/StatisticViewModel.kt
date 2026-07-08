@@ -4,7 +4,9 @@ import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.lotto.GetLottoNumber
+import com.queentech.domain.model.lotto.GetLottoStats
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
+import com.queentech.domain.usecase.lotto.GetLottoStatsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.async
@@ -22,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
+    private val getLottoStatsUseCase: GetLottoStatsUseCase,
 ) : ViewModel(), ContainerHost<StatisticState, StatisticSideEffect> {
 
     override val container: Container<StatisticState, StatisticSideEffect> = container(
@@ -44,10 +47,11 @@ class StatisticViewModel @Inject constructor(
     companion object {
         const val TAG = "StatisticViewModel"
         const val PAGE_SIZE = 10 // 한 번에 불러올 회차 개수
+        const val ISSUED_STATS_SIZE = 5 // 발급 통계에 표시할 최신 회차 개수
     }
 
     private fun loadInitialData() = intent {
-        reduce { state.copy(isLoading = true, lottoList = emptyList()) }
+        reduce { state.copy(isLoading = true, lottoList = emptyList(), issuedStatsList = emptyList()) }
 
         // 1. 최신 회차(0) 정보 가져오기
         val latestLotto = getLottoNumberUseCase(round = 0).getOrNull()
@@ -60,13 +64,19 @@ class StatisticViewModel @Inject constructor(
         // GetLottoNumber 모델의 확장 프로퍼티 사용
         val latestRound = latestLotto.roundInt
         val startRound = maxOf(1, latestRound - PAGE_SIZE + 1)
+        val statsStartRound = maxOf(1, latestRound - ISSUED_STATS_SIZE + 1)
 
-        // 2. 최신 회차부터 10개 병렬로 불러오기
-        val fetchedList = fetchLottoRange(startRound, latestRound)
+        // 2. 최신 회차부터 10개 병렬로 불러오기 + 발급 통계 최신 5개 회차 병렬로 불러오기
+        val (fetchedList, fetchedStats) = coroutineScope {
+            val listDeferred = async { fetchLottoRange(startRound, latestRound) }
+            val statsDeferred = async { fetchStatsRange(statsStartRound, latestRound) }
+            listDeferred.await() to statsDeferred.await()
+        }
 
         reduce {
             state.copy(
                 lottoList = fetchedList,
+                issuedStatsList = fetchedStats,
                 nextRoundToFetch = startRound - 1,
                 isLoading = false
             )
@@ -113,11 +123,23 @@ class StatisticViewModel @Inject constructor(
             .filterNotNull()
             .sortedByDescending { it.roundInt } // GetLottoNumber 모델 자체를 정렬
     }
+
+    private suspend fun fetchStatsRange(start: Int, end: Int): List<GetLottoStats> = coroutineScope {
+        (start..end).map { round ->
+            async {
+                getLottoStatsUseCase(round).getOrNull()
+            }
+        }
+            .awaitAll()
+            .filterNotNull()
+            .sortedByDescending { it.roundInt }
+    }
 }
 
 @Immutable
 data class StatisticState(
     val lottoList: List<GetLottoNumber> = emptyList(), // 데이터 타입 변경
+    val issuedStatsList: List<GetLottoStats> = emptyList(), // 발급 번호 당첨 통계
     val isLoading: Boolean = false,
     val isPaginating: Boolean = false,
     val nextRoundToFetch: Int? = null,

@@ -9,4 +9,6 @@ data class GetLottoStats(
     val grade4: Int,
     val grade5: Int,
     val combiCount: Int,
-)
+) {
+    val roundInt get() = round.toIntOrNull() ?: 0
+}

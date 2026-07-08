@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.lotto.GetLottoNumber
+import com.queentech.domain.model.lotto.GetLottoStats
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.AccentGreen
@@ -67,6 +68,9 @@ enum class StatisticTab(val title: String) {
 // 회차, 1등, 2등, 3등, 4등, 5등의 가로 비율 (총합에 대한 비율로 자동 계산됨)
 private val countColumnWeights = listOf(1.2f, 1.0f, 1.0f, 1.2f, 1.6f, 2.0f)
 private val moneyColumnWeights = listOf(1.2f, 2.5f, 2.0f, 2.0f)
+
+// 회차, 발급 수, 1등, 2등, 3등, 4등, 5등의 가로 비율
+private val issuedStatsColumnWeights = listOf(1.0f, 1.3f, 0.9f, 0.9f, 0.9f, 1.0f, 1.0f)
 
 @Composable
 fun StatisticScreen(viewModel: StatisticViewModel = hiltViewModel()) {
@@ -104,6 +108,17 @@ private fun StatisticContent(
                 ),
                 isLoading = state.isLoading,
                 onRefresh = onRefresh,
+            )
+        }
+
+        // 1-2. 발급 번호 당첨 통계 섹션 (최신 N개 회차만 표시)
+        item {
+            IssuedStatsSection(
+                modifier = Modifier
+                    .padding(horizontal = Paddings.xlarge)
+                    .padding(top = Paddings.medium),
+                statsList = state.issuedStatsList,
+                isLoading = state.isLoading,
             )
         }
 
@@ -308,6 +323,170 @@ private fun StatisticTabRow(
                 )
             }
         }
+    }
+}
+
+// -------------------------------------------------------------------------
+// 발급 번호 당첨 통계 섹션 (회차별 발급 수 및 등수별 당첨 개수)
+// -------------------------------------------------------------------------
+@Composable
+private fun IssuedStatsSection(
+    modifier: Modifier = Modifier,
+    statsList: List<GetLottoStats>,
+    isLoading: Boolean,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBg)
+    ) {
+        Text(
+            text = "어부로또 발급 번호 통계",
+            modifier = Modifier.padding(
+                start = Paddings.xlarge,
+                end = Paddings.xlarge,
+                top = Paddings.xlarge
+            ),
+            color = TextPrimary,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(Paddings.medium))
+        Text(
+            text = "최근 ${StatisticViewModel.ISSUED_STATS_SIZE}회차 동안 발급한 번호 중 실제 당첨된 개수예요.",
+            modifier = Modifier.padding(horizontal = Paddings.xlarge),
+            color = TextSecondary,
+            fontSize = 13.sp
+        )
+        Spacer(Modifier.height(Paddings.xlarge))
+        IssuedStatsTableHeader()
+
+        if (statsList.isEmpty() && !isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Paddings.xlarge),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "표시할 발급 통계 데이터가 없어요.",
+                    color = TextSecondary,
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            statsList.forEachIndexed { index, data ->
+                IssuedStatsTableRow(
+                    data = data,
+                    isEvenRow = index % 2 == 0,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun IssuedStatsTableHeader(modifier: Modifier = Modifier) {
+    val headers = listOf("회차", "발급 수", "1등", "2등", "3등", "4등", "5등")
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(SectionBg)
+            .padding(vertical = Paddings.large, horizontal = Paddings.medium),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        headers.forEachIndexed { index, title ->
+            Text(
+                text = title,
+                modifier = Modifier.weight(issuedStatsColumnWeights[index]),
+                textAlign = TextAlign.Center,
+                color = if (index == 0) AccentBlue else TextSecondary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (index == 0) {
+                Box(modifier = Modifier.width(1.dp).height(14.dp).background(DividerColor))
+            }
+        }
+    }
+}
+
+@Composable
+private fun IssuedStatsTableRow(
+    modifier: Modifier = Modifier,
+    data: GetLottoStats,
+    isEvenRow: Boolean,
+) {
+    val rowBg = if (isEvenRow) CardBg else SectionBg
+    // 부모 Column이 카드 전체를 RoundedCornerShape(16.dp)로 이미 clip하므로 행별 라운딩은 불필요
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(rowBg)
+                .padding(vertical = Paddings.large, horizontal = Paddings.medium),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "${data.roundInt}",
+                modifier = Modifier.weight(issuedStatsColumnWeights[0]),
+                textAlign = TextAlign.Center,
+                color = TextPrimary,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Box(modifier = Modifier.width(1.dp).height(24.dp).background(DividerColor))
+            Text(
+                text = formatCount(data.combiCount),
+                modifier = Modifier.weight(issuedStatsColumnWeights[1]),
+                textAlign = TextAlign.Center,
+                color = AccentBlue,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = formatCount(data.grade1),
+                modifier = Modifier.weight(issuedStatsColumnWeights[2]),
+                textAlign = TextAlign.Center,
+                color = AccentGold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = formatCount(data.grade2),
+                modifier = Modifier.weight(issuedStatsColumnWeights[3]),
+                textAlign = TextAlign.Center,
+                color = AccentGreen,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = formatCount(data.grade3),
+                modifier = Modifier.weight(issuedStatsColumnWeights[4]),
+                textAlign = TextAlign.Center,
+                color = AccentRed,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = formatCount(data.grade4),
+                modifier = Modifier.weight(issuedStatsColumnWeights[5]),
+                textAlign = TextAlign.Center,
+                color = TextSecondary,
+                fontSize = 13.sp,
+            )
+            Text(
+                text = formatCount(data.grade5),
+                modifier = Modifier.weight(issuedStatsColumnWeights[6]),
+                textAlign = TextAlign.Center,
+                color = TextSecondary,
+                fontSize = 13.sp,
+            )
+        }
+        HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
     }
 }
 
@@ -534,6 +713,11 @@ fun StatisticScreenPreview() {
                         createMockLotto("1161", "3", "50"),
                         createMockLotto("1160", "10", "32"),
                         createMockLotto("1159", "7", "28"),
+                    ),
+                    issuedStatsList = listOf(
+                        GetLottoStats(round = "1161", pdate = "2026-02-07", grade1 = 1, grade2 = 3, grade3 = 12, grade4 = 40, grade5 = 120, combiCount = 200),
+                        GetLottoStats(round = "1160", pdate = "2026-01-31", grade1 = 0, grade2 = 2, grade3 = 9, grade4 = 35, grade5 = 110, combiCount = 180),
+                        GetLottoStats(round = "1159", pdate = "2026-01-24", grade1 = 1, grade2 = 1, grade3 = 10, grade4 = 38, grade5 = 115, combiCount = 190),
                     ),
                     isLoading = false
                 ),
