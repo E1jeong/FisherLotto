@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.lotto.GetLottoNumber
 import com.queentech.domain.model.lotto.GetLottoStats
+import com.queentech.presentation.component.text.AutoSizeText
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.AccentGreen
@@ -97,28 +98,14 @@ private fun StatisticContent(
             .background(BgDark),
         contentPadding = PaddingValues(bottom = Paddings.xextra)
     ) {
-        // 1. 헤더 섹션
-        item {
-            StatisticHeader(
-                modifier = Modifier.padding(
-                    Paddings.xlarge,
-                    Paddings.xlarge,
-                    Paddings.xlarge,
-                    Paddings.medium
-                ),
-                isLoading = state.isLoading,
-                onRefresh = onRefresh,
-            )
-        }
-
-        // 1-2. 발급 번호 당첨 통계 섹션 (최신 N개 회차만 표시)
+        // 1. 발급 번호 당첨 통계 섹션 (최신 N개 회차만 표시, 새로고침 포함)
         item {
             IssuedStatsSection(
                 modifier = Modifier
-                    .padding(horizontal = Paddings.xlarge)
-                    .padding(top = Paddings.medium),
+                    .padding(Paddings.xlarge, Paddings.xlarge, Paddings.xlarge, Paddings.medium),
                 statsList = state.issuedStatsList,
                 isLoading = state.isLoading,
+                onRefresh = onRefresh,
             )
         }
 
@@ -238,59 +225,6 @@ private fun StatisticContent(
 }
 
 @Composable
-private fun StatisticHeader(
-    modifier: Modifier = Modifier,
-    isLoading: Boolean,
-    onRefresh: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(CardBg)
-            .padding(Paddings.xlarge)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "어부로또 당첨 통계",
-                color = TextPrimary,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = AccentBlue
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-                IconButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "새로고침",
-                        tint = TextSecondary
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(Paddings.medium))
-
-        Text(
-            text = "최근 회차별 등수 당첨 조합 수를 확인하세요.",
-            color = TextSecondary,
-            fontSize = 13.sp
-        )
-    }
-}
-
-@Composable
 private fun StatisticTabRow(
     selectedTab: StatisticTab,
     onTabSelected: (StatisticTab) -> Unit,
@@ -334,6 +268,7 @@ private fun IssuedStatsSection(
     modifier: Modifier = Modifier,
     statsList: List<GetLottoStats>,
     isLoading: Boolean,
+    onRefresh: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -341,17 +276,37 @@ private fun IssuedStatsSection(
             .clip(RoundedCornerShape(16.dp))
             .background(CardBg)
     ) {
-        Text(
-            text = "어부로또 발급 번호 통계",
-            modifier = Modifier.padding(
-                start = Paddings.xlarge,
-                end = Paddings.xlarge,
-                top = Paddings.xlarge
-            ),
-            color = TextPrimary,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = Paddings.xlarge, end = Paddings.medium, top = Paddings.xlarge),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "어부로또 발급 번호 통계",
+                color = TextPrimary,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = AccentBlue
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+                IconButton(onClick = onRefresh) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "새로고침",
+                        tint = TextSecondary
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(Paddings.medium))
         Text(
             text = "최근 ${StatisticViewModel.ISSUED_STATS_SIZE}회차 동안 발급한 번호 중 실제 당첨된 개수예요.",
@@ -430,7 +385,7 @@ private fun IssuedStatsTableRow(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
+            AutoSizeText(
                 text = "${data.roundInt}",
                 modifier = Modifier.weight(issuedStatsColumnWeights[0]),
                 textAlign = TextAlign.Center,
@@ -439,7 +394,7 @@ private fun IssuedStatsTableRow(
                 fontWeight = FontWeight.Medium,
             )
             Box(modifier = Modifier.width(1.dp).height(24.dp).background(DividerColor))
-            Text(
+            AutoSizeText(
                 text = formatCount(data.combiCount),
                 modifier = Modifier.weight(issuedStatsColumnWeights[1]),
                 textAlign = TextAlign.Center,
@@ -447,7 +402,7 @@ private fun IssuedStatsTableRow(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(
+            AutoSizeText(
                 text = formatCount(data.grade1),
                 modifier = Modifier.weight(issuedStatsColumnWeights[2]),
                 textAlign = TextAlign.Center,
@@ -455,7 +410,7 @@ private fun IssuedStatsTableRow(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
+            AutoSizeText(
                 text = formatCount(data.grade2),
                 modifier = Modifier.weight(issuedStatsColumnWeights[3]),
                 textAlign = TextAlign.Center,
@@ -463,7 +418,7 @@ private fun IssuedStatsTableRow(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(
+            AutoSizeText(
                 text = formatCount(data.grade3),
                 modifier = Modifier.weight(issuedStatsColumnWeights[4]),
                 textAlign = TextAlign.Center,
@@ -471,14 +426,14 @@ private fun IssuedStatsTableRow(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Text(
+            AutoSizeText(
                 text = formatCount(data.grade4),
                 modifier = Modifier.weight(issuedStatsColumnWeights[5]),
                 textAlign = TextAlign.Center,
                 color = TextSecondary,
                 fontSize = 13.sp,
             )
-            Text(
+            AutoSizeText(
                 text = formatCount(data.grade5),
                 modifier = Modifier.weight(issuedStatsColumnWeights[6]),
                 textAlign = TextAlign.Center,
