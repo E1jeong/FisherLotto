@@ -47,6 +47,7 @@ FisherLotto helps Korean lotto users check results, scan tickets, review history
    - Room-backed local history for scanned tickets and results.
 4. Prediction numbers
    - Weekly prediction number generation with ad/subscription constraints.
+   - Issuance is temporarily unavailable from Saturday 19:00 until Sunday 12:00 KST while the next week's numbers are prepared on the server.
 5. Lotto news
    - Google News RSS parsing and cached display.
 6. Statistics

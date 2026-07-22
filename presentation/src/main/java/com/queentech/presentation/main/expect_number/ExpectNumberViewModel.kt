@@ -43,7 +43,7 @@ class ExpectNumberViewModel @Inject constructor(
         onCreate = {
             loadCachedUser()
             loadSavedNumbers()
-            checkDeadline()
+            checkIssueWindow()
             loadWinningStatus()
         },
     )
@@ -91,15 +91,17 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
-    private fun checkDeadline() = intent {
-        reduce { state.copy(isDeadlineClosed = DateUtils.isSaturdayDeadline()) }
+    private fun checkIssueWindow() = intent {
+        reduce { state.copy(isIssueWindowClosed = DateUtils.isIssueWindowClosed()) }
     }
 
     fun onExpectNumberClick() = intent {
-        if (DateUtils.isSaturdayDeadline()) {
-            reduce { state.copy(isDeadlineClosed = true, showDeadlineDialog = true) }
+        val isIssueWindowClosed = DateUtils.isIssueWindowClosed()
+        if (isIssueWindowClosed) {
+            reduce { state.copy(isIssueWindowClosed = true, showIssueWindowClosedDialog = true) }
             return@intent
         }
+        reduce { state.copy(isIssueWindowClosed = false) }
 
         val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
         if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
@@ -175,8 +177,8 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
-    fun dismissDeadlineDialog() = intent {
-        reduce { state.copy(showDeadlineDialog = false) }
+    fun dismissIssueWindowClosedDialog() = intent {
+        reduce { state.copy(showIssueWindowClosedDialog = false) }
     }
 }
 
@@ -192,8 +194,8 @@ data class ExpectNumberState(
     val userName: String = "",
     val userBirth: String = "",
     val userPhone: String = "",
-    val isDeadlineClosed: Boolean = false,
-    val showDeadlineDialog: Boolean = false,
+    val isIssueWindowClosed: Boolean = false,
+    val showIssueWindowClosedDialog: Boolean = false,
     val winningNumbers: List<Int> = emptyList(),
     val isSubscribed: Boolean = false,
 )

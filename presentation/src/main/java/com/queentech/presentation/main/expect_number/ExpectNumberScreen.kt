@@ -106,13 +106,13 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         lastWeekNumbers = state.lastWeekNumbers,
         thisWeekNumbers = state.thisWeekNumbers,
         isThisWeekIssued = state.isThisWeekIssued,
-        isDeadlineClosed = state.isDeadlineClosed,
-        showDeadlineDialog = state.showDeadlineDialog,
+        isIssueWindowClosed = state.isIssueWindowClosed,
+        showIssueWindowClosedDialog = state.showIssueWindowClosedDialog,
         lastWeekRange = state.lastWeekRange,
         thisWeekRange = state.thisWeekRange,
         winningNumbers = state.winningNumbers,
         onNumberIssueClick = viewModel::onExpectNumberClick,
-        onDismissDeadlineDialog = viewModel::dismissDeadlineDialog
+        onDismissIssueWindowClosedDialog = viewModel::dismissIssueWindowClosedDialog
     )
 }
 
@@ -181,16 +181,16 @@ private fun ExpectNumberContent(
     lastWeekNumbers: List<String>,
     thisWeekNumbers: List<String>,
     isThisWeekIssued: Boolean,
-    isDeadlineClosed: Boolean = false,
-    showDeadlineDialog: Boolean = false,
+    isIssueWindowClosed: Boolean = false,
+    showIssueWindowClosedDialog: Boolean = false,
     lastWeekRange: String,
     thisWeekRange: String,
     winningNumbers: List<Int> = emptyList(),
     onNumberIssueClick: () -> Unit,
-    onDismissDeadlineDialog: () -> Unit = {},
+    onDismissIssueWindowClosedDialog: () -> Unit = {},
 ) {
-    if (showDeadlineDialog) {
-        DeadlineClosedDialog(onDismiss = onDismissDeadlineDialog)
+    if (showIssueWindowClosedDialog) {
+        IssueWindowClosedDialog(onDismiss = onDismissIssueWindowClosedDialog)
     }
 
     Column(
@@ -236,7 +236,7 @@ private fun ExpectNumberContent(
             emptyMessage = "발급하기를 눌러보세요",
             emptyEmoji = "🎣",
             showIssueButton = true,
-            isButtonDisabled = isDeadlineClosed,
+            isButtonDisabled = isIssueWindowClosed,
             onIssueClick = onNumberIssueClick
         )
     }
@@ -322,7 +322,7 @@ private fun WeekSection(
                     elevation = ButtonDefaults.buttonElevation(if (isButtonDisabled) 0.dp else 4.dp)
                 ) {
                     Text(
-                        text = if (isButtonDisabled) "마감" else "번호발급",
+                        text = if (isButtonDisabled) "발급 대기" else "번호발급",
                         color = if (isButtonDisabled) Color.LightGray else Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -495,14 +495,14 @@ fun ExpectNumberScreenPreview() {
 }
 
 @Composable
-private fun DeadlineClosedDialog(onDismiss: () -> Unit) {
+private fun IssueWindowClosedDialog(onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
-        DeadlineClosedDialogContent(onDismiss = onDismiss)
+        IssueWindowClosedDialogContent(onDismiss = onDismiss)
     }
 }
 
 @Composable
-private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
+private fun IssueWindowClosedDialogContent(onDismiss: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -532,7 +532,7 @@ private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
                     letterSpacing = 2.sp
                 )
                 Text(
-                    text = "발급 마감 안내",
+                    text = "번호 발급 안내",
                     color = TextPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
@@ -552,7 +552,7 @@ private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "이번회차는 마감됐습니다.",
+                text = "다음 주차 번호를 준비하고 있어요.",
                 color = TextPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
@@ -560,7 +560,7 @@ private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "토요일 20:30 이후에는 발급이 불가합니다.",
+                text = "토요일 오후 7시부터 일요일 낮 12시까지\n번호 발급이 잠시 중단됩니다.",
                 color = TextSecondary,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
@@ -586,8 +586,8 @@ private fun DeadlineClosedDialogContent(onDismiss: () -> Unit = {}) {
 
 @Composable
 @Preview
-fun DeadlineDialogPreview() {
+fun IssueWindowClosedDialogPreview() {
     FisherLottoTheme {
-        DeadlineClosedDialogContent()
+        IssueWindowClosedDialogContent()
     }
 }

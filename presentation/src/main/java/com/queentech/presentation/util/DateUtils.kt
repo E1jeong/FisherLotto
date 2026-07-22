@@ -79,13 +79,13 @@ object DateUtils {
     }
 
     /**
-     * 토요일 20:30 ~ 23:59 (KST) 인지 확인
+     * 다음 주차 번호 준비를 위해 토요일 19:00부터 일요일 12:00 전까지 발급을 중단한다.
      */
-    fun isSaturdayDeadline(): Boolean {
-        val cal = getKoreaCalendar()
-        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) return false
-        val hour = cal.get(Calendar.HOUR_OF_DAY)
-        val minute = cal.get(Calendar.MINUTE)
-        return (hour > 20 || (hour == 20 && minute >= 30))
+    fun isIssueWindowClosed(calendar: Calendar = getKoreaCalendar()): Boolean {
+        return when (calendar.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.SATURDAY -> calendar.get(Calendar.HOUR_OF_DAY) >= 19
+            Calendar.SUNDAY -> calendar.get(Calendar.HOUR_OF_DAY) < 12
+            else -> false
+        }
     }
 }
