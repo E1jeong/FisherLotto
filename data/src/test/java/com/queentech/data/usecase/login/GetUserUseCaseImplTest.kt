@@ -1,7 +1,7 @@
 package com.queentech.data.usecase.login
 
 import com.queentech.data.model.login.GetUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.common.CommonResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,13 +13,13 @@ import org.junit.Test
 
 class GetUserUseCaseImplTest {
 
-    private val lottoService: LottoService = mockk()
-    private val useCase = GetUserUseCaseImpl(lottoService)
+    private val userService: UserService = mockk()
+    private val useCase = GetUserUseCaseImpl(userService)
 
     @Test
     fun `invoke returns success with common response`() = runTest {
         // Arrange
-        coEvery { lottoService.getUser(any()) } returns CommonResponse(status = "200")
+        coEvery { userService.getUser(any()) } returns CommonResponse(status = "200")
 
         // Act
         val result = useCase.invoke(email = "user@test.com", phone = "01098765432")
@@ -28,7 +28,7 @@ class GetUserUseCaseImplTest {
         assertTrue(result.isSuccess)
         assertEquals(200, result.getOrThrow().statusInt)
         coVerify {
-            lottoService.getUser(
+            userService.getUser(
                 GetUserRequestBody(email = "user@test.com", phone = "01098765432")
             )
         }
@@ -37,7 +37,7 @@ class GetUserUseCaseImplTest {
     @Test
     fun `invoke returns failure when service throws`() = runTest {
         // Arrange
-        coEvery { lottoService.getUser(any()) } throws RuntimeException("Timeout")
+        coEvery { userService.getUser(any()) } throws RuntimeException("Timeout")
 
         // Act
         val result = useCase.invoke(email = "user@test.com", phone = "01098765432")

@@ -1,7 +1,7 @@
 package com.queentech.data.usecase.lotto
 
 import com.queentech.data.model.lotto.GetLottoNumberResponse
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.service.SubLottoService
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -12,10 +12,10 @@ import org.junit.Test
 
 class GetLottoNumberUseCaseImplTest {
 
-    private val lottoService: LottoService = mockk()
-    private val useCase = GetLottoNumberUseCaseImpl(lottoService)
+    private val subLottoService: SubLottoService = mockk()
+    private val useCase = GetLottoNumberUseCaseImpl(subLottoService)
 
-    private fun createResponse(round: String = "1210") = GetLottoNumberResponse(
+    private fun createResponse(round: Int = 1210) = GetLottoNumberResponse(
         firstCount = "10", firstMoney = "2000000000",
         secondCount = "50", secondMoney = "60000000",
         thirdCount = "2000", thirdMoney = "1500000",
@@ -30,7 +30,7 @@ class GetLottoNumberUseCaseImplTest {
     @Test
     fun `invoke returns success with mapped domain model`() = runTest {
         // Arrange
-        coEvery { lottoService.getNumber(round = 1210) } returns createResponse()
+        coEvery { subLottoService.getNumber(round = 1210) } returns createResponse()
 
         // Act
         val result = useCase.invoke(1210)
@@ -39,13 +39,13 @@ class GetLottoNumberUseCaseImplTest {
         assertTrue(result.isSuccess)
         assertEquals(1210, result.getOrThrow().roundInt)
         assertEquals(3, result.getOrThrow().num1Int)
-        coVerify { lottoService.getNumber(round = 1210) }
+        coVerify { subLottoService.getNumber(round = 1210) }
     }
 
     @Test
     fun `invoke returns failure when service throws exception`() = runTest {
         // Arrange
-        coEvery { lottoService.getNumber(round = any()) } throws RuntimeException("Network error")
+        coEvery { subLottoService.getNumber(round = any()) } throws RuntimeException("Network error")
 
         // Act
         val result = useCase.invoke(9999)
@@ -58,7 +58,7 @@ class GetLottoNumberUseCaseImplTest {
     @Test
     fun `invoke passes correct round parameter to service`() = runTest {
         // Arrange
-        coEvery { lottoService.getNumber(round = 500) } returns createResponse(round = "500")
+        coEvery { subLottoService.getNumber(round = 500) } returns createResponse(round = 500)
 
         // Act
         val result = useCase.invoke(500)
@@ -66,6 +66,6 @@ class GetLottoNumberUseCaseImplTest {
         // Assert
         assertTrue(result.isSuccess)
         assertEquals(500, result.getOrThrow().roundInt)
-        coVerify(exactly = 1) { lottoService.getNumber(round = 500) }
+        coVerify(exactly = 1) { subLottoService.getNumber(round = 500) }
     }
 }
