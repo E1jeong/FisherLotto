@@ -55,7 +55,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onLoginClick() = intent {
-        val email = state.userEmail.ifEmpty { state.emailInput.trim() }
+        val email = state.emailInput.trim()
 
         if (email.isBlank()) {
             postSideEffect(LoginSideEffect.Toast("이메일(ID)을 입력해주세요."))
@@ -117,6 +117,7 @@ class LoginViewModel @Inject constructor(
             reduce {
                 state.copy(
                     userEmail = cachedUser.email,
+                    emailInput = cachedUser.email,
                     userName = cachedUser.name,
                     userBirth = cachedUser.birth,
                     userPhone = cachedUser.phone

@@ -16,4 +16,10 @@ class CommonResponseTest {
         val response = CommonResponse(status = "0")
         assertEquals(0, response.statusInt)
     }
+
+    @Test
+    fun `statusInt returns minus one on non-numeric status`() {
+        val response = CommonResponse(status = "SUCCESS")
+        assertEquals(-1, response.statusInt)
+    }
 }

@@ -223,6 +223,10 @@ class BillingRepositoryImpl @Inject constructor(
         val calendar = Calendar.getInstance().apply { timeInMillis = purchaseTimeMillis }
         when (productId) {
             "fisherlotto_monthly" -> calendar.add(Calendar.MONTH, 1)
+            else -> {
+                Log.w(TAG, "Unknown product ID: $productId, falling back to 1 month extension")
+                calendar.add(Calendar.MONTH, 1)
+            }
         }
         return calendar.timeInMillis
     }

@@ -57,8 +57,8 @@ fun LoginScreen(
     InitLoginScreen(context, moveToSignUp, moveToHome, viewModel)
 
     LoginContent(
-        email = state.userEmail.ifEmpty { state.emailInput },
-        enabledTextInput = state.userEmail.isEmpty(),
+        email = state.emailInput,
+        enabledTextInput = true,
         isVisibleSignUp = state.userEmail.isEmpty(),
         onEmailChanged = viewModel::onEmailChanged,
         onLoginClick = viewModel::onLoginClick,

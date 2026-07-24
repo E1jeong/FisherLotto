@@ -122,10 +122,10 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateTier(tier: String) {
-        _currentUser.value = _currentUser.value?.copy(tier = tier)
+        val user = _currentUser.value ?: return
+        _currentUser.value = user.copy(tier = tier)
         localDataSource.updateTier(tier)
 
-        val user = _currentUser.value ?: return
         try {
             userService.updateTier(
                 TierRequest(

@@ -67,10 +67,17 @@ class StatisticViewModel @Inject constructor(
         val statsStartRound = maxOf(1, latestRound - ISSUED_STATS_SIZE + 1)
 
         // 2. 최신 회차부터 10개 병렬로 불러오기 + 발급 통계 최신 5개 회차 병렬로 불러오기
-        val (fetchedList, fetchedStats) = coroutineScope {
+        val (listResult, statsResult) = coroutineScope {
             val listDeferred = async { fetchLottoRange(startRound, latestRound) }
             val statsDeferred = async { fetchStatsRange(statsStartRound, latestRound) }
             listDeferred.await() to statsDeferred.await()
+        }
+
+        val (fetchedList, listHasError) = listResult
+        val (fetchedStats, statsHasError) = statsResult
+
+        if (listHasError || statsHasError) {
+            postSideEffect(StatisticSideEffect.Toast("일부 회차 정보를 불러오지 못했습니다."))
         }
 
         reduce {
@@ -98,7 +105,10 @@ class StatisticViewModel @Inject constructor(
         val endRound = nextRound
         val startRound = maxOf(1, endRound - PAGE_SIZE + 1)
 
-        val fetchedList = fetchLottoRange(startRound, endRound)
+        val (fetchedList, hasError) = fetchLottoRange(startRound, endRound)
+        if (hasError) {
+            postSideEffect(StatisticSideEffect.Toast("일부 회차 정보를 불러오지 못했습니다."))
+        }
 
         reduce {
             state.copy(
@@ -113,26 +123,40 @@ class StatisticViewModel @Inject constructor(
         loadInitialData()
     }
 
-    private suspend fun fetchLottoRange(start: Int, end: Int): List<GetLottoNumber> = coroutineScope {
-        (start..end).map { round ->
+    private suspend fun fetchLottoRange(start: Int, end: Int): Pair<List<GetLottoNumber>, Boolean> = coroutineScope {
+        var hasError = false
+        val fetched = (start..end).map { round ->
             async {
-                getLottoNumberUseCase(round).getOrNull()
+                getLottoNumberUseCase(round)
             }
         }
             .awaitAll()
-            .filterNotNull()
-            .sortedByDescending { it.roundInt } // GetLottoNumber 모델 자체를 정렬
+            .mapNotNull { result ->
+                if (result.isFailure) {
+                    hasError = true
+                }
+                result.getOrNull()
+            }
+            .sortedByDescending { it.roundInt }
+        Pair(fetched, hasError)
     }
 
-    private suspend fun fetchStatsRange(start: Int, end: Int): List<GetLottoStats> = coroutineScope {
-        (start..end).map { round ->
+    private suspend fun fetchStatsRange(start: Int, end: Int): Pair<List<GetLottoStats>, Boolean> = coroutineScope {
+        var hasError = false
+        val fetched = (start..end).map { round ->
             async {
-                getLottoStatsUseCase(round).getOrNull()
+                getLottoStatsUseCase(round)
             }
         }
             .awaitAll()
-            .filterNotNull()
+            .mapNotNull { result ->
+                if (result.isFailure) {
+                    hasError = true
+                }
+                result.getOrNull()
+            }
             .sortedByDescending { it.roundInt }
+        Pair(fetched, hasError)
     }
 }
 
