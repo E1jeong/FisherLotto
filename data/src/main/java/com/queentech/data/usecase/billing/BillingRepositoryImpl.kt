@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
+import com.queentech.data.database.datastore.BillingLocalDataSource
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.billing.ReceiptRequest
 import com.queentech.data.model.billing.SubscriptionQueryRequest
@@ -30,6 +31,7 @@ class BillingRepositoryImpl @Inject constructor(
     private val billingClientWrapper: BillingClientWrapper,
     private val billingService: BillingService,
     private val userLocalDataSource: UserLocalDataSource,
+    private val billingLocalDataSource: BillingLocalDataSource,
     private val userRepository: UserRepository,
 ) : BillingRepository {
 
@@ -39,6 +41,12 @@ class BillingRepositoryImpl @Inject constructor(
         SubscriptionStatus(isActive = false, productId = null, expiryTimeMillis = null, autoRenewing = false)
     )
     override val subscriptionStatus: Flow<SubscriptionStatus> = _subscriptionStatus.asStateFlow()
+
+    override val reissuePending: Flow<Boolean> = billingLocalDataSource.reissuePendingFlow
+
+    override suspend fun clearReissuePending() {
+        billingLocalDataSource.setReissuePending(false)
+    }
 
     private var cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
 
@@ -146,6 +154,12 @@ class BillingRepositoryImpl @Inject constructor(
                     autoRenewing = purchase.isAutoRenewing,
                 )
                 userRepository.updateTier(User.TIER_PREMIUM)
+
+                // 서버가 이번주 예상번호를 30개로 교체했으면 깃발만 남긴다.
+                // 실제 로컬 기록 삭제와 화면 반영은 예상번호 화면이 이 깃발을 보고 처리한다.
+                if (response.reissued == true) {
+                    billingLocalDataSource.setReissuePending(true)
+                }
                 true
             } else {
                 Log.e(TAG, "Receipt send failed: ${response.message}")

@@ -83,3 +83,13 @@ FisherLotto should remain a small, understandable Android app even as it integra
 **Reason**: Lotto outcomes are random. Product copy and AI/code changes must avoid misleading users.
 
 **Tradeoff**: Marketing language is more constrained, but user trust and compliance risk are better protected.
+
+---
+
+### ADR-009: Cross-feature Signalling Uses A Persisted Flag, Not A Direct Call
+
+**Decision**: When one feature must trigger work owned by another feature, the producing side writes a persisted flag through its own domain contract and the consuming side observes and clears it. It does not call the other feature's repository directly. The first case is subscription purchase requiring the prediction-number screen to drop its cached week: `BillingRepository.reissuePending` is written by billing and consumed by `ExpectNumberViewModel`, which owns `LottoIssueRepository.deleteWeek()` and clears the flag.
+
+**Reason**: A direct call would make billing code depend on prediction-number storage, and each new subscription benefit would widen that dependency. A persisted flag also survives process death — the purchase response arrives while the consuming screen is usually not on screen, so an in-memory event would be lost exactly when it matters.
+
+**Tradeoff**: Reflection is deferred to whenever the consuming screen next observes the flag, rather than happening at purchase time. Consumers must treat their work as idempotent, since a crash between doing the work and clearing the flag replays it. Concurrent readers of the same store must serialise "read + reduce" as one unit; Orbit dispatches intents in parallel, so this is not automatic.

@@ -93,6 +93,7 @@ jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 orbit-core = { group = "org.orbit-mvi", name = "orbit-core", version.ref = "orbit" }
 orbit-viewmodel = { group = "org.orbit-mvi", name = "orbit-viewmodel", version.ref = "orbit" }
 orbit-compose = { group = "org.orbit-mvi", name = "orbit-compose", version.ref = "orbit" }
+orbit-test = { group = "org.orbit-mvi", name = "orbit-test", version.ref = "orbit" }
 
 paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
 paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "paging" }

@@ -14,8 +14,10 @@ import com.queentech.presentation.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
+import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
@@ -44,11 +46,15 @@ class ExpectNumberViewModel @Inject constructor(
             loadCachedUser()
             loadSavedNumbers()
             checkIssueWindow()
+            observeReissuePending()
             loadWinningStatus()
         },
     )
 
     private val issueMutex = Mutex()
+
+    // Room 조회/삭제와 번호 상태 반영의 원자성 보장용 (refreshNumbers, observeReissuePending)
+    private val numbersMutex = Mutex()
 
     companion object {
         const val TAG = "ExpectNumberViewModel"
@@ -70,24 +76,32 @@ class ExpectNumberViewModel @Inject constructor(
     }
 
     private fun loadSavedNumbers() = intent {
-        val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
-        val lastWeekStart = DateUtils.getLastWeekStartMillis()
-
         // 2주 이전 데이터 정리
         val cutoff = DateUtils.getCutoffWeekStartMillis()
         lottoIssueRepository.cleanupOldData(cutoff)
 
-        val thisWeek = lottoIssueRepository.getThisWeekNumbers(thisWeekStart)
-        val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+        refreshNumbers()
+    }
 
-        reduce {
-            state.copy(
-                thisWeekNumbers = thisWeek,
-                lastWeekNumbers = lastWeek,
-                isThisWeekIssued = thisWeek.isNotEmpty(),
-                thisWeekRange = DateUtils.getWeekRangeString(thisWeekStart),
-                lastWeekRange = DateUtils.getWeekRangeString(lastWeekStart)
-            )
+    // Room 조회와 상태 반영을 한 단위로 묶는다. 재발급 반영(observeReissuePending)과 동시에
+    // 실행되더라도 삭제 전에 읽은 값이 삭제 후 상태를 덮어쓰지 않도록 numbersMutex로 보호한다.
+    private suspend fun SimpleSyntax<ExpectNumberState, ExpectNumberSideEffect>.refreshNumbers() {
+        numbersMutex.withLock {
+            val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
+            val lastWeekStart = DateUtils.getLastWeekStartMillis()
+
+            val thisWeek = lottoIssueRepository.getThisWeekNumbers(thisWeekStart)
+            val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
+            reduce {
+                state.copy(
+                    thisWeekNumbers = thisWeek,
+                    lastWeekNumbers = lastWeek,
+                    isThisWeekIssued = thisWeek.isNotEmpty(),
+                    thisWeekRange = DateUtils.getWeekRangeString(thisWeekStart),
+                    lastWeekRange = DateUtils.getWeekRangeString(lastWeekStart)
+                )
+            }
         }
     }
 
@@ -155,6 +169,23 @@ class ExpectNumberViewModel @Inject constructor(
             }
         } finally {
             if (issueMutex.isLocked) issueMutex.unlock()
+        }
+    }
+
+    // 구독 결제로 서버가 이번주 번호를 재발급했을 때, 결제 화면 대신 이 화면에서 반영한다.
+    // 결제 시점에 이 화면이 떠 있지 않아도 깃발이 DataStore에 남아 있어 놓치지 않는다.
+    private fun observeReissuePending() = intent {
+        billingRepository.reissuePending.collect { pending ->
+            if (!pending) return@collect
+
+            // 삭제를 먼저 하고 깃발을 해제한다. 중간에 앱이 죽으면 깃발이 남아 다음 진입에서 다시 처리된다.
+            numbersMutex.withLock {
+                lottoIssueRepository.deleteWeek(DateUtils.getCurrentWeekStartMillis())
+            }
+            billingRepository.clearReissuePending()
+
+            refreshNumbers()
+            postSideEffect(ExpectNumberSideEffect.Toast("구독 혜택이 적용되었습니다. 다시 발급해 주세요"))
         }
     }
 

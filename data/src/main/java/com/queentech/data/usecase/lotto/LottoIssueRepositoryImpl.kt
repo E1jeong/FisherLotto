@@ -37,4 +37,8 @@ class LottoIssueRepositoryImpl @Inject constructor(
     override suspend fun cleanupOldData(cutoffWeekStartMillis: Long) {
         dao.deleteOlderThan(cutoffWeekStartMillis)
     }
+
+    override suspend fun deleteWeek(weekStartMillis: Long) {
+        dao.deleteByWeek(weekStartMillis)
+    }
 }

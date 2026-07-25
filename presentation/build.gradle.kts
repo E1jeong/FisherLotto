@@ -60,6 +60,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.orbit.test)
     androidTestImplementation(libs.androidx.test.core)
 
     implementation(project(":domain"))
