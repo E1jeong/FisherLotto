@@ -53,6 +53,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.queentech.presentation.BuildConfig
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.BgDark
@@ -159,10 +160,9 @@ private fun loadRewardedAd(
     onAdLoaded: (RewardedAd?) -> Unit
 ) {
     val adRequest = AdRequest.Builder().build()
-    // 보상형 광고 테스트 ID입니다.
     RewardedAd.load(
         context,
-        "ca-app-pub-3940256099942544/5224354917",
+        BuildConfig.ADMOB_REWARDED_AD_UNIT_ID,
         adRequest,
         object : RewardedAdLoadCallback() {
             override fun onAdFailedToLoad(adError: LoadAdError) {

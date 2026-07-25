@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// AdMob 앱 ID. 실 ID는 local.properties의 ADMOB_APP_ID로 주입하고,
+// 값이 없거나 debug 빌드일 때는 Google 공식 테스트 ID를 쓴다.
+val ADMOB_TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+
 android {
     namespace = "com.queentech.fisherlotto"
     compileSdk = 35
@@ -18,13 +22,15 @@ android {
         minSdk = 26
         //noinspection OldTargetApi
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.0.6"
+        versionCode = 7
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
         buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY")}\"")
+        manifestPlaceholders["admobAppId"] =
+            localProperties.getProperty("ADMOB_APP_ID", ADMOB_TEST_APP_ID)
     }
 
     signingConfigs {
@@ -40,6 +46,8 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("config")
+            // 개발 중 실제 광고를 클릭하면 무효 트래픽으로 AdMob 계정이 정지될 수 있다.
+            manifestPlaceholders["admobAppId"] = ADMOB_TEST_APP_ID
         }
 
         release {
@@ -61,6 +69,26 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// CI 러너에는 local.properties가 없어 위 주입값이 조용히 폴백/null로 떨어진다.
+// 그대로 bundleRelease가 성공하면 테스트 광고가 박힌 AAB가 Play에 올라가고,
+// 앱은 정상 동작해 보이기 때문에 발견이 늦다. CI에서는 빌드를 실패시킨다.
+tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+    doFirst {
+        val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+        val missing = listOf("ADMOB_APP_ID", "ADMOB_REWARDED_AD_UNIT_ID", "KAKAO_NATIVE_APP_KEY")
+            .filter { localProperties.getProperty(it).isNullOrBlank() }
+
+        if (missing.isEmpty()) return@doFirst
+
+        // 메시지는 영문으로 둔다. Windows 콘솔 코드페이지에서 한글이 깨져 읽을 수 없다.
+        val message = "Missing release config in local.properties: $missing"
+        if (System.getenv("CI") == "true") {
+            throw GradleException("$message - add a step that writes local.properties from GitHub Secrets.")
+        }
+        logger.warn("WARNING: $message - local verification build only, do NOT distribute this artifact.")
     }
 }
 
