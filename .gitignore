@@ -195,7 +195,6 @@ fabric.properties
 
 # Custom
 .claude
-CLAUDE.md
 reference
 .codex
 
