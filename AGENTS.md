@@ -7,9 +7,9 @@ This file is the single source of AI agent instructions for this repository. `CL
 ## Tech Stack
 
 - Kotlin 2.0.0
-- Android Gradle Plugin 8.7.3
+- Android Gradle Plugin 8.10.1 (Gradle 8.11.1)
 - JDK 17
-- Min SDK 26, target SDK 35, compile SDK 35
+- Min SDK 26, target SDK 36, compile SDK 36
 - Multi-module Clean Architecture: `app`, `presentation`, `domain`, `data`
 - Jetpack Compose, Material 3, Navigation Compose
 - Orbit MVI 6.1.0

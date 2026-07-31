@@ -15,13 +15,12 @@ val ADMOB_TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
 
 android {
     namespace = "com.queentech.fisherlotto"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.queentech.fisherlotto"
         minSdk = 26
-        //noinspection OldTargetApi
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 7
         versionName = "1.0.0"
 
