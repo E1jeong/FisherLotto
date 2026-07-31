@@ -76,7 +76,8 @@ class BillingClientWrapper @Inject constructor(
             .build()
 
         return suspendCancellableCoroutine { cont ->
-            billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+            billingClient.queryProductDetailsAsync(params) { billingResult, queryProductDetailsResult ->
+                val productDetailsList = queryProductDetailsResult.productDetailsList
                 Log.d(TAG, "queryProductDetails responseCode=${billingResult.responseCode}, " +
                         "debugMessage=${billingResult.debugMessage}, " +
                         "products=${productDetailsList.map { it.productId }}")
