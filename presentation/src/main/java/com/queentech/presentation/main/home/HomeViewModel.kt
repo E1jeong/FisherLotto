@@ -11,15 +11,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.annotation.OrbitExperimental
-import org.orbitmvi.orbit.syntax.simple.blockingIntent
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import org.orbitmvi.orbit.viewmodel.container
 import javax.inject.Inject
 
-@OptIn(OrbitExperimental::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
@@ -42,7 +39,7 @@ class HomeViewModel @Inject constructor(
         }
     )
 
-    private fun loadLottoNumber() = blockingIntent {
+    private fun loadLottoNumber() = intent {
         val response = getLottoNumberUseCase(round = 0).getOrThrow()
         reduce { state.copy( getLottoNumberResponse = response) }
     }
