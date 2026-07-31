@@ -1,6 +1,9 @@
 package com.queentech.domain.usecase.fcm
 
 interface FcmRepository {
+    // 푸시 제공자에서 현재 토큰 조회. 실패 시 null
+    suspend fun getFreshToken(): String?
+
     // 내부 저장소(DataStore)에서 토큰 읽기
     suspend fun getCachedToken(): String?
 

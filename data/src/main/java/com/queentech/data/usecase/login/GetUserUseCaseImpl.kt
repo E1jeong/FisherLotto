@@ -1,5 +1,6 @@
 package com.queentech.data.usecase.login
 
+import com.queentech.data.model.common.toDomainModel
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.common.CommonResponse
@@ -19,6 +20,6 @@ class GetUserUseCaseImpl @Inject constructor(
             phone = phone
         )
 
-        userService.getUser(requestBody)
+        userService.getUser(requestBody).toDomainModel()
     }
 }

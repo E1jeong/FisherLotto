@@ -3,14 +3,12 @@ package com.queentech.presentation.login
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
-import com.google.firebase.messaging.FirebaseMessaging
 import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -18,7 +16,6 @@ import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import org.orbitmvi.orbit.viewmodel.container
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -83,16 +80,8 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getFirebaseToken(): String? {
-        return suspendCancellableCoroutine { continuation ->
-            FirebaseMessaging.getInstance().token
-                .addOnSuccessListener { token -> continuation.resume(token) }
-                .addOnFailureListener { continuation.resume(null) }
-        }
-    }
-
     private suspend fun registerFcmToken(email: String) {
-        val token = getFirebaseToken() ?: run {
+        val token = fcmRepository.getFreshToken() ?: run {
             Log.w(TAG, "FCM 토큰을 가져오지 못했습니다.")
             return
         }

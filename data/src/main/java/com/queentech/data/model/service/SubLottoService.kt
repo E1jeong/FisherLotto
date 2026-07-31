@@ -2,8 +2,8 @@ package com.queentech.data.model.service
 
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.lotto.GetLottoNumberResponse
+import com.queentech.data.model.lotto.GetExpectNumberResponse
 import com.queentech.data.model.lotto.GetLottoStatsResponse
-import com.queentech.domain.model.lotto.GetExpectNumber
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -23,5 +23,5 @@ interface SubLottoService {
     @POST("api/lotto/expect")
     suspend fun getExpectNumber(
         @Body request: GetUserRequestBody,
-    ): GetExpectNumber
+    ): GetExpectNumberResponse
 }

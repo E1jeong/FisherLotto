@@ -1,16 +1,25 @@
 package com.queentech.data.usecase.fcm
 
+import com.google.firebase.messaging.FirebaseMessaging
 import com.queentech.data.database.datastore.FcmLocalDataSource
 import com.queentech.data.model.fcm.DeleteUserRequest
 import com.queentech.data.model.fcm.FcmTokenRequest
 import com.queentech.data.model.service.FcmService
 import com.queentech.domain.usecase.fcm.FcmRepository
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 class FcmRepositoryImpl @Inject constructor(
     private val fcmLocalDataSource: FcmLocalDataSource,
     private val fcmService: FcmService,
 ) : FcmRepository {
+
+    override suspend fun getFreshToken(): String? = suspendCancellableCoroutine { continuation ->
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token -> continuation.resume(token) }
+            .addOnFailureListener { continuation.resume(null) }
+    }
 
     override suspend fun getCachedToken(): String? {
         return fcmLocalDataSource.getToken()

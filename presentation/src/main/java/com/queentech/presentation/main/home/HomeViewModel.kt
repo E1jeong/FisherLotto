@@ -1,12 +1,8 @@
 package com.queentech.presentation.main.home
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.compose.runtime.Immutable
-import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.queentech.domain.model.lotto.GetLottoNumber
 import com.queentech.domain.model.news.NewsArticle
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
@@ -28,7 +24,6 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getLottoNumberUseCase: GetLottoNumberUseCase,
     private val getLotteryNewsUseCase: GetLotteryNewsUseCase,
-    private val prefs: SharedPreferences,
 ) : ViewModel(), ContainerHost<HomeState, HomeSideEffect> {
 
     override val container: Container<HomeState, HomeSideEffect> = container(
@@ -55,31 +50,10 @@ class HomeViewModel @Inject constructor(
     fun refreshNews() = loadNews(force = true)
 
     private fun loadNews(force: Boolean) = intent {
-        val lastFetch = prefs.getLong(KEY_NEWS_FETCH_AT, 0L)
-        val now = System.currentTimeMillis()
-
-        // 예: 30분 캐시
-        val canUseCache = !force && (now - lastFetch) < 30 * 60 * 1000L
-        if (canUseCache) {
-            val cachedJson = prefs.getString(KEY_NEWS_CACHE, null)
-            if (!cachedJson.isNullOrEmpty()) {
-                val type = object : TypeToken<List<NewsArticle>>() {}.type
-                val cached = gson.fromJson<List<NewsArticle>>(cachedJson, type)
-                if (cached.isNotEmpty()) {
-                    reduce { state.copy(news = cached, isNewsLoading = false) }
-                    return@intent
-                }
-            }
-        }
-
         reduce { state.copy(isNewsLoading = true) }
 
-        getLotteryNewsUseCase(maxResults = 20)
+        getLotteryNewsUseCase(maxResults = 20, forceRefresh = force)
             .onSuccess { news ->
-                prefs.edit {
-                    putLong(KEY_NEWS_FETCH_AT, now)
-                    putString(KEY_NEWS_CACHE, gson.toJson(news))
-                }
                 reduce { state.copy(news = news, isNewsLoading = false) }
             }
             .onFailure { e ->
@@ -91,9 +65,6 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "HomeViewModel"
-        private const val KEY_NEWS_FETCH_AT = "news_fetch_at"
-        private const val KEY_NEWS_CACHE = "news_cache"
-        private val gson = Gson()
     }
 }
 

@@ -13,7 +13,7 @@ val ADMOB_TEST_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
 
 android {
     namespace = "com.queentech.presentation"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -116,7 +116,6 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.messaging)
 
     implementation(libs.lottie.compose)
 }

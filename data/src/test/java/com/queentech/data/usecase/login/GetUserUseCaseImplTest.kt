@@ -1,8 +1,8 @@
 package com.queentech.data.usecase.login
 
+import com.queentech.data.model.common.CommonResponseDto
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.service.UserService
-import com.queentech.domain.model.common.CommonResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -19,7 +19,7 @@ class GetUserUseCaseImplTest {
     @Test
     fun `invoke returns success with common response`() = runTest {
         // Arrange
-        coEvery { userService.getUser(any()) } returns CommonResponse(status = "200")
+        coEvery { userService.getUser(any()) } returns CommonResponseDto(status = "200")
 
         // Act
         val result = useCase.invoke(email = "user@test.com", phone = "01098765432")

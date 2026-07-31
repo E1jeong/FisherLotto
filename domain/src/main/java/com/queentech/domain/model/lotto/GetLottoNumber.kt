@@ -1,31 +1,27 @@
 package com.queentech.domain.model.lotto
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class GetLottoNumber(
-    @SerialName("1_count") val firstCount: String,
-    @SerialName("1_money") val firstMoney: String,
-    @SerialName("2_count") val secondCount: String,
-    @SerialName("2_money") val secondMoney: String,
-    @SerialName("3_count") val thirdCount: String,
-    @SerialName("3_money") val thirdMoney: String,
-    @SerialName("4_count") val fourthCount: String,
-    @SerialName("4_money") val fourthMoney: String,
-    @SerialName("5_count") val fifthCount: String,
-    @SerialName("5_money") val fifthMoney: String,
+    val firstCount: String,
+    val firstMoney: String,
+    val secondCount: String,
+    val secondMoney: String,
+    val thirdCount: String,
+    val thirdMoney: String,
+    val fourthCount: String,
+    val fourthMoney: String,
+    val fifthCount: String,
+    val fifthMoney: String,
 
-    @SerialName("bonus") val bonus: String,
-    @SerialName("num1") val num1: String,
-    @SerialName("num2") val num2: String,
-    @SerialName("num3") val num3: String,
-    @SerialName("num4") val num4: String,
-    @SerialName("num5") val num5: String,
-    @SerialName("num6") val num6: String,
+    val bonus: String,
+    val num1: String,
+    val num2: String,
+    val num3: String,
+    val num4: String,
+    val num5: String,
+    val num6: String,
 
-    @SerialName("pdate") val pdate: String,   // "2026-02-07"
-    @SerialName("round") val round: String    // "1210"
+    val pdate: String,   // "2026-02-07"
+    val round: String    // "1210"
 ) {
     private fun String.toCleanLong() = replace(Regex("[^0-9]"), "").toLong()
     private fun String.toCleanInt() = replace(Regex("[^0-9]"), "").toInt()

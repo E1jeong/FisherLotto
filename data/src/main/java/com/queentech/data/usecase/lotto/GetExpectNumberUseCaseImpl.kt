@@ -1,6 +1,7 @@
 package com.queentech.data.usecase.lotto
 
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.lotto.toDomainModel
 import com.queentech.data.model.service.SubLottoService
 import com.queentech.domain.model.lotto.GetExpectNumber
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
@@ -19,6 +20,6 @@ class GetExpectNumberUseCaseImpl @Inject constructor(
             phone = phone
         )
 
-        subLottoService.getExpectNumber(requestBody)
+        subLottoService.getExpectNumber(requestBody).toDomainModel()
     }
 }

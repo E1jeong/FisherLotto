@@ -93,3 +93,23 @@ FisherLotto should remain a small, understandable Android app even as it integra
 **Reason**: A direct call would make billing code depend on prediction-number storage, and each new subscription benefit would widen that dependency. A persisted flag also survives process death — the purchase response arrives while the consuming screen is usually not on screen, so an in-memory event would be lost exactly when it matters.
 
 **Tradeoff**: Reflection is deferred to whenever the consuming screen next observes the flag, rather than happening at purchase time. Consumers must treat their work as idempotent, since a crash between doing the work and clearing the flag replays it. Concurrent readers of the same store must serialise "read + reduce" as one unit; Orbit dispatches intents in parallel, so this is not automatic.
+
+---
+
+### ADR-010: Cache Policy Belongs To The Data Layer, Not The ViewModel
+
+**Decision**: Read-through caching lives in the `data` implementation of a usecase, behind a local data source. The `domain` contract exposes only intent — `GetLotteryNewsUseCase(maxResults, query, forceRefresh)` — never the cache mechanism, its TTL, or whether a given call was served from cache. The first case is lottery news: `GetLotteryNewsUseCaseImpl` owns the 30-minute TTL and `NewsLocalDataSource` owns the DataStore keys.
+
+**Reason**: `HomeViewModel` previously held a `SharedPreferences` handle and hand-rolled the TTL check, which put Android storage APIs and a serialization format inside `presentation` and made the cache untestable without Robolectric.
+
+**Tradeoff**: The caller can no longer skip its loading indicator on a cache hit, because it cannot tell a cache hit from a fast network response. A brief spinner on cached loads was accepted rather than leaking cache state back through the contract. Storage also moved from `SharedPreferences` to the shared `user_prefs` DataStore, so any cache written by an older build is abandoned once, not migrated.
+
+---
+
+### ADR-011: Stay On The AGP 8.x Line For The Android 16 Upgrade
+
+**Decision**: `compileSdk`/`targetSdk` 36 is taken with AGP 8.10.1 and Gradle 8.11.1, keeping Kotlin 2.0.0, KSP 2.0.0-1.0.24, Hilt 2.49, Room 2.6.1, and Compose BOM 2024.12.01 unchanged.
+
+**Reason**: AGP 8.10 is the first release whose compatibility table states max API level 36 — the Android 16 setup page says "8.9.0-rc01 or higher", but the AGP 8.9 release notes still state max API 35, so 8.10 is the first version supported without relying on conflicting documentation. AGP 9.x is deliberately avoided: it drops the legacy Variant API that `hilt-android-gradle-plugin` still references, and the Crashlytics Gradle plugin has open crash reports against it.
+
+**Tradeoff**: Kotlin 2.0.0 with Gradle 8.11.1 is outside the Kotlin team's officially tested range, so the combination is unsupported-but-working rather than guaranteed; it was verified by building. Staying on 8.x also means API 36.1 (`platforms;android-36.1`) cannot be used as `compileSdk`, since that requires AGP 8.13.

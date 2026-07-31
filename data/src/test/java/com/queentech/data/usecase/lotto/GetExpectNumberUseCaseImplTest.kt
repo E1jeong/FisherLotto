@@ -1,8 +1,8 @@
 package com.queentech.data.usecase.lotto
 
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.lotto.GetExpectNumberResponse
 import com.queentech.data.model.service.SubLottoService
-import com.queentech.domain.model.lotto.GetExpectNumber
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -19,7 +19,7 @@ class GetExpectNumberUseCaseImplTest {
     @Test
     fun `invoke returns success with expected numbers`() = runTest {
         // Arrange
-        val expected = GetExpectNumber(count = 5, lotto = listOf("1,2,3,4,5,6"))
+        val expected = GetExpectNumberResponse(count = 5, lotto = listOf("1,2,3,4,5,6"))
         coEvery { subLottoService.getExpectNumber(any()) } returns expected
 
         // Act

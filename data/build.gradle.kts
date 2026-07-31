@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.queentech.data"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -73,6 +73,9 @@ dependencies {
     testImplementation(libs.moshi)
     testImplementation(libs.moshi.kotlin)
     testImplementation(libs.okhttp.mockwebserver)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     implementation(libs.datastore)
 

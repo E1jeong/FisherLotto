@@ -2,8 +2,8 @@ package com.queentech.data.model.service
 
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
-import com.queentech.domain.model.common.CommonResponse
-import com.queentech.domain.model.lotto.GetExpectNumber
+import com.queentech.data.model.common.CommonResponseDto
+import com.queentech.data.model.lotto.GetExpectNumberResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -17,10 +17,10 @@ interface LottoService {
     @POST("$RESOURCE_LOTTO/$GET_EXPECT_NUMBER")
     suspend fun getExpectNumber(
         @Body request: GetUserRequestBody,
-    ): GetExpectNumber
+    ): GetExpectNumberResponse
 
     @POST("$RESOURCE_LOTTO/$REGISTER_USER")
     suspend fun registerUser(
         @Body request: SignUpUserRequestBody,
-    ): CommonResponse
+    ): CommonResponseDto
 }

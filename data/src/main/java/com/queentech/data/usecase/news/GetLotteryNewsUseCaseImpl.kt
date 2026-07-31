@@ -1,5 +1,8 @@
 package com.queentech.data.usecase.news
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.queentech.data.database.datastore.NewsLocalDataSource
 import com.queentech.domain.model.news.NewsArticle
 import com.queentech.domain.usecase.news.GetLotteryNewsUseCase
 import kotlinx.coroutines.Dispatchers
@@ -16,12 +19,18 @@ import javax.inject.Inject
 
 class GetLotteryNewsUseCaseImpl @Inject constructor(
     private val client: OkHttpClient,
+    private val newsLocalDataSource: NewsLocalDataSource,
 ) : GetLotteryNewsUseCase {
 
     override suspend fun invoke(
         maxResults: Int,
-        query: String
+        query: String,
+        forceRefresh: Boolean,
     ): Result<List<NewsArticle>> = runCatching {
+        if (!forceRefresh) {
+            cachedNews(maxResults)?.let { return@runCatching it }
+        }
+
         withContext(Dispatchers.IO) {
             val encoded = URLEncoder.encode(query, "UTF-8")
             val url = "https://news.google.com/rss/search?q=$encoded&hl=ko&gl=KR&ceid=KR:ko"
@@ -40,7 +49,22 @@ class GetLotteryNewsUseCaseImpl @Inject constructor(
             }
 
             parseGoogleNewsRss(xml, maxResults)
+        }.also { news ->
+            newsLocalDataSource.saveCache(gson.toJson(news), System.currentTimeMillis())
         }
+    }
+
+    // 캐시가 없거나 만료됐거나 비어 있으면 null을 돌려 네트워크 조회로 넘긴다.
+    private suspend fun cachedNews(maxResults: Int): List<NewsArticle>? {
+        val cache = newsLocalDataSource.getCache() ?: return null
+        if (System.currentTimeMillis() - cache.fetchedAtEpochMillis >= CACHE_TTL_MILLIS) return null
+
+        val type = object : TypeToken<List<NewsArticle>>() {}.type
+        val cached = runCatching {
+            gson.fromJson<List<NewsArticle>>(cache.json, type)
+        }.getOrNull()
+
+        return cached?.takeIf { it.isNotEmpty() }?.take(maxResults)
     }
 
     private fun parseGoogleNewsRss(xml: String, maxResults: Int): List<NewsArticle> {
@@ -77,5 +101,10 @@ class GetLotteryNewsUseCaseImpl @Inject constructor(
         }
             .distinctBy { it.link }
             .take(maxResults)
+    }
+
+    companion object {
+        private const val CACHE_TTL_MILLIS = 30 * 60 * 1000L
+        private val gson = Gson()
     }
 }
