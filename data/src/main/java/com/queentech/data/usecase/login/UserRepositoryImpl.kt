@@ -1,12 +1,11 @@
 package com.queentech.data.usecase.login
 
-import android.util.Log
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.database.room.dao.LottoIssueDao
 import com.queentech.data.database.room.dao.ScanHistoryDao
+import com.queentech.data.model.common.toDomainModel
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
-import com.queentech.data.model.login.TierRequest
 import com.queentech.data.model.service.LottoService
 import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.login.SignUpResultStatus
@@ -43,7 +42,7 @@ class UserRepositoryImpl @Inject constructor(
                 phone = phone
             )
 
-            val mainResponse = lottoService.registerUser(requestBody)
+            val mainResponse = lottoService.registerUser(requestBody).toDomainModel()
             if (mainResponse.statusInt == SignUpResultStatus.OK.status) {
                 val user = User(name, email, birth, phone)
                 localDataSource.saveUser(user) // DataStore에 영속 저장
@@ -92,7 +91,7 @@ class UserRepositoryImpl @Inject constructor(
             )
 
             // 서버에 유저 존재 여부 조회
-            val response = userService.getUser(body)
+            val response = userService.getUser(body).toDomainModel()
 
             if (response.statusInt == 8200) {
                 val user = User(name, email, birth, phone)
@@ -121,22 +120,11 @@ class UserRepositoryImpl @Inject constructor(
         scanHistoryDao.deleteAll()
     }
 
+    // 서버 tier는 서브백엔드가 Google Play 검증 결과로만 갱신한다. 앱은 로컬 캐시만 관리한다.
     override suspend fun updateTier(tier: String) {
         val user = _currentUser.value ?: return
         _currentUser.value = user.copy(tier = tier)
         localDataSource.updateTier(tier)
-
-        try {
-            userService.updateTier(
-                TierRequest(
-                    email = user.email,
-                    phone = user.phone,
-                    isPremium = tier == User.TIER_PREMIUM,
-                )
-            )
-        } catch (e: Exception) {
-            Log.w(TAG, "서버 tier 업데이트 실패 (로컬은 적용됨)", e)
-        }
     }
 
     override suspend fun deleteAccount(): Result<Unit> {
@@ -152,9 +140,5 @@ class UserRepositoryImpl @Inject constructor(
             // 서버 처리 성공/실패와 무관하게 로컬 데이터는 항상 정리
             logout()
         }
-    }
-
-    companion object {
-        private const val TAG = "UserRepositoryImpl"
     }
 }
