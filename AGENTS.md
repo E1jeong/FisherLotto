@@ -50,9 +50,12 @@ Working documents for planned migrations and roadmap items are **not** kept in t
 
 ## Related Projects
 
-- App project: `<dev-root>\6.project\fisherlotto`
-- Server project: `<dev-root>\7.server\lotto-sub-backend`
-- From this app repository, the server project is at `..\..\7.server\lotto-sub-backend`.
+- App project: this repository (`FisherLotto`).
+- Server project: `lotto-sub-backend`.
+- Local paths are machine-dependent:
+  - Company PC: `<dev-root>\1.project\FisherLotto`, `<dev-root>\1.project\lotto-sub-backend`
+  - Home main notebook: `<dev-root>\6.project\fisherlotto`, `<dev-root>\7.server\lotto-sub-backend`
+- Resolve the server by repository name or the matching path above; do not assume one relative path works on every machine.
 - Treat the server project as read-only unless the user explicitly asks for server changes.
 - When changing API contracts, subscription verification, or FCM behavior, inspect both Android client and server handlers before editing.
 - Do not copy server secrets, environment values, tokens, or deployment config into this repository.
