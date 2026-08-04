@@ -79,6 +79,8 @@ Violating any CRITICAL rule below means stopping work and telling the user, not 
 - CRITICAL: UI state should follow Orbit MVI patterns: state, side effects, and intents should be explicit and testable.
 - CRITICAL: Do not expose API keys, signing values, Kakao keys, billing tokens, auth credentials, provider raw errors, or stack traces in UI, logs, docs, or commits.
 - CRITICAL: Do not hardcode local secret values from `local.properties`, signing configs, or `google-services.json`.
+- Every declared side effect must be collected by its screen. An uncollected `sideEffect` silently discards user-facing errors.
+- Compose text fields hold their value in `rememberSaveable`, not in Orbit state. A keystroke handler that must reach the container uses `blockingIntent`; an async `intent` lets the field lag its own input and drop or reorder characters.
 - Room schema changes must include a migration decision. Do not silently change persisted tables.
 - Version and dependency changes belong in `gradle/libs.versions.toml` unless the existing module pattern requires otherwise.
 

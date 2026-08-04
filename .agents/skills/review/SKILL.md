@@ -25,7 +25,7 @@ Check:
 3. Presentation boundary: `presentation` depends on domain contracts, not data implementations.
 4. Provider safety: raw provider errors, secrets, billing tokens, auth credentials, and stack traces are not exposed.
 5. Room safety: schema changes include migration decisions.
-6. Orbit MVI consistency: state and side effects are explicit.
+6. Orbit MVI consistency: state and side effects are explicit, and every declared side effect is collected by its screen.
 7. Tests: new or changed behavior has focused tests, or the gap is clearly justified.
 8. Buildability: appropriate Gradle command was run or inability is clearly reported.
 
