@@ -10,15 +10,12 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
-import org.orbitmvi.orbit.annotation.OrbitExperimental
-import org.orbitmvi.orbit.syntax.simple.blockingIntent
 import org.orbitmvi.orbit.syntax.simple.intent
 import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import org.orbitmvi.orbit.viewmodel.container
 import javax.inject.Inject
 
-@OrbitExperimental
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val userRepository: UserRepository,
@@ -40,28 +37,17 @@ class SignUpViewModel @Inject constructor(
         const val TAG = "SignUpViewModel"
     }
 
-    fun onSignUpNameChanged(v: String) = blockingIntent {
-        reduce { state.copy(name = v) }
-    }
+    fun onSignUpSubmitClick(
+        inputName: String,
+        inputEmail: String,
+        inputBirth: String,
+        inputPhone: String,
+    ) = intent {
 
-    fun onSignUpEmailChanged(v: String) = blockingIntent {
-        reduce { state.copy(email = v) }
-    }
-
-    fun onSignUpBirthChanged(v: String) = blockingIntent {
-        reduce { state.copy(birth = v) }
-    }
-
-    fun onSignUpPhoneChanged(v: String) = blockingIntent {
-        reduce { state.copy(phone = v) }
-    }
-
-    fun onSignUpSubmitClick() = intent {
-
-        val name = state.name.trim()
-        val email = state.email.trim()
-        val birth = state.birth.trim()
-        val phone = state.phone.trim()
+        val name = inputName.trim()
+        val email = inputEmail.trim()
+        val birth = inputBirth.trim()
+        val phone = inputPhone.trim()
 
         if (name.isBlank()) {
             postSideEffect(SignUpSideEffect.Toast("이름을 입력해주세요."))
@@ -83,15 +69,7 @@ class SignUpViewModel @Inject constructor(
         val result = userRepository.signUp(name, email, birth, phone)
 
         result.onSuccess {
-            reduce {
-                state.copy(
-                    name = name,
-                    email = email,
-                    birth = birth,
-                    phone = phone,
-                    isSignUpComplete = true
-                )
-            }
+            reduce { state.copy(isSignUpComplete = true) }
             postSideEffect(SignUpSideEffect.Toast("회원가입 정보가 저장됐어요."))
             delay(3000L)
             reduce { state.copy(isSignUpComplete = false) }
@@ -104,10 +82,6 @@ class SignUpViewModel @Inject constructor(
 
 @Immutable
 data class SignUpState(
-    val name: String = "",
-    val email: String = "",
-    val birth: String = "",
-    val phone: String = "",
     val isSignUpComplete: Boolean = false
 )
 

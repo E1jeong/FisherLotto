@@ -22,6 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,10 +36,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.presentation.component.textfield.DefaultTextField
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
-import org.orbitmvi.orbit.annotation.OrbitExperimental
 import org.orbitmvi.orbit.compose.collectSideEffect
 
-@OptIn(OrbitExperimental::class)
 @Composable
 fun SignUpScreen(
     popBackStack: () -> Unit,
@@ -44,6 +45,11 @@ fun SignUpScreen(
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var birth by rememberSaveable { mutableStateOf("") }
+    var phone by rememberSaveable { mutableStateOf("") }
 
     BackHandler(enabled = state.isSignUpComplete) {}
 
@@ -55,15 +61,15 @@ fun SignUpScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         SignUpContent(
-            name = state.name,
-            email = state.email,
-            birth = state.birth,
-            phone = state.phone,
-            onNameChanged = viewModel::onSignUpNameChanged,
-            onEmailChanged = viewModel::onSignUpEmailChanged,
-            onBirthChanged = viewModel::onSignUpBirthChanged,
-            onPhoneChanged = viewModel::onSignUpPhoneChanged,
-            onSubmitClick = viewModel::onSignUpSubmitClick,
+            name = name,
+            email = email,
+            birth = birth,
+            phone = phone,
+            onNameChanged = { name = it },
+            onEmailChanged = { email = it },
+            onBirthChanged = { birth = it },
+            onPhoneChanged = { phone = it },
+            onSubmitClick = { viewModel.onSignUpSubmitClick(name, email, birth, phone) },
         )
 
         // 회원가입 완료 로딩 오버레이
@@ -90,7 +96,6 @@ fun SignUpScreen(
     }
 }
 
-@OptIn(OrbitExperimental::class)
 @Composable
 private fun InitSignUpScreen(
     context: Context,
