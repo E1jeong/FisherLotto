@@ -2,6 +2,7 @@ package com.queentech.presentation.main.camera
 
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -43,6 +45,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.TextPrimary
+import org.orbitmvi.orbit.compose.collectSideEffect
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -52,8 +55,19 @@ fun CameraScreen(
     viewModel: CameraViewModel = hiltViewModel(),
 ) {
     val state by viewModel.container.stateFlow.collectAsState()
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var qrCodeValueDialogVisible by remember { mutableStateOf(false) }
+
+    viewModel.collectSideEffect { sideEffect ->
+        when (sideEffect) {
+            is CameraSideEffect.Toast -> {
+                // 스캔이 실패하면 결과 다이얼로그가 뜨지 않으므로 스캐너를 다시 열어둔다.
+                qrCodeValueDialogVisible = false
+                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     var cameraError by remember { mutableStateOf<String?>(null) }
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     DisposableEffect(Unit) {

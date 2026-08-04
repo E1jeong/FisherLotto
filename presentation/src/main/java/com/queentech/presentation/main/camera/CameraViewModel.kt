@@ -44,7 +44,10 @@ class CameraViewModel @Inject constructor(
         if (rawValue == lastScannedValue) return@intent
         lastScannedValue = rawValue
         Log.d("CameraViewModel", "raw QR: $rawValue")
-        val result = LottoQrResult.parse(rawValue) ?: return@intent
+        val result = LottoQrResult.parse(rawValue) ?: run {
+            postSideEffect(CameraSideEffect.Toast("올바른 로또 QR 코드가 아닙니다."))
+            return@intent
+        }
         Log.d("CameraViewModel", "Parsed drawNo=${result.drawNo}, games=${result.games}")
         val winning = getLottoNumberUseCase(result.drawNo).getOrNull()
         reduce { state.copy(result = result, winningNumbers = winning) }
