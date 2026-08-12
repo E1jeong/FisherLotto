@@ -16,7 +16,7 @@ This file is the single source of AI agent instructions for this repository. `CL
 - Hilt 2.49 with KSP
 - Retrofit, OkHttp, Room, DataStore, Paging 3
 - CameraX, ML Kit Barcode Scanning
-- Firebase Auth, Messaging, Crashlytics
+- Firebase Messaging, Crashlytics
 - Google Play Billing, AdMob
 
 ## Product Goals
@@ -75,9 +75,10 @@ Violating any CRITICAL rule below means stopping work and telling the user, not 
 - CRITICAL: `domain` must remain pure Kotlin and must not depend on Android, Firebase, Retrofit, Room, Compose, Hilt Android APIs, or resource files.
 - CRITICAL: `presentation` may depend on `domain`, but must not depend on `data`.
 - CRITICAL: `data` may depend on `domain` and owns repository/usecase implementations, API services, Room, DataStore, Billing wrappers, and provider adapters.
-- CRITICAL: `app` wires application-level setup, DI entry points, Firebase/Kakao/AdMob initialization, WorkManager, and module composition.
+- CRITICAL: `app` wires application-level setup, DI entry points, Firebase/AdMob initialization, WorkManager, and module composition.
 - CRITICAL: UI state should follow Orbit MVI patterns: state, side effects, and intents should be explicit and testable.
-- CRITICAL: Do not expose API keys, signing values, Kakao keys, billing tokens, auth credentials, provider raw errors, or stack traces in UI, logs, docs, or commits.
+- CRITICAL: Do not expose API keys, signing values, billing tokens, auth credentials, provider raw errors, or stack traces in UI, logs, docs, or commits.
+- Authentication is email-only. Social login (Kakao, Google) was never implemented and its remaining SDK wiring was removed on 2026-08-12; `SocialLoginButton.kt` is a deliberately kept UI shell with no call site. Do not treat it as evidence that social login exists.
 - CRITICAL: Do not hardcode local secret values from `local.properties`, signing configs, or `google-services.json`.
 - Every declared side effect must be collected by its screen. An uncollected `sideEffect` silently discards user-facing errors.
 - Compose text fields hold their value in `rememberSaveable`, not in Orbit state. A keystroke handler that must reach the container uses `blockingIntent`; an async `intent` lets the field lag its own input and drop or reorder characters.

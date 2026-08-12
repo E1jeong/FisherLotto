@@ -108,7 +108,6 @@ mlkit = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "
 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
-firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
@@ -117,10 +116,6 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk"}
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine"}
 moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi"}
 moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
-
-google-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "21.4.0"}
-kakao-auth = { group="com.kakao.sdk", name = "v2-user", version = "2.20.1"}
-kakao-common = { group="com.kakao.sdk", name = "v2-common", version = "2.20.1"}
 
 lottie-compose = {group = "com.airbnb.android", name="lottie-compose", version="6.6.6"}
 browser = {group = "androidx.browser", name="browser", version="1.8.0"}

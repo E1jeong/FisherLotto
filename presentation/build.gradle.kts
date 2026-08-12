@@ -114,8 +114,5 @@ dependencies {
     implementation(libs.camera.view)
     implementation(libs.mlkit)
 
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
-
     implementation(libs.lottie.compose)
 }

@@ -34,7 +34,7 @@ FisherLotto helps Korean lotto users check results, scan tickets, review history
 3. User reviews previously scanned QR tickets from local history.
 4. User watches an ad or uses subscription benefits to generate prediction numbers.
 5. User browses draw statistics with paginated historical data.
-6. User logs in with Kakao or Google and manages account/subscription state.
+6. User logs in with an email account and manages account/subscription state.
 7. User receives FCM or local notification updates where enabled.
 
 ## Major Features
@@ -53,7 +53,8 @@ FisherLotto helps Korean lotto users check results, scan tickets, review history
 6. Statistics
    - Draw-by-draw winning number statistics with Paging 3.
 7. Login and account
-   - Kakao and Google social login, user profile, withdrawal, and state management.
+   - Email sign-up and login, user profile, withdrawal, and state management.
+   - Social login (Kakao, Google) is **out of scope for 1.0**. It was never implemented, and the leftover SDK wiring was removed on 2026-08-12.
 8. Subscription
    - Google Play Billing subscription, purchase restoration, and benefit state.
 9. Notifications

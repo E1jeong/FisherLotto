@@ -77,7 +77,7 @@ The reverse direction should happen through mapped return values, flows, or doma
 ### `app`
 
 - Application class and manifest-level wiring.
-- Firebase, Kakao, AdMob, WorkManager, and process-level initialization.
+- Firebase, AdMob, WorkManager, and process-level initialization.
 - Hilt entry setup and module aggregation where needed.
 - Build config, signing config, app version, release packaging.
 
@@ -100,7 +100,7 @@ The reverse direction should happen through mapped return values, flows, or doma
 
 - Retrofit and OkHttp calls belong in `data`.
 - Room and DataStore access belong in `data`.
-- Firebase/Auth/FCM wrappers should be isolated behind data/app boundaries.
+- Firebase/FCM wrappers should be isolated behind data/app boundaries.
 - Google Play Billing should be wrapped so UI observes domain-level subscription state.
 - CameraX and ML Kit are UI-adjacent and should stay in presentation/app-facing code unless a pure parser can be moved to domain.
 

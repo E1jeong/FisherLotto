@@ -24,7 +24,7 @@ Only run release build commands when local signing and SDK setup are available.
 - Do not commit secret values from `local.properties`.
 - Do not change signing passwords or key aliases through AI edits.
 - Treat `google-services.json` and signing files as sensitive project assets.
-- Confirm Kakao, Firebase, Billing, and AdMob configuration changes are intentional.
+- Confirm Firebase, Billing, and AdMob configuration changes are intentional.
 
 ## Runtime Checks
 
@@ -32,7 +32,7 @@ Only run release build commands when local signing and SDK setup are available.
 - QR scan opens camera and handles invalid QR data.
 - Scan history persists after app restart.
 - Prediction number flow respects ad/subscription rules.
-- Login state reflects Kakao/Google auth state.
+- Email login state is reflected in UI and survives restart.
 - Subscription state is restored and reflected in UI.
 - FCM/local notification behavior is not broken by background restrictions.
 

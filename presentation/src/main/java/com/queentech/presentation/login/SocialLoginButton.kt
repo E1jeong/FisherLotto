@@ -1,3 +1,13 @@
+// 소셜 로그인 UI 껍데기. 호출부는 없다.
+//
+// 카카오/구글 로그인은 구현된 적이 없고, 2026-08-12에 남아 있던 흔적
+// (KakaoSdk 초기화, KAKAO_NATIVE_APP_KEY 주입, kakao/play-services-auth 의존성,
+// 카카오 maven 저장소)을 모두 제거했다. 이 파일은 나중에 소셜 로그인을 붙일 때
+// 재사용하려고 의도적으로 남겼다.
+//
+// 다시 붙이려면 위 설정을 되살리고 각 SDK의 로그인 플로우를 새로 구현해야 한다.
+// 이 파일이 있다고 해서 로그인이 동작하는 것은 아니다.
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row

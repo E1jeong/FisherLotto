@@ -27,7 +27,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-        buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY")}\"")
         manifestPlaceholders["admobAppId"] =
             localProperties.getProperty("ADMOB_APP_ID", ADMOB_TEST_APP_ID)
     }
@@ -77,7 +76,7 @@ android {
 tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
     doFirst {
         val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-        val missing = listOf("ADMOB_APP_ID", "ADMOB_REWARDED_AD_UNIT_ID", "KAKAO_NATIVE_APP_KEY")
+        val missing = listOf("ADMOB_APP_ID", "ADMOB_REWARDED_AD_UNIT_ID")
             .filter { localProperties.getProperty(it).isNullOrBlank() }
 
         if (missing.isEmpty()) return@doFirst
@@ -121,8 +120,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics)
-
-    implementation(libs.kakao.common)
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)

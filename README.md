@@ -17,7 +17,7 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 | **로또 뉴스** | Google News RSS 기반 로또 관련 최신 뉴스 제공 (30분 캐싱) | ✅ |
 | **예상 번호** | 리워드 광고 시청 후 주간 예상 번호 발급 (주 1회, 토요일 마감) | ✅ |
 | **당첨 통계** | 회차별 등수 당첨자 수 통계 테이블 (Paging 3 기반 페이지네이션) | ✅ |
-| **로그인 / 회원가입** | 이메일 + 소셜 로그인 (Kakao, Google) | ✅ |
+| **로그인 / 회원가입** | 이메일 로그인 / 회원가입 | ✅ |
 | **마이페이지** | 사용자 정보 관리 + 구독 관리 + 회원탈퇴 | ✅ |
 | **구독 서비스** | Google Play Billing 기반 구독 결제 — 광고 제거, 예상번호 발급 횟수 증가, 지난주 예상번호 당첨 확인 | ✅ |
 | **푸시 알림** | Firebase Cloud Messaging 기반 알림 수신 + 구독 만료 D-3 로컬 알림 | ✅ |
@@ -59,10 +59,11 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 - **WorkManager** 2.9.0 — 구독 만료 D-3 로컬 알림 스케줄링
 
 ### Backend & Auth
-- **Firebase** Auth / Realtime Database / Cloud Messaging / Analytics / Crashlytics
-- **Kakao SDK** 2.20.1 — 카카오 소셜 로그인
-- **Google Play Services Auth** — 구글 소셜 로그인
-- **Sub Backend (Vercel)** — FCM 푸시 프록시 + 구독 검증 서버
+- **Firebase** Cloud Messaging / Crashlytics
+- **Sub Backend** — FCM 푸시 프록시 + 구독 검증 서버
+
+> 소셜 로그인(Kakao, Google)은 구현된 적이 없고, 남아 있던 SDK 설정은 2026-08-12에 제거했습니다.
+> 인증은 이메일 기반이며 서버 API로 처리합니다. Firebase Auth와 Realtime Database는 사용하지 않습니다.
 
 ### Testing
 - **JUnit 4** + **MockK** 1.13.12 — 단위 테스트
@@ -73,7 +74,7 @@ Fisher Lotto는 로또 사용자를 위한 올인원 앱입니다.
 
 ```
 FisherLotto/
-├── app/                # Application 클래스, Hilt 설정, Firebase/Kakao/AdMob 초기화, FCM 서비스, WorkManager
+├── app/                # Application 클래스, Hilt 설정, Firebase/AdMob 초기화, FCM 서비스, WorkManager
 ├── domain/             # UseCase 인터페이스, Repository 인터페이스, Model 정의 (순수 Kotlin)
 ├── data/               # UseCase 구현, API Service, Repository 구현, Room DB, DI 모듈
 ├── presentation/       # Compose UI, ViewModel (Orbit MVI), Navigation, Theme
