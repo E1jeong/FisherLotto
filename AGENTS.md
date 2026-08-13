@@ -46,7 +46,7 @@ Read additionally depending on the change:
 - Test-related work → `docs/TESTING.md`
 - Release, build, or signing work → `docs/RELEASE.md`
 
-Working documents for planned migrations and roadmap items are **not** kept in this repository. They live in the Obsidian wiki under `Project/Personal/FisherLotto/`.
+Working documents for planned migrations and roadmap items are **not** kept in this repository. They live in the Obsidian wiki under `Dev/Project/Personal/FisherLotto/`.
 
 ## Related Projects
 
@@ -105,7 +105,7 @@ Violating any CRITICAL rule below means stopping work and telling the user, not 
 
 Skills defined in this repository for AI agents:
 
-- `.agents/skills/android-feature/SKILL.md` — feature implementation workflow and Phase Step template
+- `.agents/skills/android-feature/SKILL.md` — feature planning and implementation workflow
 - `.agents/skills/review/SKILL.md` — code review checklist and output format
 - `.agents/skills/release-check/SKILL.md` — release validation procedure
 

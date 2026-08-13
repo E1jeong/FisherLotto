@@ -8,8 +8,10 @@ description: Use when working in FisherLotto and the user asks to prepare, revie
 ## Context To Read First
 
 - `AGENTS.md`
-- `docs/RELEASE.md`
+- `docs/PRD.md`
 - `docs/ARCHITECTURE.md`
+- `docs/ADR.md`
+- `docs/RELEASE.md`
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
 

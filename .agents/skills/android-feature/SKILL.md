@@ -33,43 +33,11 @@ Before proposing or implementing feature work, read:
 5. Add or update focused tests for changed behavior.
 6. Run the smallest useful Gradle verification command, then broader checks if risk is high.
 
-## Phase Step Template
+## Planning Documents
 
-Use this structure when creating `phases/{phase-name}/stepN.md`:
-
-````markdown
-# Step N: kebab-case-name
-
-## Read First
-
-- `/AGENTS.md`
-- `/docs/PRD.md`
-- `/docs/ARCHITECTURE.md`
-- `/docs/ADR.md`
-- {relevant existing files}
-
-## Task
-
-{specific implementation task with target files and boundaries}
-
-## Acceptance Criteria
-
-```powershell
-.\gradlew.bat {focused-task}
-```
-
-## Verification
-
-1. Run the acceptance command.
-2. Check module boundaries from `docs/ARCHITECTURE.md`.
-3. Update `phases/{phase-name}/index.json` with status and one-line summary.
-
-## Do Not
-
-- Do not change unrelated navigation or architecture. Reason: feature scope must stay reviewable.
-- Do not leak provider DTO/entity types into UI/domain. Reason: provider boundaries must remain stable.
-- Do not hardcode secrets. Reason: local and production credentials must remain outside source.
-````
+- Do not create a repository-local `phases/` tree. Planned migrations and roadmap work belong in the FisherLotto Obsidian project wiki, as required by `AGENTS.md`.
+- Write implementation plans, task documents, and walkthroughs in Korean.
+- Keep acceptance criteria concrete and include the smallest Gradle command that verifies the planned behavior.
 
 ## Output Expectations
 

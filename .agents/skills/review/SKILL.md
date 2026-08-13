@@ -10,6 +10,7 @@ description: Use when working in FisherLotto and the user asks to review local c
 Before reviewing changes, read:
 
 - `AGENTS.md`
+- `docs/PRD.md`
 - `docs/ARCHITECTURE.md`
 - `docs/ADR.md`
 - `docs/TESTING.md`
