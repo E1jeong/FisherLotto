@@ -1,153 +1,102 @@
-# Project: FisherLotto
+# FisherLotto AI Guide
 
-FisherLotto is an Android lotto companion app for lotto result lookup, QR result checking, scan history, prediction number generation, lotto news, statistics, login, subscription, and notifications.
+## Start Here
 
-This file is the single source of AI agent instructions for this repository. `CLAUDE.md` only points here.
+- This guide is a navigation aid and execution safety guard, not a history archive.
+- The Obsidian wiki `Dev/Project/Personal/FisherLotto` is the single source of truth for business context, product rules, server integration analysis, roadmap, and decision history.
+- Before resuming work or making non-trivial changes, follow the mandatory read order:
+  1. `README.md` (Wiki entrypoint)
+  2. `handoff.md` (Current state and unresolved blockers)
+  3. `issues/needs-verification.md` (Unsettled claims and verification gaps)
+- Before proposing or executing changes, communicate in Korean. Explain command rationale and report completion status in Korean.
+- Read the nearest module `AGENTS.md` before changing any module.
 
-## Tech Stack
+## Machine Topology
 
-- Kotlin 2.0.0
-- Android Gradle Plugin 8.10.1 (Gradle 8.11.1)
-- JDK 17
-- Min SDK 26, target SDK 36, compile SDK 36
-- Multi-module Clean Architecture: `app`, `presentation`, `domain`, `data`
-- Jetpack Compose, Material 3, Navigation Compose
-- Orbit MVI 6.1.0
-- Hilt 2.49 with KSP
-- Retrofit, OkHttp, Room, DataStore, Paging 3
-- CameraX, ML Kit Barcode Scanning
-- Firebase Messaging, Crashlytics
-- Google Play Billing, AdMob
+- **Company PC**: `C:\Users\Unionbiometrics\Desktop\dev\1.project\FisherLotto`
+- **Home Main Notebook**: `C:\Users\sumas\OneDrive\Desktop\dev\6.project\fisherlotto`
+- **Related Backend Repository**: `lotto-sub-backend` (read-only unless server changes are explicitly requested)
 
-## Product Goals
+## Product and Architecture Map
 
-- Let users check latest lotto winning numbers and prize information quickly.
-- Let users scan lotto QR codes and keep local scan history.
-- Provide prediction number generation and related statistics without overpromising certainty.
-- Provide lotto-related news and useful app notifications.
-- Keep subscription, ads, auth, and notification behavior understandable and safe.
+FisherLotto is an Android lotto companion app built with Multi-module Clean Architecture, Jetpack Compose, and Orbit MVI.
 
-### Prediction Wording
-
-- CRITICAL: Describe prediction features as recommendation, entertainment, or assistance. Never use wording that guarantees or implies a win.
-- This applies to UI strings, store listings, documentation, and commit messages alike.
-
-## Read Order Before Work
-
-Read these in order before any behavior change, implementation, or review:
-
-1. `AGENTS.md` (this file) — project overview, architecture rules, module responsibilities, development process, encoding rules, verification commands
-2. `docs/PRD.md` — product goals, core user flows, feature scope, product policy
-3. `docs/ARCHITECTURE.md` — module dependency direction, layer responsibilities, error handling, test strategy
-4. `docs/ADR.md` — architecture decision records
-
-Read additionally depending on the change:
-
-- Test-related work → `docs/TESTING.md`
-- Release, build, or signing work → `docs/RELEASE.md`
-
-Working documents for planned migrations and roadmap items are **not** kept in this repository. They live in the Obsidian wiki under `Dev/Project/Personal/FisherLotto/`.
-
-## Related Projects
-
-- App project: this repository (`FisherLotto`).
-- Server project: `lotto-sub-backend`.
-- Local paths are machine-dependent:
-  - Company PC: `<dev-root>\1.project\FisherLotto`, `<dev-root>\1.project\lotto-sub-backend`
-  - Home main notebook: `<dev-root>\6.project\fisherlotto`, `<dev-root>\7.server\lotto-sub-backend`
-- Resolve the server by repository name or the matching path above; do not assume one relative path works on every machine.
-- Treat the server project as read-only unless the user explicitly asks for server changes.
-- When changing API contracts, subscription verification, or FCM behavior, inspect both Android client and server handlers before editing.
-- Do not copy server secrets, environment values, tokens, or deployment config into this repository.
-
-## Architecture Rules
-
-Violating any CRITICAL rule below means stopping work and telling the user, not working around it.
-
-| Rule | Action on violation |
-| --- | --- |
-| `domain` stays pure Kotlin — no Android, Firebase, Retrofit, Room, Compose, or Hilt Android API dependency | Stop implementing, warn |
-| `presentation` must not depend on `data` | Stop implementing, warn |
-| `data` must not depend on `presentation` | Stop implementing, warn |
-| UI state follows Orbit MVI (explicit state / sideEffect / intent) | Require pattern correction |
-| Room schema changes require a migration decision | Require a migration plan |
-
-- CRITICAL: `domain` must remain pure Kotlin and must not depend on Android, Firebase, Retrofit, Room, Compose, Hilt Android APIs, or resource files.
-- CRITICAL: `presentation` may depend on `domain`, but must not depend on `data`.
-- CRITICAL: `data` may depend on `domain` and owns repository/usecase implementations, API services, Room, DataStore, Billing wrappers, and provider adapters.
-- CRITICAL: `app` wires application-level setup, DI entry points, Firebase/AdMob initialization, WorkManager, and module composition.
-- CRITICAL: UI state should follow Orbit MVI patterns: state, side effects, and intents should be explicit and testable.
-- CRITICAL: Do not expose API keys, signing values, billing tokens, auth credentials, provider raw errors, or stack traces in UI, logs, docs, or commits.
-- Authentication is email-only. Social login (Kakao, Google) was never implemented and its remaining SDK wiring was removed on 2026-08-12; `SocialLoginButton.kt` is a deliberately kept UI shell with no call site. Do not treat it as evidence that social login exists.
-- CRITICAL: Do not hardcode local secret values from `local.properties`, signing configs, or `google-services.json`.
-- Every declared side effect must be collected by its screen. An uncollected `sideEffect` silently discards user-facing errors.
-- Compose text fields hold their value in `rememberSaveable`, not in Orbit state. A keystroke handler that must reach the container uses `blockingIntent`; an async `intent` lets the field lag its own input and drop or reorder characters.
-- Room schema changes must include a migration decision. Do not silently change persisted tables.
-- Version and dependency changes belong in `gradle/libs.versions.toml` unless the existing module pattern requires otherwise.
-
-## Type Boundary Rules
-
-- Network DTOs exist only in `data`.
-- Room entities exist only in `data`.
-- Domain models exist only in `domain`.
-- UI state models exist only in `presentation`.
-- Add a mapper at every boundary. Never leak provider or storage types into an upper layer.
-- Network DTOs, local entities, domain models, and UI state should not be collapsed into one type unless the scope is truly local and temporary.
-
-## Module Responsibilities
-
-- `domain`: business models, repository interfaces, usecase interfaces/contracts, pure Kotlin business rules.
-- `data`: repository implementations, remote/local data sources, API services, DTO/entity mapping, Room, DataStore, Billing integration.
-- `presentation`: Compose screens, navigation, ViewModels, Orbit containers, UI state, UI-only models.
-- `app`: Android application shell, manifest, app-level initialization, DI aggregation, build config, release packaging.
-
-## Agent Skills
-
-Skills defined in this repository for AI agents:
-
-- `.agents/skills/android-feature/SKILL.md` — feature planning and implementation workflow
-- `.agents/skills/review/SKILL.md` — code review checklist and output format
-- `.agents/skills/release-check/SKILL.md` — release validation procedure
-
-## Development Process
-
-- Before implementing behavior changes, read `docs/PRD.md`, `docs/ARCHITECTURE.md`, and `docs/ADR.md`.
-- For feature work, identify the affected layer first: domain contract, data implementation, presentation state/UI, or app wiring.
-- Prefer small, surgical changes. Do not refactor adjacent code just because it is nearby.
-- Add or update tests when behavior changes, especially for usecases, repository mapping, ViewModel state transitions, Room migrations, and provider error mapping.
-- If product scope changes, update `docs/PRD.md` before implementation.
-- If architecture or technology decisions change, update `docs/ADR.md` before implementation.
-- If module ownership or data flow changes, update `docs/ARCHITECTURE.md`.
-
-## Encoding Rules
-
-- Markdown and source files containing Korean text must be read and written as UTF-8.
-- On Windows PowerShell, use `Get-Content -Encoding UTF8` when reading Korean Markdown files.
-- Do not append to an already mojibake-corrupted document unless the task explicitly requires recovery.
-- Prefer creating a new UTF-8 reference document over editing a corrupted historical note.
-
-## Verification Commands
-
-Use the smallest command that verifies the change:
-
-```bash
-./gradlew :domain:test
-./gradlew :data:test
-./gradlew :presentation:test
-./gradlew test
-./gradlew assembleDebug
+```text
+       ┌─────────────────────────────────────────────────────────┐
+       │                       app/ Module                       │
+       │     (Hilt DI, Application Shell, FCM, WorkManager)      │
+       └──────────────┬───────────────────────────┬──────────────┘
+                      │                           │
+                      ▼                           ▼
+        ┌───────────────────────────┐   ┌───────────────────────────┐
+        │   presentation/ Module    │   │       data/ Module        │
+        │ (Compose UI, ViewModels,  │   │  (Room DB, Retrofit API,  │
+        │   Orbit MVI, Navigation)  │   │   Play Billing, DataStore)│
+        └─────────────┬─────────────┘   └─────────────┬─────────────┘
+                      │                               │
+                      │   ┌───────────────────────┐   │
+                      └──►│    domain/ Module     │◄──┘
+                          │ (Pure Kotlin Models,  │
+                          │   UseCases, Contracts)│
+                          └───────────────────────┘
 ```
 
-On Windows PowerShell, use:
+## Module Map and First Reads
+
+| Module | Guide | Ownership & Responsibility | First Source Entry Point | Related Wiki Topics |
+| :--- | :--- | :--- | :--- | :--- |
+| `domain/` | [`domain/AGENTS.md`](domain/AGENTS.md) | Pure Kotlin business models, UseCases, lotto algorithms | `domain/.../usecase/lotto/GetExpectNumberUseCase.kt` | `features/predicted-numbers.md`, `technical/architecture.md` |
+| `data/` | [`data/AGENTS.md`](data/AGENTS.md) | Repository implementations, Room DB, Retrofit APIs, Billing | `data/.../database/AppDatabase.kt`, `.../billing/BillingRepositoryImpl.kt` | `data/external-data.md`, `server/API.md`, `features/payments-and-subscriptions.md` |
+| `presentation/` | [`presentation/AGENTS.md`](presentation/AGENTS.md) | Jetpack Compose UI, Orbit MVI ViewModels, Navigation | `presentation/.../main/home/HomeScreen.kt` | `UI/screen-layout.md`, `features/home.md`, `features/qr-winning-verification.md` |
+| `app/` | [`app/AGENTS.md`](app/AGENTS.md) | Application shell, Hilt DI root, FCM Service, WorkManager | `app/.../MainActivity.kt`, `.../App.kt` | `features/FCM.md`, `operations/google-play-store.md`, `docs/RELEASE.md` |
+
+## Task Router
+
+| Request Concerns | Read First in Wiki | First Source Path | Then Trace |
+| :--- | :--- | :--- | :--- |
+| **Home & Lottery News** | `features/home.md` | `presentation/src/main/java/com/queentech/presentation/main/home/HomeScreen.kt` | `HomeViewModel.kt` → `domain/.../GetLotteryNewsUseCase.kt` → `data/.../GetLotteryNewsUseCaseImpl.kt` |
+| **Lotto Number Recommendation** | `features/predicted-numbers.md` | `domain/src/main/java/com/queentech/domain/usecase/lotto/GetExpectNumberUseCase.kt` | `presentation/src/main/java/com/queentech/presentation/main/expect_number/ExpectNumberViewModel.kt` → `ExpectNumberScreen.kt` |
+| **QR Code Scan & History** | `features/qr-winning-verification.md` | `presentation/src/main/java/com/queentech/presentation/main/camera/CameraScreen.kt` | `CameraViewModel.kt` → `domain/.../ScanHistoryRepository.kt` → `data/.../ScanHistoryRepositoryImpl.kt` |
+| **In-App Billing & Subscriptions** | `features/payments-and-subscriptions.md`<br>`../lotto-sub-backend/issues/payment-gaps.md` | `data/src/main/java/com/queentech/data/usecase/billing/BillingRepositoryImpl.kt` | `BillingClientWrapper.kt` → `domain/.../BillingRepository.kt` → Server Receipt API |
+| **Push Notifications (FCM)** | `features/FCM.md` | `app/src/main/java/com/queentech/fisherlotto/FisherLottoMessagingService.kt` | `data/src/main/java/com/queentech/data/usecase/fcm/FcmRepositoryImpl.kt` (Token sync) |
+| **User Login & Account Lifecycle** | `features/login-and-membership.md`<br>`roadmap/email-verification-and-account-recovery.md` | `presentation/src/main/java/com/queentech/presentation/login/LoginViewModel.kt` | `domain/src/main/java/com/queentech/domain/usecase/login/GetUserUseCase.kt` → `data/.../UserRepositoryImpl.kt` |
+| **Local Database & Room Schema** | `data/external-data.md` | `data/src/main/java/com/queentech/data/database/AppDatabase.kt` | `data/src/main/java/com/queentech/data/database/dao/` → Room Entities & Migrations |
+| **Statistics & Chart Analysis** | `features/statistics.md` | `presentation/src/main/java/com/queentech/presentation/main/statistic/StatisticViewModel.kt` | `domain/src/main/java/com/queentech/domain/usecase/lotto/GetLottoStatsUseCase.kt` |
+
+## Immutable Boundaries and Change Gates
+
+1. **Domain Purity**: `domain` must remain 100% pure Kotlin. No Android, Firebase, Retrofit, Room, Compose, or Hilt Android imports.
+2. **Layer Isolation**: `presentation` must never depend on `data`; `data` must never depend on `presentation`.
+3. **Prediction Wording Policy (CRITICAL)**: Describe prediction features as recommendation, entertainment, or assistance. **Never use wording that guarantees or implies a win** in UI strings, logs, tests, docstrings, or commit messages.
+4. **Secret Protection**: Never commit API keys, signing keystores, billing tokens, `google-services.json`, or credentials.
+5. **Orbit MVI Integrity**: Every declared `sideEffect` must be collected in its Screen. Keystroke inputs must use `rememberSaveable` + `blockingIntent`.
+6. **Room Migration Safety**: Persisted Room table modifications require an explicit migration plan (`AutoMigration` or `Migration`).
+7. **Read-Only Server Boundary**: `lotto-sub-backend` is read-only unless server changes are explicitly requested.
+
+## Build and Verification
+
+### Windows PowerShell
 
 ```powershell
+# Module tests
 .\gradlew.bat :domain:test
 .\gradlew.bat :data:test
 .\gradlew.bat :presentation:test
+
+# Full test suite & debug build
 .\gradlew.bat test
 .\gradlew.bat assembleDebug
 ```
 
-If a command cannot be run because of local SDK, emulator, signing, or network constraints, state that clearly with the attempted command and the reason.
+### Linux / WSL / macOS
 
-`:app:assembleRelease` availability is machine-dependent: it needs `app/google-services.json`, which is intentionally absent on some machines. When reporting a build failure, say which machine you were on.
+```bash
+# Module tests
+./gradlew :domain:test
+./gradlew :data:test
+./gradlew :presentation:test
+
+# Full test suite & debug build
+./gradlew test
+./gradlew assembleDebug
+```
