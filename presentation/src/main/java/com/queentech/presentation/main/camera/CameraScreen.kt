@@ -206,8 +206,8 @@ private fun CameraPreview(
                             imageAnalysis
                         )
                     } catch (e: Exception) {
-                        Log.e("CameraScreen", "카메라 초기화 실패", e)
-                        onCameraError(e.message ?: "카메라 초기화 실패")
+                        Log.e("CameraScreen", "Camera initialization failed")
+                        onCameraError("카메라를 시작하지 못했습니다.")
                     }
                 }, ContextCompat.getMainExecutor(context))
 

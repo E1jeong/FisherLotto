@@ -34,8 +34,8 @@ class StatisticViewModel @Inject constructor(
                 intent {
                     // 에러 발생 시 로딩/페이징 상태 해제
                     reduce { state.copy(isLoading = false, isPaginating = false) }
-                    postSideEffect(StatisticSideEffect.Toast(throwable.message ?: "Unknown Error"))
-                    Log.e(TAG, "error handler: ${throwable.message}", throwable)
+                    postSideEffect(StatisticSideEffect.Toast("통계 정보를 불러오지 못했습니다."))
+                    Log.e(TAG, "Statistic loading failed")
                 }
             }
         },

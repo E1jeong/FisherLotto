@@ -1,7 +1,6 @@
 package com.queentech.presentation.main.camera
 
 import android.net.Uri
-import android.util.Log
 
 data class LottoQrResult(
     val drawNo: Int,
@@ -11,7 +10,6 @@ data class LottoQrResult(
         fun parse(raw: String): LottoQrResult? {
             val uri = runCatching { Uri.parse(raw) }.getOrNull() ?: return null
             val value = uri.getQueryParameter("v") ?: return null
-            Log.d("LottoQr", "v=$value")
             if (value.length < 4) return null
 
             // 1. 회차
@@ -20,9 +18,6 @@ data class LottoQrResult(
             // 2. 나머지에서 숫자만 추출
             val digitsOnly = value.substring(4)
                 .filter { it.isDigit() }   // 'm', 'q' 같은 문자 전부 제거
-            Log.d("LottoQr", "digitsOnly=$digitsOnly")
-            Log.d("LottoQr", "digitChunks=${digitsOnly.chunked(12)}")
-
             if (digitsOnly.length < 12) return null  // 최소 한 게임도 안될 때
 
             // 3. 12자리씩 잘라서 -> 2자리씩 -> Int 리스트로 변환

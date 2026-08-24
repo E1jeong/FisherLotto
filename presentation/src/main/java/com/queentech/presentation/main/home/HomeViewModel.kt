@@ -28,8 +28,8 @@ class HomeViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(HomeSideEffect.Toast(throwable.message ?: "Unknown Error"))
-                    Log.e("!!@@", "error handler: ${throwable.message}")
+                    postSideEffect(HomeSideEffect.Toast("정보를 불러오지 못했습니다."))
+                    Log.e(TAG, "Home loading failed")
                 }
             }
         },
@@ -54,7 +54,7 @@ class HomeViewModel @Inject constructor(
                 reduce { state.copy(news = news, isNewsLoading = false) }
             }
             .onFailure { e ->
-                Log.e(TAG, "뉴스 로딩 실패", e)
+                Log.e(TAG, "News loading failed")
                 reduce { state.copy(isNewsLoading = false) }
                 postSideEffect(HomeSideEffect.Toast("뉴스를 불러오지 못했습니다."))
             }

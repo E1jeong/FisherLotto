@@ -37,8 +37,8 @@ class ExpectNumberViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(ExpectNumberSideEffect.Toast(throwable.message.toString()))
-                    Log.e(TAG, "error handler: ${throwable.message}", throwable)
+                    postSideEffect(ExpectNumberSideEffect.Toast("추천 번호를 불러오지 못했습니다."))
+                    Log.e(TAG, "Expected-number loading failed")
                 }
             }
         },

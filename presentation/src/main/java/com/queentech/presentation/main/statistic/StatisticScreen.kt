@@ -1,5 +1,6 @@
 package com.queentech.presentation.main.statistic
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +59,7 @@ import com.queentech.presentation.theme.Paddings
 import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
+import org.orbitmvi.orbit.compose.collectSideEffect
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -76,6 +79,15 @@ private val issuedStatsColumnWeights = listOf(1.0f, 1.3f, 0.9f, 0.9f, 0.9f, 1.0f
 @Composable
 fun StatisticScreen(viewModel: StatisticViewModel = hiltViewModel()) {
     val state by viewModel.container.stateFlow.collectAsState()
+    val context = LocalContext.current
+
+    viewModel.collectSideEffect { sideEffect ->
+        when (sideEffect) {
+            is StatisticSideEffect.Toast -> {
+                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     StatisticContent(
         state = state,

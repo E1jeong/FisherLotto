@@ -26,8 +26,8 @@ class SignUpViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(SignUpSideEffect.Toast(throwable.message.toString()))
-                    Log.e(TAG, "error handler: ${throwable.message}", throwable)
+                    postSideEffect(SignUpSideEffect.Toast("회원가입 중 오류가 발생했습니다."))
+                    Log.e(TAG, "Sign-up failed")
                 }
             }
         },
@@ -75,7 +75,7 @@ class SignUpViewModel @Inject constructor(
             reduce { state.copy(isSignUpComplete = false) }
             postSideEffect(SignUpSideEffect.SignUpDoneNavigateToLogin)
         }.onFailure {
-            postSideEffect(SignUpSideEffect.Toast(it.message ?: "회원가입에 실패했습니다."))
+            postSideEffect(SignUpSideEffect.Toast("회원가입에 실패했습니다."))
         }
     }
 }

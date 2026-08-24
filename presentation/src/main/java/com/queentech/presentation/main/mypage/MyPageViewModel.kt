@@ -30,8 +30,8 @@ class MyPageViewModel @Inject constructor(
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
                     reduce { state.copy(isLoading = false, isBillingLoading = false) }
-                    postSideEffect(MyPageSideEffect.Toast(throwable.message ?: "오류가 발생했습니다."))
-                    Log.e(TAG, "error handler: ${throwable.message}", throwable)
+                    postSideEffect(MyPageSideEffect.Toast("정보를 처리하지 못했습니다."))
+                    Log.e(TAG, "MyPage operation failed")
                 }
             }
         },
@@ -69,8 +69,8 @@ class MyPageViewModel @Inject constructor(
             .onSuccess { products ->
                 reduce { state.copy(subscriptionProducts = products, isBillingLoading = false) }
             }
-            .onFailure { e ->
-                Log.e(TAG, "Failed to load subscription products", e)
+            .onFailure {
+                Log.e(TAG, "Subscription product loading failed")
                 reduce { state.copy(isBillingLoading = false) }
             }
     }
@@ -86,8 +86,8 @@ class MyPageViewModel @Inject constructor(
     fun launchBillingFlow(activityContext: Any, productId: String) = intent {
         reduce { state.copy(isBillingLoading = true) }
         billingRepository.launchSubscriptionFlow(activityContext, productId)
-            .onFailure { e ->
-                postSideEffect(MyPageSideEffect.Toast(e.message ?: "구독 처리 중 오류가 발생했습니다."))
+            .onFailure {
+                postSideEffect(MyPageSideEffect.Toast("구독 처리 중 오류가 발생했습니다."))
             }
         reduce { state.copy(isBillingLoading = false) }
     }
@@ -98,8 +98,8 @@ class MyPageViewModel @Inject constructor(
             .onSuccess {
                 postSideEffect(MyPageSideEffect.Toast("구독 상태가 복원되었습니다."))
             }
-            .onFailure { e ->
-                postSideEffect(MyPageSideEffect.Toast(e.message ?: "복원 중 오류가 발생했습니다."))
+            .onFailure {
+                postSideEffect(MyPageSideEffect.Toast("구독 복원 중 오류가 발생했습니다."))
             }
         reduce { state.copy(isBillingLoading = false) }
     }
@@ -119,9 +119,9 @@ class MyPageViewModel @Inject constructor(
                 reduce { state.copy(user = null, isDeleting = false, showDeleteAccountDialog = false) }
                 postSideEffect(MyPageSideEffect.NavigateToLogin)
             }
-            .onFailure { e ->
+            .onFailure {
                 reduce { state.copy(isDeleting = false, showDeleteAccountDialog = false) }
-                postSideEffect(MyPageSideEffect.Toast(e.message ?: "회원탈퇴 중 오류가 발생했습니다."))
+                postSideEffect(MyPageSideEffect.Toast("회원탈퇴 중 오류가 발생했습니다."))
             }
     }
 }

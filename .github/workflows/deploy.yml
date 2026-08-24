@@ -20,6 +20,11 @@ jobs:
       - name: 2-5. 구글 서비스 JSON 파일 복구하기
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
 
+      - name: Restore AdMob release configuration
+        run: |
+          echo "ADMOB_APP_ID=${{ secrets.ADMOB_APP_ID }}" > local.properties
+          echo "ADMOB_REWARDED_AD_UNIT_ID=${{ secrets.ADMOB_REWARDED_AD_UNIT_ID }}" >> local.properties
+
       - name: 3. 앱 빌드하기 (App Bundle 생성)
         run: |
           chmod +x gradlew

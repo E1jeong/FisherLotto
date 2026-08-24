@@ -29,8 +29,8 @@ class LoginViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(LoginSideEffect.Toast(throwable.message.toString()))
-                    Log.e(TAG, "error handler: ${throwable.message}", throwable)
+                    postSideEffect(LoginSideEffect.Toast("로그인 중 오류가 발생했습니다."))
+                    Log.e(TAG, "Login failed")
                 }
             }
         },
@@ -76,7 +76,7 @@ class LoginViewModel @Inject constructor(
             billingRepository.restorePurchases()
             postSideEffect(LoginSideEffect.NavigateToHome)
         }.onFailure {
-            postSideEffect(LoginSideEffect.Toast(it.message ?: "로그인에 실패했습니다."))
+            postSideEffect(LoginSideEffect.Toast("로그인에 실패했습니다."))
         }
     }
 
@@ -96,7 +96,7 @@ class LoginViewModel @Inject constructor(
                 fcmRepository.saveTokenToCache(token)
                 fcmRepository.saveEmailToCache(email)
             }
-            .onFailure { Log.e(TAG, "FCM 토큰 서버 전송 실패", it) }
+            .onFailure { Log.e(TAG, "FCM token submission failed") }
     }
 
     fun loadCachedUser() = intent {

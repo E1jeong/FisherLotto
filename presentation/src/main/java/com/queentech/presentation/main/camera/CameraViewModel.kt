@@ -1,6 +1,5 @@
 package com.queentech.presentation.main.camera
 
-import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.queentech.domain.model.lotto.GetLottoNumber
@@ -28,7 +27,7 @@ class CameraViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
-                    postSideEffect(CameraSideEffect.Toast(throwable.message ?: "Unknown Error"))
+                    postSideEffect(CameraSideEffect.Toast("QR 정보를 처리하지 못했습니다."))
                 }
             }
         }
@@ -43,12 +42,10 @@ class CameraViewModel @Inject constructor(
     fun onQrCodeScanned(rawValue: String) = intent {
         if (rawValue == lastScannedValue) return@intent
         lastScannedValue = rawValue
-        Log.d("CameraViewModel", "raw QR: $rawValue")
         val result = LottoQrResult.parse(rawValue) ?: run {
             postSideEffect(CameraSideEffect.Toast("올바른 로또 QR 코드가 아닙니다."))
             return@intent
         }
-        Log.d("CameraViewModel", "Parsed drawNo=${result.drawNo}, games=${result.games}")
         val winning = getLottoNumberUseCase(result.drawNo).getOrNull()
         reduce { state.copy(result = result, winningNumbers = winning) }
 
