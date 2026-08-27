@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,9 +11,21 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// AdMob 앱 ID. 실 ID는 local.properties의 ADMOB_APP_ID로 주입하고,
+// AdMob 앱 ID. 실 ID는 secrets.properties 또는 local.properties의 ADMOB_APP_ID로 주입하고,
 // 값이 없거나 debug 빌드일 때는 Google 공식 테스트 ID를 쓴다.
 val ADMOB_TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+
+fun getSecretOrLocalProperty(key: String, defaultValue: String = ""): String {
+    val secretsFile = rootProject.file("secrets.properties")
+    if (secretsFile.exists()) {
+        val props = Properties()
+        secretsFile.inputStream().use { props.load(it) }
+        val value = props.getProperty(key)
+        if (!value.isNullOrBlank()) return value
+    }
+    val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+    return localProperties.getProperty(key, defaultValue) ?: defaultValue
+}
 
 android {
     namespace = "com.queentech.fisherlotto"
@@ -26,17 +40,15 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
         manifestPlaceholders["admobAppId"] =
-            localProperties.getProperty("ADMOB_APP_ID", ADMOB_TEST_APP_ID)
+            getSecretOrLocalProperty("ADMOB_APP_ID", ADMOB_TEST_APP_ID)
     }
 
     signingConfigs {
         create("config") {
-            val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-            keyAlias = localProperties.getProperty("KEYSTORE_KEY_ALIAS", "fisherlotto")
-            keyPassword = localProperties.getProperty("KEYSTORE_KEY_PASSWORD", "")
-            storePassword = localProperties.getProperty("KEYSTORE_STORE_PASSWORD", "")
+            keyAlias = getSecretOrLocalProperty("KEYSTORE_KEY_ALIAS", "fisherlotto")
+            keyPassword = getSecretOrLocalProperty("KEYSTORE_KEY_PASSWORD", "")
+            storePassword = getSecretOrLocalProperty("KEYSTORE_STORE_PASSWORD", "")
             storeFile = rootProject.file("fisherlotto.jks")
         }
     }
@@ -70,21 +82,18 @@ android {
     }
 }
 
-// CI 러너에는 local.properties가 없어 위 주입값이 조용히 폴백/null로 떨어진다.
-// 그대로 bundleRelease가 성공하면 테스트 광고가 박힌 AAB가 Play에 올라가고,
-// 앱은 정상 동작해 보이기 때문에 발견이 늦다. CI에서는 빌드를 실패시킨다.
+// CI 러너나 개발 환경에 배포 설정이 없을 때 release 빌드 시 조기 감지한다.
 tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
     doFirst {
-        val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
         val missing = listOf("ADMOB_APP_ID", "ADMOB_REWARDED_AD_UNIT_ID")
-            .filter { localProperties.getProperty(it).isNullOrBlank() }
+            .filter { getSecretOrLocalProperty(it).isBlank() }
 
         if (missing.isEmpty()) return@doFirst
 
         // 메시지는 영문으로 둔다. Windows 콘솔 코드페이지에서 한글이 깨져 읽을 수 없다.
-        val message = "Missing release config in local.properties: $missing"
+        val message = "Missing release config in secrets.properties/local.properties: $missing"
         if (System.getenv("CI") == "true") {
-            throw GradleException("$message - add a step that writes local.properties from GitHub Secrets.")
+            throw GradleException("$message - add a step that writes secrets/local.properties from GitHub Secrets.")
         }
         logger.warn("WARNING: $message - local verification build only, do NOT distribute this artifact.")
     }

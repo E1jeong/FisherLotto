@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -7,9 +9,21 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// 보상형 광고 단위 ID. 실 ID는 local.properties의 ADMOB_REWARDED_AD_UNIT_ID로 주입하고,
+// 보상형 광고 단위 ID. 실 ID는 secrets.properties 또는 local.properties의 ADMOB_REWARDED_AD_UNIT_ID로 주입하고,
 // 값이 없거나 debug 빌드일 때는 Google 공식 테스트 ID를 쓴다.
 val ADMOB_TEST_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
+
+fun getSecretOrLocalProperty(key: String, defaultValue: String = ""): String {
+    val secretsFile = rootProject.file("secrets.properties")
+    if (secretsFile.exists()) {
+        val props = Properties()
+        secretsFile.inputStream().use { props.load(it) }
+        val value = props.getProperty(key)
+        if (!value.isNullOrBlank()) return value
+    }
+    val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+    return localProperties.getProperty(key, defaultValue) ?: defaultValue
+}
 
 android {
     namespace = "com.queentech.presentation"
@@ -21,11 +35,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
         buildConfigField(
             "String",
             "ADMOB_REWARDED_AD_UNIT_ID",
-            "\"${localProperties.getProperty("ADMOB_REWARDED_AD_UNIT_ID", ADMOB_TEST_REWARDED_AD_UNIT_ID)}\""
+            "\"${getSecretOrLocalProperty("ADMOB_REWARDED_AD_UNIT_ID", ADMOB_TEST_REWARDED_AD_UNIT_ID)}\""
         )
     }
 
