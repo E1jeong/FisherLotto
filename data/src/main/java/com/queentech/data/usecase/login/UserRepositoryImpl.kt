@@ -132,13 +132,17 @@ class UserRepositoryImpl @Inject constructor(
             ?: return Result.failure(Exception("로그인된 사용자가 없습니다."))
 
         return try {
-            userService.withdraw(GetUserRequestBody(email = user.email, phone = user.phone))
-            Result.success(Unit)
+            val response = userService.withdraw(
+                GetUserRequestBody(email = user.email, phone = user.phone)
+            ).toDomainModel()
+            if (response.statusInt == SignUpResultStatus.OK.status) {
+                logout()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("회원탈퇴에 실패했습니다."))
+            }
         } catch (e: Exception) {
             Result.failure(e)
-        } finally {
-            // 서버 처리 성공/실패와 무관하게 로컬 데이터는 항상 정리
-            logout()
         }
     }
 }
