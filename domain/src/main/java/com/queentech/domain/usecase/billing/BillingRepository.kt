@@ -14,7 +14,5 @@ interface BillingRepository {
 
     suspend fun launchSubscriptionFlow(activityContext: Any, productId: String): Result<Unit>
 
-    suspend fun restorePurchases(): Result<SubscriptionStatus>
-
-    suspend fun refreshSubscriptionStatus()
+    suspend fun refreshSubscriptionStatus(): Result<SubscriptionStatus>
 }

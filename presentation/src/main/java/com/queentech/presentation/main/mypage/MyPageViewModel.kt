@@ -92,18 +92,6 @@ class MyPageViewModel @Inject constructor(
         reduce { state.copy(isBillingLoading = false) }
     }
 
-    fun onRestorePurchasesClick() = intent {
-        reduce { state.copy(isBillingLoading = true) }
-        billingRepository.restorePurchases()
-            .onSuccess {
-                postSideEffect(MyPageSideEffect.Toast("구독 상태가 복원되었습니다."))
-            }
-            .onFailure {
-                postSideEffect(MyPageSideEffect.Toast("구독 복원 중 오류가 발생했습니다."))
-            }
-        reduce { state.copy(isBillingLoading = false) }
-    }
-
     fun onDeleteAccountClick() = intent {
         reduce { state.copy(showDeleteAccountDialog = true) }
     }

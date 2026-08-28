@@ -73,7 +73,7 @@ class LoginViewModel @Inject constructor(
         result.onSuccess {
             reduce { state.copy(userEmail = email) }
             registerFcmToken(email)
-            billingRepository.restorePurchases()
+            billingRepository.refreshSubscriptionStatus()
             postSideEffect(LoginSideEffect.NavigateToHome)
         }.onFailure {
             postSideEffect(LoginSideEffect.Toast("로그인에 실패했습니다."))

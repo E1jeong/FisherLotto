@@ -7,4 +7,11 @@ data class SubscriptionStatus(
     val autoRenewing: Boolean,
     val cancelAtPeriodEnd: Boolean = false,
     val isOnHold: Boolean = false,
+    val verificationState: SubscriptionVerificationState = SubscriptionVerificationState.UNKNOWN,
 )
+
+enum class SubscriptionVerificationState {
+    UNKNOWN,
+    VERIFIED,
+    FAILED,
+}

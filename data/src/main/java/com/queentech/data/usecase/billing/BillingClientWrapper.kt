@@ -106,8 +106,10 @@ class BillingClientWrapper @Inject constructor(
         return billingClient.launchBillingFlow(activity, billingFlowParams)
     }
 
-    suspend fun queryPurchases(): List<Purchase>? {
-        if (!ensureConnected()) return null
+    suspend fun queryPurchases(): Result<List<Purchase>> {
+        if (!ensureConnected()) {
+            return Result.failure(IllegalStateException("Billing service is unavailable"))
+        }
 
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
@@ -116,10 +118,10 @@ class BillingClientWrapper @Inject constructor(
         return suspendCancellableCoroutine { cont ->
             billingClient.queryPurchasesAsync(params) { billingResult, purchasesList ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    cont.resume(purchasesList)
+                    cont.resume(Result.success(purchasesList))
                 } else {
                     Log.e(TAG, "queryPurchases failed: ${billingResult.debugMessage}")
-                    cont.resume(null)
+                    cont.resume(Result.failure(IllegalStateException("Failed to query purchases")))
                 }
             }
         }

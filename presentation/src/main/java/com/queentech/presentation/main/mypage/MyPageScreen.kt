@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
+import com.queentech.domain.model.billing.SubscriptionVerificationState
 import com.queentech.domain.model.login.User
 import com.queentech.presentation.component.dialog.ConfirmDialog
 import com.queentech.presentation.theme.AccentBlue
@@ -95,7 +96,6 @@ fun MyPageScreen(
         state = state,
         onDeleteAccountClick = myPageViewModel::onDeleteAccountClick,
         onSubscribeClick = myPageViewModel::onSubscribeClick,
-        onRestorePurchasesClick = myPageViewModel::onRestorePurchasesClick,
     )
 
     ConfirmDialog(
@@ -114,7 +114,6 @@ private fun MyPageContent(
     state: MyPageState,
     onDeleteAccountClick: () -> Unit = {},
     onSubscribeClick: (String) -> Unit = {},
-    onRestorePurchasesClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -126,7 +125,7 @@ private fun MyPageContent(
         MyPageHeader()
 
         // ── User Profile Section ──
-        UserProfileSection(user = state.user)
+        UserProfileSection(user = state.user, subscriptionStatus = state.subscriptionStatus)
 
         Spacer(Modifier.height(16.dp))
 
@@ -136,7 +135,6 @@ private fun MyPageContent(
             products = state.subscriptionProducts,
             isBillingLoading = state.isBillingLoading,
             onSubscribeClick = onSubscribeClick,
-            onRestorePurchasesClick = onRestorePurchasesClick,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -196,7 +194,7 @@ private fun MyPageHeader() {
 // ── User Profile ──
 
 @Composable
-private fun UserProfileSection(user: User?) {
+private fun UserProfileSection(user: User?, subscriptionStatus: SubscriptionStatus) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,8 +231,12 @@ private fun UserProfileSection(user: User?) {
                     if (user != null) {
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            text = if (user.isPremium) "Premium 회원" else "Free 회원",
-                            color = if (user.isPremium) AccentGold else TextSecondary,
+                        text = when (subscriptionStatus.verificationState) {
+                            SubscriptionVerificationState.UNKNOWN -> "구독 상태 확인 중"
+                            SubscriptionVerificationState.FAILED -> "구독 상태 확인 필요"
+                            SubscriptionVerificationState.VERIFIED -> if (subscriptionStatus.isActive) "Premium 회원" else "Free 회원"
+                        },
+                        color = if (subscriptionStatus.isActive) AccentGold else TextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                         )
@@ -295,7 +297,6 @@ private fun SubscriptionSection(
     products: List<SubscriptionProduct>,
     isBillingLoading: Boolean,
     onSubscribeClick: (String) -> Unit,
-    onRestorePurchasesClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -329,7 +330,19 @@ private fun SubscriptionSection(
 
             Spacer(Modifier.height(16.dp))
 
-            if (isBillingLoading) {
+            if (subscriptionStatus.verificationState == SubscriptionVerificationState.UNKNOWN) {
+                Text(
+                    text = "구독 상태를 확인하는 중입니다...",
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                )
+            } else if (subscriptionStatus.verificationState == SubscriptionVerificationState.FAILED) {
+                Text(
+                    text = "구독 상태를 확인하지 못했습니다.",
+                    color = AccentRed,
+                    fontSize = 13.sp,
+                )
+            } else if (isBillingLoading) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
@@ -349,22 +362,6 @@ private fun SubscriptionSection(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            if (!subscriptionStatus.isActive) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    TextButton(onClick = onRestorePurchasesClick) {
-                        Text(
-                            text = "구독 복원",
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-            }
         }
     }
 }

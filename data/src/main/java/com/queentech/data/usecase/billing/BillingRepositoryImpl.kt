@@ -10,6 +10,7 @@ import com.queentech.data.model.billing.SubscriptionQueryRequest
 import com.queentech.data.model.service.BillingService
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
+import com.queentech.domain.model.billing.SubscriptionVerificationState
 import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.login.UserRepository
@@ -99,23 +100,6 @@ class BillingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun restorePurchases(): Result<SubscriptionStatus> = runCatching {
-        refreshSubscriptionStatus()
-        val tier = if (_subscriptionStatus.value.isActive) User.TIER_PREMIUM else User.TIER_FREE
-        userRepository.updateTier(tier)
-
-        // 계정 이동 후 복원 시 서버 T_PURCHASES의 email을 현재 계정으로 동기화
-        if (_subscriptionStatus.value.isActive) {
-            val purchases = billingClientWrapper.queryPurchases()
-            val activePurchase = purchases?.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
-            if (activePurchase != null) {
-                sendReceiptToServer(activePurchase, resetExpectedNumbersOnSuccess = false)
-            }
-        }
-
-        _subscriptionStatus.value
-    }
-
     private suspend fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
@@ -146,15 +130,15 @@ class BillingRepositoryImpl @Inject constructor(
                 email = email,
             )
             val response = billingService.sendReceipt(request)
-            if (response.success) {
+            val expiryMillis = response.expiryTimeMillis
+            if (response.success && response.isEntitled == true && expiryMillis != null && expiryMillis > System.currentTimeMillis()) {
                 Log.d(TAG, "Receipt sent successfully: ${purchase.orderId}")
-                val expiryMillis = response.expiryTimeMillis
-                    ?: estimateExpiryTime(purchase.purchaseTime, productId)
                 _subscriptionStatus.value = SubscriptionStatus(
                     isActive = true,
                     productId = productId,
                     expiryTimeMillis = expiryMillis,
                     autoRenewing = purchase.isAutoRenewing,
+                    verificationState = SubscriptionVerificationState.VERIFIED,
                 )
                 userRepository.updateTier(User.TIER_PREMIUM)
 
@@ -191,19 +175,18 @@ class BillingRepositoryImpl @Inject constructor(
         return calendar.timeInMillis
     }
 
-    override suspend fun refreshSubscriptionStatus() {
-        val purchases = billingClientWrapper.queryPurchases() ?: run {
-            Log.w(TAG, "Failed to query purchases, keeping current status")
-            return
+    override suspend fun refreshSubscriptionStatus(): Result<SubscriptionStatus> {
+        val purchases = billingClientWrapper.queryPurchases().getOrElse {
+            setVerificationFailed()
+            return Result.failure(it)
         }
-        val activePurchase = purchases.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
-
-        val isActive = activePurchase != null
+        val activePurchase = purchases.firstOrNull {
+            it.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                it.products.any(PRODUCT_IDS::contains)
+        }
 
         if (activePurchase != null) {
-            val productId = activePurchase.products.firstOrNull()
-
-            // 서버를 통해 Google Play Developer API에서 정확한 만료일 조회
+            val productId = activePurchase.products.firstOrNull(PRODUCT_IDS::contains)
             val serverResponse = try {
                 val response = billingService.querySubscription(
                     SubscriptionQueryRequest(
@@ -211,15 +194,19 @@ class BillingRepositoryImpl @Inject constructor(
                         productId = productId ?: "",
                     )
                 )
-                if (response.success) response else null
+                response
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to query subscription from server, using estimate", e)
-                null
+                Log.w(TAG, "Failed to query subscription from server", e)
+                setVerificationFailed()
+                return Result.failure(e)
             }
 
-            val expiryMillis = serverResponse?.expiryTimeMillis
-                ?: estimateExpiryTime(activePurchase.purchaseTime, productId)
-            val isEntitled = expiryMillis > System.currentTimeMillis()
+            val expiryMillis = serverResponse.expiryTimeMillis
+            val isEntitled = serverResponse.success &&
+                serverResponse.isEntitled == true &&
+                serverResponse.productId == productId &&
+                expiryMillis != null &&
+                expiryMillis > System.currentTimeMillis()
 
             if (!isEntitled) {
                 _subscriptionStatus.value = SubscriptionStatus(
@@ -227,9 +214,18 @@ class BillingRepositoryImpl @Inject constructor(
                     productId = null,
                     expiryTimeMillis = null,
                     autoRenewing = false,
+                    verificationState = if (serverResponse.success) {
+                        SubscriptionVerificationState.VERIFIED
+                    } else {
+                        SubscriptionVerificationState.FAILED
+                    },
                 )
-                userRepository.updateTier(User.TIER_FREE)
-                return
+                if (serverResponse.success) userRepository.updateTier(User.TIER_FREE)
+                return if (serverResponse.success) {
+                    Result.success(_subscriptionStatus.value)
+                } else {
+                    Result.failure(IllegalStateException("Failed to verify subscription"))
+                }
             }
 
             _subscriptionStatus.value = SubscriptionStatus(
@@ -237,8 +233,9 @@ class BillingRepositoryImpl @Inject constructor(
                 productId = productId,
                 expiryTimeMillis = expiryMillis,
                 autoRenewing = activePurchase.isAutoRenewing,
-                cancelAtPeriodEnd = serverResponse?.cancelAtPeriodEnd ?: false,
-                isOnHold = serverResponse?.isOnHold ?: false,
+                cancelAtPeriodEnd = serverResponse.cancelAtPeriodEnd ?: false,
+                isOnHold = serverResponse.isOnHold ?: false,
+                verificationState = SubscriptionVerificationState.VERIFIED,
             )
             userRepository.updateTier(User.TIER_PREMIUM)
         } else {
@@ -247,22 +244,21 @@ class BillingRepositoryImpl @Inject constructor(
                 productId = null,
                 expiryTimeMillis = null,
                 autoRenewing = false,
+                verificationState = SubscriptionVerificationState.VERIFIED,
             )
             userRepository.updateTier(User.TIER_FREE)
         }
-
+        return Result.success(_subscriptionStatus.value)
     }
 
-    private fun estimateExpiryTime(purchaseTimeMillis: Long, productId: String?): Long {
-        val calendar = Calendar.getInstance().apply { timeInMillis = purchaseTimeMillis }
-        when (productId) {
-            "fisherlotto_monthly" -> calendar.add(Calendar.MONTH, 1)
-            else -> {
-                Log.w(TAG, "Unknown product ID: $productId, falling back to 1 month extension")
-                calendar.add(Calendar.MONTH, 1)
-            }
-        }
-        return calendar.timeInMillis
+    private fun setVerificationFailed() {
+        _subscriptionStatus.value = SubscriptionStatus(
+            isActive = false,
+            productId = null,
+            expiryTimeMillis = null,
+            autoRenewing = false,
+            verificationState = SubscriptionVerificationState.FAILED,
+        )
     }
 
     companion object {
