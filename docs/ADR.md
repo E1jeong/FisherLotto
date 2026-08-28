@@ -86,13 +86,13 @@ FisherLotto should remain a small, understandable Android app even as it integra
 
 ---
 
-### ADR-009: Cross-feature Signalling Uses A Persisted Flag, Not A Direct Call
+### ADR-009: A Confirmed New Purchase Resets Its Cache In The Data Layer
 
-**Decision**: When one feature must trigger work owned by another feature, the producing side writes a persisted flag through its own domain contract and the consuming side observes and clears it. It does not call the other feature's repository directly. The first case is subscription purchase requiring the prediction-number screen to drop its cached week: `BillingRepository.reissuePending` is written by billing and consumed by `ExpectNumberViewModel`, which owns `LottoIssueRepository.deleteWeek()` and clears the flag.
+**Decision**: After a newly completed purchase has its receipt accepted, `BillingRepositoryImpl` deletes the current week's local expected-number cache. It emits an in-memory event only to refresh an already-open expected-number screen; a later screen entry reads the deleted Room state. Restore and duplicate-receipt paths do not reset the cache.
 
-**Reason**: A direct call would make billing code depend on prediction-number storage, and each new subscription benefit would widen that dependency. A persisted flag also survives process death — the purchase response arrives while the consuming screen is usually not on screen, so an in-memory event would be lost exactly when it matters.
+**Reason**: The receipt API no longer supplies `reissued`, and cache validity is determined by a confirmed new purchase rather than the non-critical `/lotto/1077` side effect. Persisting a separate pending flag duplicates the Room state transition and can leave the app waiting for a response field that no longer exists.
 
-**Tradeoff**: Reflection is deferred to whenever the consuming screen next observes the flag, rather than happening at purchase time. Consumers must treat their work as idempotent, since a crash between doing the work and clearing the flag replays it. Concurrent readers of the same store must serialise "read + reduce" as one unit; Orbit dispatches intents in parallel, so this is not automatic.
+**Tradeoff**: Billing now depends on the domain-level `LottoIssueRepository`. The in-memory event is intentionally not durable, but it carries no correctness burden because the cache deletion is already durable.
 
 ---
 

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.util.Log
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.Purchase
-import com.queentech.data.database.datastore.BillingLocalDataSource
 import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.model.billing.ReceiptRequest
 import com.queentech.data.model.billing.SubscriptionQueryRequest
@@ -14,15 +13,19 @@ import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.login.UserRepository
+import com.queentech.domain.usecase.lotto.LottoIssueRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,8 +34,8 @@ class BillingRepositoryImpl @Inject constructor(
     private val billingClientWrapper: BillingClientWrapper,
     private val billingService: BillingService,
     private val userLocalDataSource: UserLocalDataSource,
-    private val billingLocalDataSource: BillingLocalDataSource,
     private val userRepository: UserRepository,
+    private val lottoIssueRepository: LottoIssueRepository,
 ) : BillingRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -42,11 +45,8 @@ class BillingRepositoryImpl @Inject constructor(
     )
     override val subscriptionStatus: Flow<SubscriptionStatus> = _subscriptionStatus.asStateFlow()
 
-    override val reissuePending: Flow<Boolean> = billingLocalDataSource.reissuePendingFlow
-
-    override suspend fun clearReissuePending() {
-        billingLocalDataSource.setReissuePending(false)
-    }
+    private val _expectedNumberResetEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val expectedNumberResetEvents: Flow<Unit> = _expectedNumberResetEvents.asSharedFlow()
 
     private var cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
 
@@ -109,7 +109,7 @@ class BillingRepositoryImpl @Inject constructor(
             val purchases = billingClientWrapper.queryPurchases()
             val activePurchase = purchases?.firstOrNull { it.purchaseState == Purchase.PurchaseState.PURCHASED }
             if (activePurchase != null) {
-                sendReceiptToServer(activePurchase)
+                sendReceiptToServer(activePurchase, resetExpectedNumbersOnSuccess = false)
             }
         }
 
@@ -119,7 +119,7 @@ class BillingRepositoryImpl @Inject constructor(
     private suspend fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                val receiptSent = sendReceiptToServer(purchase)
+                val receiptSent = sendReceiptToServer(purchase, resetExpectedNumbersOnSuccess = true)
                 if (receiptSent) {
                     val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
                     if (!acknowledged) {
@@ -130,7 +130,10 @@ class BillingRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun sendReceiptToServer(purchase: Purchase): Boolean {
+    private suspend fun sendReceiptToServer(
+        purchase: Purchase,
+        resetExpectedNumbersOnSuccess: Boolean,
+    ): Boolean {
         return try {
             val email = userLocalDataSource.userFlow.firstOrNull()?.email
             val productId = purchase.products.firstOrNull() ?: ""
@@ -155,10 +158,8 @@ class BillingRepositoryImpl @Inject constructor(
                 )
                 userRepository.updateTier(User.TIER_PREMIUM)
 
-                // 서버가 이번주 예상번호를 30개로 교체했으면 깃발만 남긴다.
-                // 실제 로컬 기록 삭제와 화면 반영은 예상번호 화면이 이 깃발을 보고 처리한다.
-                if (response.reissued == true) {
-                    billingLocalDataSource.setReissuePending(true)
+                if (resetExpectedNumbersOnSuccess) {
+                    resetCurrentWeekExpectedNumbers()
                 }
                 true
             } else {
@@ -169,6 +170,25 @@ class BillingRepositoryImpl @Inject constructor(
             Log.e(TAG, "Failed to send receipt to server", e)
             false
         }
+    }
+
+    private suspend fun resetCurrentWeekExpectedNumbers() {
+        try {
+            lottoIssueRepository.deleteWeek(getCurrentWeekStartMillis())
+            _expectedNumberResetEvents.emit(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to reset current-week expected numbers", e)
+        }
+    }
+
+    private fun getCurrentWeekStartMillis(): Long {
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Seoul"))
+        calendar.add(Calendar.DAY_OF_YEAR, -(calendar.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY))
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
     }
 
     override suspend fun refreshSubscriptionStatus() {

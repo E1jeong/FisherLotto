@@ -18,7 +18,7 @@
   - `data/src/main/java/com/queentech/data/usecase/fcm/FcmRepositoryImpl.kt`
   - `data/src/main/java/com/queentech/data/usecase/news/GetLotteryNewsUseCaseImpl.kt`
   - `data/src/main/java/com/queentech/data/database/AppDatabase.kt` — Room database definition and entities
-  - `data/src/main/java/com/queentech/data/database/datastore/` — `UserLocalDataSource.kt`, `FcmLocalDataSource.kt`, `BillingLocalDataSource.kt`
+  - `data/src/main/java/com/queentech/data/database/datastore/` — `UserLocalDataSource.kt`, `FcmLocalDataSource.kt`
   - `data/src/main/java/com/queentech/data/di/` — Hilt modules (`RetrofitModule.kt`, `RepositoryModule.kt`, `DatabaseModule.kt`, `DataSourceModule.kt`, `BillingModule.kt`)
 
 ## Boundary & Architecture Constraints

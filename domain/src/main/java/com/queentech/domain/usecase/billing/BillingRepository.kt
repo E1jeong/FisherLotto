@@ -7,11 +7,8 @@ import kotlinx.coroutines.flow.Flow
 interface BillingRepository {
     val subscriptionStatus: Flow<SubscriptionStatus>
 
-    // 구독 결제로 서버가 이번주 예상번호를 재발급했으나 앱이 아직 반영하지 못한 상태.
-    // 반영한 쪽이 clearReissuePending()으로 해제한다.
-    val reissuePending: Flow<Boolean>
-
-    suspend fun clearReissuePending()
+    // 신규 구독 결제로 현재 주차의 로컬 추천 번호를 비운 뒤, 열린 화면을 갱신한다.
+    val expectedNumberResetEvents: Flow<Unit>
 
     suspend fun querySubscriptionProducts(): Result<List<SubscriptionProduct>>
 

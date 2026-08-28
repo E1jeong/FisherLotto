@@ -46,14 +46,14 @@ class ExpectNumberViewModel @Inject constructor(
             loadCachedUser()
             loadSavedNumbers()
             checkIssueWindow()
-            observeReissuePending()
+            observeExpectedNumberReset()
             loadWinningStatus()
         },
     )
 
     private val issueMutex = Mutex()
 
-    // Room 조회/삭제와 번호 상태 반영의 원자성 보장용 (refreshNumbers, observeReissuePending)
+    // Room 조회와 번호 상태 반영의 원자성 보장용
     private val numbersMutex = Mutex()
 
     companion object {
@@ -83,8 +83,7 @@ class ExpectNumberViewModel @Inject constructor(
         refreshNumbers()
     }
 
-    // Room 조회와 상태 반영을 한 단위로 묶는다. 재발급 반영(observeReissuePending)과 동시에
-    // 실행되더라도 삭제 전에 읽은 값이 삭제 후 상태를 덮어쓰지 않도록 numbersMutex로 보호한다.
+    // Room 조회와 상태 반영을 한 단위로 묶는다.
     private suspend fun SimpleSyntax<ExpectNumberState, ExpectNumberSideEffect>.refreshNumbers() {
         numbersMutex.withLock {
             val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
@@ -172,18 +171,8 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
-    // 구독 결제로 서버가 이번주 번호를 재발급했을 때, 결제 화면 대신 이 화면에서 반영한다.
-    // 결제 시점에 이 화면이 떠 있지 않아도 깃발이 DataStore에 남아 있어 놓치지 않는다.
-    private fun observeReissuePending() = intent {
-        billingRepository.reissuePending.collect { pending ->
-            if (!pending) return@collect
-
-            // 삭제를 먼저 하고 깃발을 해제한다. 중간에 앱이 죽으면 깃발이 남아 다음 진입에서 다시 처리된다.
-            numbersMutex.withLock {
-                lottoIssueRepository.deleteWeek(DateUtils.getCurrentWeekStartMillis())
-            }
-            billingRepository.clearReissuePending()
-
+    private fun observeExpectedNumberReset() = intent {
+        billingRepository.expectedNumberResetEvents.collect {
             refreshNumbers()
             postSideEffect(ExpectNumberSideEffect.Toast("구독 혜택이 적용되었습니다. 다시 발급해 주세요"))
         }
