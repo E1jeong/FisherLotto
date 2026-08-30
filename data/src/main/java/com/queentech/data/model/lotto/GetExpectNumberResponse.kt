@@ -4,11 +4,13 @@ import com.google.gson.annotations.SerializedName
 import com.queentech.domain.model.lotto.GetExpectNumber
 
 data class GetExpectNumberResponse(
-    @SerializedName("count") val count: Int,
-    @SerializedName("lotto") val lotto: List<String>
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("count") val count: Int? = null,
+    @SerializedName("lotto") val lotto: List<String>? = null,
 )
 
 fun GetExpectNumberResponse.toDomainModel(): GetExpectNumber = GetExpectNumber(
-    count = count,
-    lotto = lotto,
+    count = count ?: 0,
+    lotto = lotto ?: emptyList(),
 )
+

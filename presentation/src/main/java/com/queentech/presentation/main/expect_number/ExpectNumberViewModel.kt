@@ -108,6 +108,8 @@ class ExpectNumberViewModel @Inject constructor(
         reduce { state.copy(isIssueWindowClosed = DateUtils.isIssueWindowClosed()) }
     }
 
+    private var pendingExpectNumber: GetExpectNumber? = null
+
     fun onExpectNumberClick() = intent {
         val isIssueWindowClosed = DateUtils.isIssueWindowClosed()
         if (isIssueWindowClosed) {
@@ -122,15 +124,39 @@ class ExpectNumberViewModel @Inject constructor(
             return@intent
         }
 
+        if (state.isLoading) return@intent
+        reduce { state.copy(isLoading = true) }
+
+        val result = getExpectNumberUseCase(state.userEmail, state.userPhone)
+            .getOrElse {
+                reduce { state.copy(isLoading = false) }
+                postSideEffect(ExpectNumberSideEffect.Toast("추천 번호를 불러오지 못했습니다. 네트워크를 확인해주세요."))
+                return@intent
+            }
+
+        if (result.count <= 0 || result.lotto.isEmpty()) {
+            reduce { state.copy(isLoading = false) }
+            postSideEffect(ExpectNumberSideEffect.Toast("이번 회차 추천 번호가 아직 준비되지 않았습니다."))
+            return@intent
+        }
+
         val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
         if (isSubscribed) {
-            onAdWatchedSuccessfully()
+            applyIssuedNumbers(result, thisWeekStart)
         } else {
+            pendingExpectNumber = result
+            reduce { state.copy(isLoading = false) }
             postSideEffect(ExpectNumberSideEffect.ShowRewardAd)
         }
     }
 
     fun onAdWatchedSuccessfully() = intent {
+        val pending = pendingExpectNumber
+        if (pending == null || pending.count <= 0 || pending.lotto.isEmpty()) {
+            postSideEffect(ExpectNumberSideEffect.Toast("발급할 번호 정보를 찾을 수 없습니다. 다시 시도해주세요."))
+            return@intent
+        }
+
         if (!issueMutex.tryLock()) return@intent
 
         try {
@@ -139,35 +165,37 @@ class ExpectNumberViewModel @Inject constructor(
             // 이중 발급 방어: 광고 콜백 중복 호출 등 예외 상황 대비
             if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
                 postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
+                pendingExpectNumber = null
                 return@intent
             }
 
-            val result = getExpectNumberUseCase(state.userEmail, state.userPhone).getOrDefault(
-                GetExpectNumber(count = 0, lotto = emptyList())
-            )
-
-            if (result.count != 0) {
-                lottoIssueRepository.saveIssue(
-                    numbers = result.lotto,
-                    weekStartMillis = thisWeekStart
-                )
-
-                val lastWeekStart = DateUtils.getLastWeekStartMillis()
-                val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
-
-                reduce {
-                    state.copy(
-                        count = result.count,
-                        lastWeekNumbers = lastWeek,
-                        thisWeekNumbers = result.lotto,
-                        isThisWeekIssued = true
-                    )
-                }
-            } else {
-                postSideEffect(ExpectNumberSideEffect.Toast("번호 발급에 실패했습니다."))
-            }
+            applyIssuedNumbers(pending, thisWeekStart)
+            pendingExpectNumber = null
         } finally {
             if (issueMutex.isLocked) issueMutex.unlock()
+        }
+    }
+
+    private suspend fun SimpleSyntax<ExpectNumberState, ExpectNumberSideEffect>.applyIssuedNumbers(
+        result: GetExpectNumber,
+        thisWeekStart: Long,
+    ) {
+        lottoIssueRepository.saveIssue(
+            numbers = result.lotto,
+            weekStartMillis = thisWeekStart
+        )
+
+        val lastWeekStart = DateUtils.getLastWeekStartMillis()
+        val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
+        reduce {
+            state.copy(
+                count = result.count,
+                lastWeekNumbers = lastWeek,
+                thisWeekNumbers = result.lotto,
+                isThisWeekIssued = true,
+                isLoading = false,
+            )
         }
     }
 
@@ -218,6 +246,7 @@ data class ExpectNumberState(
     val showIssueWindowClosedDialog: Boolean = false,
     val winningNumbers: List<Int> = emptyList(),
     val isSubscribed: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 sealed interface ExpectNumberSideEffect {
