@@ -58,7 +58,7 @@ fun SignUpScreen(
     var phone by rememberSaveable { mutableStateOf("") }
     var verificationCode by rememberSaveable { mutableStateOf("") }
 
-    BackHandler(enabled = state.isSignUpComplete) {}
+    BackHandler(enabled = state.isSignUpComplete || state.isSigningUp) {}
 
     InitSignUpScreen(
         context = context,

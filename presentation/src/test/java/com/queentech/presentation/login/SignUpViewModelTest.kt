@@ -213,6 +213,97 @@ class SignUpViewModelTest {
         )
     }
 
+    @Test
+    fun `rapid double submit is guarded and calls signUp once`() = runTest {
+        coEvery { userRepository.sendVerificationCode(any()) } returns
+            Result.success(CommonResponse(status = "8200"))
+        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+            Result.success(
+                CommonResponse(
+                    status = "8200",
+                    verificationToken = "one-time-proof",
+                )
+            )
+        coEvery { userRepository.signUp(any(), any(), any(), any(), any()) } returns
+            Result.success(user())
+        val viewModel = SignUpViewModel(userRepository)
+
+        viewModel.test(this) {
+            expectInitialState()
+            viewModel.onSendVerificationCode("user@example.com")
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.emailVerificationStep == EmailVerificationStep.CODE_SENT) break
+            }
+            viewModel.onVerifyEmailCode("user@example.com", "123456")
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.emailVerificationStep == EmailVerificationStep.VERIFIED) break
+            }
+            // Rapid double submit
+            viewModel.onSignUpSubmitClick(
+                inputName = "홍길동",
+                inputEmail = "user@example.com",
+                inputBirth = "19900101",
+                inputPhone = "01011112222",
+            )
+            viewModel.onSignUpSubmitClick(
+                inputName = "홍길동",
+                inputEmail = "user@example.com",
+                inputBirth = "19900101",
+                inputPhone = "01011112222",
+            )
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.isSignUpComplete) break
+            }
+            cancelAndIgnoreRemainingItems()
+        }
+
+        coVerify(exactly = 1) {
+            userRepository.signUp(
+                name = "홍길동",
+                email = "user@example.com",
+                birth = "19900101",
+                phone = "01011112222",
+                verificationToken = "one-time-proof",
+            )
+        }
+    }
+
+    @Test
+    fun `resend verification code resets timer and handles failure safely`() = runTest {
+        coEvery { userRepository.sendVerificationCode("user@example.com") } returns
+            Result.success(CommonResponse(status = "8200"))
+        val viewModel = SignUpViewModel(userRepository)
+
+        viewModel.test(this) {
+            expectInitialState()
+            viewModel.onSendVerificationCode("user@example.com")
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.emailVerificationStep == EmailVerificationStep.CODE_SENT) break
+            }
+
+            // Resend fails
+            coEvery { userRepository.sendVerificationCode("user@example.com") } returns
+                Result.failure(RuntimeException("Network error"))
+
+            viewModel.onSendVerificationCode("user@example.com")
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.emailVerificationStep == EmailVerificationStep.CODE_SENT && item.value.verificationError != null) break
+            }
+            cancelAndIgnoreRemainingItems()
+        }
+
+        assertEquals(
+            "인증번호를 발송하지 못했습니다. 네트워크를 확인해주세요.",
+            viewModel.container.stateFlow.value.verificationError,
+        )
+        assertEquals(0, viewModel.container.stateFlow.value.remainingSeconds)
+    }
+
     private fun user() = User(
         name = "홍길동",
         email = "user@example.com",

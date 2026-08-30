@@ -71,6 +71,9 @@ class SignUpViewModel @Inject constructor(
             return@intent
         }
 
+        countdownJob?.cancel()
+        countdownJob = null
+
         val previousStep = state.emailVerificationStep
         val previousEmail = verificationEmail
         verificationEmail = email
@@ -78,6 +81,7 @@ class SignUpViewModel @Inject constructor(
         reduce {
             state.copy(
                 emailVerificationStep = EmailVerificationStep.SENDING,
+                remainingSeconds = 0,
                 verificationError = null,
             )
         }
@@ -103,6 +107,7 @@ class SignUpViewModel @Inject constructor(
                         reduce {
                             state.copy(
                                 emailVerificationStep = previousStep,
+                                remainingSeconds = 0,
                                 verificationError = "인증번호 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.",
                             )
                         }
@@ -113,6 +118,7 @@ class SignUpViewModel @Inject constructor(
                         reduce {
                             state.copy(
                                 emailVerificationStep = previousStep,
+                                remainingSeconds = 0,
                                 verificationError = "인증번호를 발송하지 못했습니다. 다시 시도해주세요.",
                             )
                         }
@@ -125,6 +131,7 @@ class SignUpViewModel @Inject constructor(
                     reduce {
                         state.copy(
                             emailVerificationStep = previousStep,
+                            remainingSeconds = 0,
                             verificationError = "인증번호를 발송하지 못했습니다. 네트워크를 확인해주세요.",
                         )
                     }
@@ -227,6 +234,8 @@ class SignUpViewModel @Inject constructor(
         inputBirth: String,
         inputPhone: String,
     ) = intent {
+        if (state.isSigningUp || state.isSignUpComplete) return@intent
+
         val name = inputName.trim()
         val email = inputEmail.trim().lowercase()
         val birth = inputBirth.trim()
