@@ -27,6 +27,7 @@ class SignUpUserUseCaseImplTest {
             email = "hong@test.com",
             birth = "1990-01-01",
             phone = "01011112222",
+            verificationToken = "one-time-proof",
         )
 
         // Assert
@@ -39,6 +40,7 @@ class SignUpUserUseCaseImplTest {
                     email = "hong@test.com",
                     birth = "1990-01-01",
                     phone = "01011112222",
+                    verificationToken = "one-time-proof",
                 )
             )
         }
@@ -55,6 +57,7 @@ class SignUpUserUseCaseImplTest {
             email = "hong@test.com",
             birth = "1990-01-01",
             phone = "01011112222",
+            verificationToken = "one-time-proof",
         )
 
         // Assert

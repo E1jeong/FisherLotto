@@ -5,4 +5,5 @@ data class SignUpUserRequestBody(
     val email: String,
     val birth: String,
     val phone: String,
+    val verificationToken: String,
 )

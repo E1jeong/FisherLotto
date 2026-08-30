@@ -14,14 +14,16 @@ class SignUpUserUseCaseImpl @Inject constructor(
         name: String,
         email: String,
         birth: String,
-        phone: String
+        phone: String,
+        verificationToken: String,
     ): Result<CommonResponse> = kotlin.runCatching {
 
         val requestBody = SignUpUserRequestBody(
             name = name,
             email = email,
             birth = birth,
-            phone = phone
+            phone = phone,
+            verificationToken = verificationToken,
         )
 
         userService.signUpUser(requestBody).toDomainModel()

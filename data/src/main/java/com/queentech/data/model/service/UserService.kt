@@ -1,12 +1,24 @@
 package com.queentech.data.model.service
 
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
+import com.queentech.data.model.login.VerifyEmailCodeRequestBody
 import com.queentech.data.model.common.CommonResponseDto
 import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface UserService {
+    @POST("api/email/send-code")
+    suspend fun sendVerificationCode(
+        @Body request: EmailRequestBody,
+    ): CommonResponseDto
+
+    @POST("api/email/verify-code")
+    suspend fun verifyEmailCode(
+        @Body request: VerifyEmailCodeRequestBody,
+    ): CommonResponseDto
+
     @POST("api/users/register")
     suspend fun signUpUser(
         @Body request: SignUpUserRequestBody,

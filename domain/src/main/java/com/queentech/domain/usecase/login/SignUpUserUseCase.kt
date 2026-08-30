@@ -8,5 +8,6 @@ interface SignUpUserUseCase {
         email: String,
         birth: String,
         phone: String,
+        verificationToken: String,
     ): Result<CommonResponse>
 }

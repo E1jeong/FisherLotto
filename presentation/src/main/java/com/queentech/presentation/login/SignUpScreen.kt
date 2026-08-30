@@ -6,12 +6,17 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,6 +56,7 @@ fun SignUpScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var birth by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
+    var verificationCode by rememberSaveable { mutableStateOf("") }
 
     BackHandler(enabled = state.isSignUpComplete) {}
 
@@ -61,14 +68,28 @@ fun SignUpScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         SignUpContent(
+            state = state,
             name = name,
             email = email,
             birth = birth,
             phone = phone,
+            verificationCode = verificationCode,
             onNameChanged = { name = it },
-            onEmailChanged = { email = it },
+            onEmailChanged = {
+                email = it
+                verificationCode = ""
+                viewModel.onEmailChanged(it)
+            },
             onBirthChanged = { birth = it },
             onPhoneChanged = { phone = it },
+            onVerificationCodeChanged = { verificationCode = it },
+            onSendVerificationCodeClick = {
+                verificationCode = ""
+                viewModel.onSendVerificationCode(email)
+            },
+            onVerifyEmailCodeClick = {
+                viewModel.onVerifyEmailCode(email, verificationCode)
+            },
             onSubmitClick = { viewModel.onSignUpSubmitClick(name, email, birth, phone) },
         )
 
@@ -115,14 +136,19 @@ private fun InitSignUpScreen(
 
 @Composable
 private fun SignUpContent(
+    state: SignUpState,
     name: String,
     email: String,
     birth: String,
     phone: String,
+    verificationCode: String,
     onNameChanged: (String) -> Unit,
     onEmailChanged: (String) -> Unit,
     onBirthChanged: (String) -> Unit,
     onPhoneChanged: (String) -> Unit,
+    onVerificationCodeChanged: (String) -> Unit,
+    onSendVerificationCodeClick: () -> Unit,
+    onVerifyEmailCodeClick: () -> Unit,
     onSubmitClick: () -> Unit,
 ) {
     val contentPadding = 24.dp
@@ -131,7 +157,12 @@ private fun SignUpContent(
         .padding(horizontal = contentPadding)
 
     val enableSubmit =
-        name.isNotBlank() && email.isNotBlank() && birth.length == 8 && phone.length >= 10
+        name.isNotBlank() &&
+            email.isNotBlank() &&
+            birth.length == 8 &&
+            phone.length >= 10 &&
+            state.emailVerificationStep == EmailVerificationStep.VERIFIED &&
+            !state.isSigningUp
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -140,6 +171,7 @@ private fun SignUpContent(
             SignUpBottomBar(
                 modifier = fullWidth,
                 enableSubmit = enableSubmit,
+                isSigningUp = state.isSigningUp,
                 onSubmitClick = onSubmitClick,
             )
         }
@@ -149,7 +181,8 @@ private fun SignUpContent(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
-                .padding(top = Paddings.xextra),
+                .padding(top = Paddings.xextra)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -191,6 +224,17 @@ private fun SignUpContent(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            EmailVerificationContent(
+                modifier = fullWidth,
+                state = state,
+                verificationCode = verificationCode,
+                onVerificationCodeChanged = onVerificationCodeChanged,
+                onSendVerificationCodeClick = onSendVerificationCodeClick,
+                onVerifyEmailCodeClick = onVerifyEmailCodeClick,
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             DefaultTextField(
                 modifier = fullWidth,
                 value = birth,
@@ -223,9 +267,117 @@ private fun SignUpContent(
 }
 
 @Composable
+private fun EmailVerificationContent(
+    modifier: Modifier,
+    state: SignUpState,
+    verificationCode: String,
+    onVerificationCodeChanged: (String) -> Unit,
+    onSendVerificationCodeClick: () -> Unit,
+    onVerifyEmailCodeClick: () -> Unit,
+) {
+    Column(modifier = modifier) {
+        when (state.emailVerificationStep) {
+            EmailVerificationStep.IDLE,
+            EmailVerificationStep.SENDING,
+            -> Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                enabled = state.emailVerificationStep != EmailVerificationStep.SENDING,
+                onClick = onSendVerificationCodeClick,
+            ) {
+                Text(
+                    if (state.emailVerificationStep == EmailVerificationStep.SENDING) {
+                        "발송 중..."
+                    } else {
+                        "인증번호 받기"
+                    }
+                )
+            }
+
+            EmailVerificationStep.CODE_SENT,
+            EmailVerificationStep.VERIFYING,
+            EmailVerificationStep.EXPIRED,
+            -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    DefaultTextField(
+                        modifier = Modifier.weight(1f),
+                        enabled = state.emailVerificationStep != EmailVerificationStep.EXPIRED,
+                        value = verificationCode,
+                        placeholder = "인증번호 6자리",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done,
+                        ),
+                        onValueChange = { input ->
+                            onVerificationCodeChanged(input.filter { it.isDigit() }.take(6))
+                        },
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        modifier = Modifier.height(48.dp),
+                        enabled = verificationCode.length == 6 &&
+                            state.emailVerificationStep == EmailVerificationStep.CODE_SENT,
+                        onClick = onVerifyEmailCodeClick,
+                    ) {
+                        Text(
+                            if (state.emailVerificationStep == EmailVerificationStep.VERIFYING) {
+                                "확인 중..."
+                            } else {
+                                "확인"
+                            }
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = formatRemainingTime(state.remainingSeconds),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(
+                        enabled = state.emailVerificationStep != EmailVerificationStep.VERIFYING,
+                        onClick = onSendVerificationCodeClick,
+                    ) {
+                        Text("재발송")
+                    }
+                }
+            }
+
+            EmailVerificationStep.VERIFIED -> Text(
+                text = "✓ 이메일 인증이 완료되었습니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+
+        state.verificationError?.let { error ->
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+    }
+}
+
+private fun formatRemainingTime(totalSeconds: Int): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
+}
+
+@Composable
 private fun SignUpBottomBar(
     modifier: Modifier,
     enableSubmit: Boolean,
+    isSigningUp: Boolean,
     onSubmitClick: () -> Unit,
 ) {
     Column(
@@ -245,7 +397,7 @@ private fun SignUpBottomBar(
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
-            Text("가입하기")
+            Text(if (isSigningUp) "가입 중..." else "가입하기")
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -258,14 +410,19 @@ fun SignUpScreenPreview() {
     FisherLottoTheme {
         Surface {
             SignUpContent(
+                state = SignUpState(),
                 name = "",
                 email = "",
                 birth = "",
                 phone = "",
+                verificationCode = "",
                 onNameChanged = {},
                 onEmailChanged = {},
                 onBirthChanged = {},
                 onPhoneChanged = {},
+                onVerificationCodeChanged = {},
+                onSendVerificationCodeClick = {},
+                onVerifyEmailCodeClick = {},
                 onSubmitClick = {},
             )
         }

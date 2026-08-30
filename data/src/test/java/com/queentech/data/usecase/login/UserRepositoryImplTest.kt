@@ -4,10 +4,14 @@ import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.database.room.dao.LottoIssueDao
 import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.model.common.CommonResponseDto
+import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.GetUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.login.SignUpUserRequestBody
+import com.queentech.data.model.login.VerifyEmailCodeRequestBody
 import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.login.User
+import com.queentech.domain.model.login.SignUpException
+import com.queentech.domain.model.login.SignUpResultStatus
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
@@ -21,7 +25,6 @@ import org.junit.Test
 class UserRepositoryImplTest {
 
     private val userService: UserService = mockk()
-    private val lottoService: LottoService = mockk()
     private val localDataSource: UserLocalDataSource = mockk()
     private val lottoIssueDao: LottoIssueDao = mockk()
     private val scanHistoryDao: ScanHistoryDao = mockk()
@@ -33,11 +36,91 @@ class UserRepositoryImplTest {
     )
     private val repository = UserRepositoryImpl(
         userService = userService,
-        lottoService = lottoService,
         localDataSource = localDataSource,
         lottoIssueDao = lottoIssueDao,
         scanHistoryDao = scanHistoryDao,
     )
+
+    @Test
+    fun `sendVerificationCode requests the normalized email`() = runTest {
+        coEvery {
+            userService.sendVerificationCode(EmailRequestBody("user@example.com"))
+        } returns CommonResponseDto(status = "8200")
+
+        val result = repository.sendVerificationCode(" User@Example.com ")
+
+        assertTrue(result.isSuccess)
+        coVerify {
+            userService.sendVerificationCode(EmailRequestBody("user@example.com"))
+        }
+    }
+
+    @Test
+    fun `verifyEmailCode returns the one-time registration proof`() = runTest {
+        coEvery {
+            userService.verifyEmailCode(
+                VerifyEmailCodeRequestBody(
+                    email = "user@example.com",
+                    code = "123456",
+                )
+            )
+        } returns CommonResponseDto(
+            status = "8200",
+            verificationToken = "one-time-proof",
+        )
+
+        val result = repository.verifyEmailCode(
+            email = " User@Example.com ",
+            code = "123456",
+        )
+
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow().verificationToken == "one-time-proof")
+    }
+
+    @Test
+    fun `signUp sends the verification proof to sub backend and saves the user`() = runTest {
+        coEvery {
+            userService.signUpUser(
+                SignUpUserRequestBody(
+                    name = user.name,
+                    email = user.email,
+                    birth = user.birth,
+                    phone = user.phone,
+                    verificationToken = "one-time-proof",
+                )
+            )
+        } returns CommonResponseDto(status = "8200")
+        coJustRun { localDataSource.saveUser(user) }
+
+        val result = repository.signUp(
+            name = user.name,
+            email = user.email,
+            birth = user.birth,
+            phone = user.phone,
+            verificationToken = "one-time-proof",
+        )
+
+        assertTrue(result.isSuccess)
+        coVerify { localDataSource.saveUser(user) }
+    }
+
+    @Test
+    fun `signUp exposes invalid verification proof without saving the user`() = runTest {
+        coEvery { userService.signUpUser(any()) } returns CommonResponseDto(status = "8703")
+
+        val result = repository.signUp(
+            name = user.name,
+            email = user.email,
+            birth = user.birth,
+            phone = user.phone,
+            verificationToken = "expired-proof",
+        )
+
+        val error = result.exceptionOrNull() as SignUpException
+        assertTrue(error.status == SignUpResultStatus.EMAIL_PROOF_INVALID)
+        coVerify(exactly = 0) { localDataSource.saveUser(any()) }
+    }
 
     @Test
     fun `deleteAccount clears local data only when server withdrawal succeeds`() = runTest {

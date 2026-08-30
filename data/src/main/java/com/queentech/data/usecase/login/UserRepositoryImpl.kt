@@ -4,10 +4,13 @@ import com.queentech.data.database.datastore.UserLocalDataSource
 import com.queentech.data.database.room.dao.LottoIssueDao
 import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.model.common.toDomainModel
+import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.GetUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
-import com.queentech.data.model.service.LottoService
+import com.queentech.data.model.login.VerifyEmailCodeRequestBody
 import com.queentech.data.model.service.UserService
+import com.queentech.domain.model.common.CommonResponse
+import com.queentech.domain.model.login.SignUpException
 import com.queentech.domain.model.login.SignUpResultStatus
 import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.login.UserRepository
@@ -19,7 +22,6 @@ import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
     private val userService: UserService,
-    private val lottoService: LottoService,
     private val localDataSource: UserLocalDataSource,
     private val lottoIssueDao: LottoIssueDao,
     private val scanHistoryDao: ScanHistoryDao,
@@ -28,51 +30,60 @@ class UserRepositoryImpl @Inject constructor(
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    override suspend fun sendVerificationCode(email: String): Result<CommonResponse> = runCatching {
+        userService.sendVerificationCode(
+            EmailRequestBody(email = email.trim().lowercase())
+        ).toDomainModel()
+    }
+
+    override suspend fun verifyEmailCode(
+        email: String,
+        code: String,
+    ): Result<CommonResponse> = runCatching {
+        userService.verifyEmailCode(
+            VerifyEmailCodeRequestBody(
+                email = email.trim().lowercase(),
+                code = code,
+            )
+        ).toDomainModel()
+    }
+
     override suspend fun signUp(
         name: String,
         email: String,
         birth: String,
-        phone: String
+        phone: String,
+        verificationToken: String,
     ): Result<User> {
         return try {
+            val normalizedEmail = email.trim().lowercase()
             val requestBody = SignUpUserRequestBody(
                 name = name,
-                email = email,
+                email = normalizedEmail,
                 birth = birth,
-                phone = phone
+                phone = phone,
+                verificationToken = verificationToken,
             )
 
-            val mainResponse = lottoService.registerUser(requestBody).toDomainModel()
-            if (mainResponse.statusInt == SignUpResultStatus.OK.status) {
-                val user = User(name, email, birth, phone)
+            val response = userService.signUpUser(requestBody).toDomainModel()
+            if (response.statusInt == SignUpResultStatus.OK.status) {
+                val user = User(name, normalizedEmail, birth, phone)
                 localDataSource.saveUser(user) // DataStore에 영속 저장
                 Result.success(user)
             } else {
-                val errorMessage = when (mainResponse.statusInt) {
-                    SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
-                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
-                    SignUpResultStatus.ERROR_REGISTER.status -> "등록 중 오류가 발생했습니다."
-                    SignUpResultStatus.ERROR_REQUEST.status -> "요청 오류가 발생했습니다."
-                    else -> "번호 발급 중 오류가 발생했습니다. (${mainResponse.status})"
+                val status = SignUpResultStatus.entries.firstOrNull {
+                    it.status == response.statusInt
+                } ?: SignUpResultStatus.ERROR
+                val errorMessage = when (status) {
+                    SignUpResultStatus.DUPLICATED_EMAIL -> "이미 등록된 이메일입니다."
+                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER -> "이미 등록된 전화번호입니다."
+                    SignUpResultStatus.ERROR_REGISTER -> "등록 중 오류가 발생했습니다."
+                    SignUpResultStatus.ERROR_REQUEST -> "요청 오류가 발생했습니다."
+                    SignUpResultStatus.EMAIL_PROOF_INVALID -> "이메일 인증을 다시 진행해주세요."
+                    else -> "회원가입에 실패했습니다. (${response.status})"
                 }
-                return Result.failure(Exception(errorMessage))
+                return Result.failure(SignUpException(status, errorMessage))
             }
-
-//            val response = userService.signUpUser(requestBody)
-//            if (response.statusInt == SignUpResultStatus.OK.status) {
-//                val user = User(name, email, birth, phone)
-//                localDataSource.saveUser(user) // DataStore에 영속 저장
-//                Result.success(user)
-//            } else {
-//                val errorMessage = when (response.statusInt) {
-//                    SignUpResultStatus.DUPLICATED_EMAIL.status -> "이미 등록된 이메일입니다."
-//                    SignUpResultStatus.DUPLICATED_PHONE_NUMBER.status -> "이미 등록된 전화번호입니다."
-//                    SignUpResultStatus.ERROR_REGISTER.status -> "등록 중 오류가 발생했습니다."
-//                    SignUpResultStatus.ERROR_REQUEST.status -> "요청 오류가 발생했습니다."
-//                    else -> "회원가입에 실패했습니다. (${response.status})"
-//                }
-//                Result.failure(Exception(errorMessage))
-//            }
         } catch (e: Exception) {
             Result.failure(e)
         }
