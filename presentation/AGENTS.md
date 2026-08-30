@@ -2,36 +2,23 @@
 
 ## Scope
 
-- UI screens built with Jetpack Compose and Material 3.
-- ViewModels powered by Orbit MVI 6.1.0 (`ContainerHost`).
-- Navigation Compose graph and destination route bindings.
-- UI state models, event handling, dialogs, custom components, and themes.
+Compose UI, Orbit MVI ViewModels, navigation, UI state, dialogs, and reusable components.
 
 ## Orient First
 
-- Read first in Wiki: `UI/screen-layout.md`, `features/home.md`, `features/qr-winning-verification.md`, `features/predicted-numbers.md`, `features/login-and-membership.md`
-- Core source entrypoints:
-  - `presentation/src/main/java/com/queentech/presentation/main/home/` — `HomeScreen.kt`, `HomeViewModel.kt`
-  - `presentation/src/main/java/com/queentech/presentation/main/expect_number/` — `ExpectNumberScreen.kt`, `ExpectNumberViewModel.kt`
-  - `presentation/src/main/java/com/queentech/presentation/main/camera/` — `CameraScreen.kt`, `CameraViewModel.kt`, `LottoQrResult.kt`
-  - `presentation/src/main/java/com/queentech/presentation/main/statistic/` — `StatisticScreen.kt`, `StatisticViewModel.kt`
-  - `presentation/src/main/java/com/queentech/presentation/main/mypage/` — `MyPageScreen.kt`, `MyPageViewModel.kt`
-  - `presentation/src/main/java/com/queentech/presentation/login/` — `LoginScreen.kt`, `LoginViewModel.kt`, `SignUpScreen.kt`, `SignUpViewModel.kt`
-  - `presentation/src/main/java/com/queentech/presentation/component/` — Reusable dialogs, buttons, and text fields
+- `presentation/src/main/java/com/queentech/presentation/main/`
+- `presentation/src/main/java/com/queentech/presentation/login/`
+- `presentation/src/main/java/com/queentech/presentation/component/`
 
 ## Boundary & Architecture Constraints
 
-- **Dependency Direction**: Depends on `domain`. Must **never** depend on `data`.
-- **MVI Architecture**: Follows Orbit MVI (`State`, `SideEffect`, `Intent`).
-- **UI State Ownership**: ViewModels manage UI state transitions; composables are reactive renderers.
+Depends on `domain`, never `data`. ViewModels own state transitions; composables render state and send intents.
 
 ## Change Gates
 
-1. **SideEffect Collection Mandate**: Every declared `sideEffect` must be explicitly collected by its corresponding Screen composable (`collectSideEffect`). An uncollected sideEffect silently drops user-facing notifications or error dialogs.
-2. **Compose TextField State Rule**: Text fields hold their input value in `rememberSaveable`, not in Orbit state. Keystroke handlers that must reach the container must use `blockingIntent` to prevent character reordering/dropping.
-3. **No Direct Data Layer Access**: Never import Repository implementations, Room entities, or Retrofit DTOs.
-4. **Prediction Wording Policy**: UI strings, placeholders, and tooltips must use recommendation, assistance, or entertainment terms only. Never imply or promise a winning outcome.
-5. **Email-Only Auth**: Do not wire social login buttons to SDKs; `SocialLoginButton.kt` is a detached UI shell.
+- Collect every declared Orbit `sideEffect` in its corresponding screen.
+- Keep text input in `rememberSaveable`; use `blockingIntent` when a keystroke must reach the Orbit container.
+- Do not wire detached social-login UI shells to provider SDKs.
 
 ## Verify
 
@@ -39,6 +26,4 @@
 .\gradlew.bat :presentation:test
 ```
 
-```bash
-./gradlew :presentation:test
-```
+Use `./gradlew :presentation:test` outside Windows.
