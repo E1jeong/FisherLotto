@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LooksOne
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.queentech.fisherlotto.navigation.RouteName.CAMERA
+import com.queentech.fisherlotto.navigation.RouteName.ACCOUNT_RECOVERY
 import com.queentech.fisherlotto.navigation.RouteName.EXPECT_NUMBER
 import com.queentech.fisherlotto.navigation.RouteName.HOME
 import com.queentech.fisherlotto.navigation.RouteName.LOGIN
@@ -47,12 +48,18 @@ object SignUpNav : Destination {
     override val title: String = "회원가입"
 }
 
+object AccountRecoveryNav : Destination {
+    override val route: String = ACCOUNT_RECOVERY
+    override val title: String = "계정 복구"
+}
+
 interface Destination {
     val route: String
     val title: String
 }
 
 object RouteName {
+    const val ACCOUNT_RECOVERY = "AccountRecoveryScreen"
     const val LOGIN = "LoginScreen"
     const val SIGNUP = "SignUpScreen"
     const val CAMERA = "CameraScreen"

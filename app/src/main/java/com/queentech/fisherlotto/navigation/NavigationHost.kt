@@ -30,6 +30,7 @@ import com.queentech.fisherlotto.utils.PermissionState
 import com.queentech.fisherlotto.utils.PermissionHelper
 import com.queentech.fisherlotto.utils.permissionRequest
 import com.queentech.presentation.login.LoginScreen
+import com.queentech.presentation.login.AccountRecoveryScreen
 import com.queentech.presentation.login.SignUpScreen
 import com.queentech.presentation.main.camera.CameraScreen
 import com.queentech.presentation.main.expect_number.ExpectNumberScreen
@@ -94,6 +95,12 @@ fun NavigationHost() {
                                         RouteName.SIGNUP
                                     )
                                 },
+                                moveToAccountRecovery = {
+                                    NavigationHelper.navigate(
+                                        navController,
+                                        RouteName.ACCOUNT_RECOVERY
+                                    )
+                                },
                                 moveToHome = {
                                     NavigationHelper.navigate(
                                         navController,
@@ -104,6 +111,17 @@ fun NavigationHost() {
                         }
                         composable(route = SignUpNav.route) {
                             SignUpScreen(popBackStack = { navController.popBackStack() })
+                        }
+                        composable(route = AccountRecoveryNav.route) {
+                            AccountRecoveryScreen(
+                                moveToHome = {
+                                    NavigationHelper.navigate(
+                                        navController,
+                                        RouteName.HOME,
+                                        backStackRouteName = LoginNav.route,
+                                    )
+                                }
+                            )
                         }
                         composable(route = MainNav.Statistic.route) {
                             StatisticScreen()

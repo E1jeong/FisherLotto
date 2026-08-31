@@ -44,6 +44,7 @@ import org.orbitmvi.orbit.compose.collectSideEffect
 @Composable
 fun LoginScreen(
     moveToSignUp: () -> Unit,
+    moveToAccountRecovery: () -> Unit,
     moveToHome: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
@@ -62,7 +63,8 @@ fun LoginScreen(
         isVisibleSignUp = state.userEmail.isEmpty(),
         onEmailChanged = viewModel::onEmailChanged,
         onLoginClick = viewModel::onLoginClick,
-        onSignUpClick = viewModel::onSignUpClick
+        onSignUpClick = viewModel::onSignUpClick,
+        onAccountRecoveryClick = moveToAccountRecovery,
     )
 }
 
@@ -92,7 +94,8 @@ private fun LoginContent(
     isVisibleSignUp: Boolean,
     onEmailChanged: (String) -> Unit,
     onLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit,
+    onAccountRecoveryClick: () -> Unit,
 ) {
     val contentPadding = 24.dp
     val fullWidth = Modifier
@@ -108,7 +111,8 @@ private fun LoginContent(
                 email = email,
                 isVisibleSignUp = isVisibleSignUp,
                 onLoginClick = onLoginClick,
-                onSignUpClick = onSignUpClick
+                onSignUpClick = onSignUpClick,
+                onAccountRecoveryClick = onAccountRecoveryClick,
             )
         }
     ) { innerPadding ->
@@ -162,7 +166,8 @@ private fun LoginBottomBar(
     isVisibleSignUp: Boolean,
     email: String,
     onLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit,
+    onAccountRecoveryClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -205,6 +210,12 @@ private fun LoginBottomBar(
             }
         }
 
+        Text(
+            modifier = Modifier.clickable { onAccountRecoveryClick() },
+            text = "기존 계정 복구",
+            color = MaterialTheme.colorScheme.secondary,
+        )
+
         Spacer(modifier = Modifier.height(6.dp))
     }
 }
@@ -236,7 +247,8 @@ fun LoginScreenPreview() {
                 isVisibleSignUp = true,
                 onEmailChanged = {},
                 onLoginClick = {},
-                onSignUpClick = {}
+                onSignUpClick = {},
+                onAccountRecoveryClick = {},
             )
         }
     }
