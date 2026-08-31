@@ -6,6 +6,7 @@ import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.model.common.toDomainModel
 import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.login.RecoverUserRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.login.VerifyEmailCodeRequestBody
 import com.queentech.data.model.service.UserService
@@ -13,6 +14,7 @@ import com.queentech.domain.model.common.CommonResponse
 import com.queentech.domain.model.login.SignUpException
 import com.queentech.domain.model.login.SignUpResultStatus
 import com.queentech.domain.model.login.User
+import com.queentech.domain.model.login.EmailVerificationPurpose
 import com.queentech.domain.usecase.login.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,22 +32,63 @@ class UserRepositoryImpl @Inject constructor(
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    override suspend fun sendVerificationCode(email: String): Result<CommonResponse> = runCatching {
+    override suspend fun sendVerificationCode(
+        email: String,
+        purpose: EmailVerificationPurpose,
+    ): Result<CommonResponse> = runCatching {
         userService.sendVerificationCode(
-            EmailRequestBody(email = email.trim().lowercase())
+            EmailRequestBody(
+                email = email.trim().lowercase(),
+                purpose = purpose.name.lowercase(),
+            )
         ).toDomainModel()
     }
 
     override suspend fun verifyEmailCode(
         email: String,
         code: String,
+        purpose: EmailVerificationPurpose,
     ): Result<CommonResponse> = runCatching {
         userService.verifyEmailCode(
             VerifyEmailCodeRequestBody(
                 email = email.trim().lowercase(),
                 code = code,
+                purpose = purpose.name.lowercase(),
             )
         ).toDomainModel()
+    }
+
+    override suspend fun recoverAccount(
+        email: String,
+        phone: String,
+        verificationToken: String,
+    ): Result<User> = runCatching {
+        val response = userService.recoverUser(
+            RecoverUserRequestBody(
+                email = email.trim().lowercase(),
+                phone = phone.trim(),
+                verificationToken = verificationToken,
+            )
+        )
+        if (response.status.toIntOrNull() != SignUpResultStatus.OK.status) {
+            throw IllegalStateException("Account recovery failed")
+        }
+
+        val user = User(
+            name = response.name?.takeIf(String::isNotBlank)
+                ?: throw IllegalStateException("Missing recovered name"),
+            email = response.email?.takeIf(String::isNotBlank)
+                ?: throw IllegalStateException("Missing recovered email"),
+            birth = response.birth?.takeIf(String::isNotBlank)
+                ?: throw IllegalStateException("Missing recovered birth"),
+            phone = response.phone?.takeIf(String::isNotBlank)
+                ?: throw IllegalStateException("Missing recovered phone"),
+            tier = response.tier?.takeIf { it == User.TIER_FREE || it == User.TIER_PREMIUM }
+                ?: throw IllegalStateException("Invalid recovered tier"),
+        )
+        localDataSource.saveUser(user)
+        _currentUser.value = user
+        user
     }
 
     override suspend fun signUp(

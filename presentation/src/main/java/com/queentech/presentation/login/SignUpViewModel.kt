@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queentech.domain.model.login.SignUpException
 import com.queentech.domain.model.login.SignUpResultStatus
+import com.queentech.domain.model.login.EmailVerificationPurpose
 import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.presentation.util.ValidCheckHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -86,7 +87,7 @@ class SignUpViewModel @Inject constructor(
             )
         }
 
-        userRepository.sendVerificationCode(email)
+        userRepository.sendVerificationCode(email, EmailVerificationPurpose.REGISTRATION)
             .onSuccess { response ->
                 if (verificationEmail != email) return@onSuccess
                 when (response.statusInt) {
@@ -164,7 +165,7 @@ class SignUpViewModel @Inject constructor(
             )
         }
 
-        userRepository.verifyEmailCode(email, code)
+        userRepository.verifyEmailCode(email, code, EmailVerificationPurpose.REGISTRATION)
             .onSuccess { response ->
                 if (verificationEmail != email) return@onSuccess
                 when (response.statusInt) {

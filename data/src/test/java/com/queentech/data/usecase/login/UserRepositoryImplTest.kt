@@ -6,10 +6,13 @@ import com.queentech.data.database.room.dao.ScanHistoryDao
 import com.queentech.data.model.common.CommonResponseDto
 import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.login.RecoverUserRequestBody
+import com.queentech.data.model.login.RecoverUserResponseDto
 import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.login.VerifyEmailCodeRequestBody
 import com.queentech.data.model.service.UserService
 import com.queentech.domain.model.login.User
+import com.queentech.domain.model.login.EmailVerificationPurpose
 import com.queentech.domain.model.login.SignUpException
 import com.queentech.domain.model.login.SignUpResultStatus
 import io.mockk.coEvery
@@ -19,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -44,14 +48,21 @@ class UserRepositoryImplTest {
     @Test
     fun `sendVerificationCode requests the normalized email`() = runTest {
         coEvery {
-            userService.sendVerificationCode(EmailRequestBody("user@example.com"))
+            userService.sendVerificationCode(
+                EmailRequestBody("user@example.com", "registration")
+            )
         } returns CommonResponseDto(status = "8200")
 
-        val result = repository.sendVerificationCode(" User@Example.com ")
+        val result = repository.sendVerificationCode(
+            " User@Example.com ",
+            EmailVerificationPurpose.REGISTRATION,
+        )
 
         assertTrue(result.isSuccess)
         coVerify {
-            userService.sendVerificationCode(EmailRequestBody("user@example.com"))
+            userService.sendVerificationCode(
+                EmailRequestBody("user@example.com", "registration")
+            )
         }
     }
 
@@ -62,6 +73,7 @@ class UserRepositoryImplTest {
                 VerifyEmailCodeRequestBody(
                     email = "user@example.com",
                     code = "123456",
+                    purpose = "registration",
                 )
             )
         } returns CommonResponseDto(
@@ -72,6 +84,7 @@ class UserRepositoryImplTest {
         val result = repository.verifyEmailCode(
             email = " User@Example.com ",
             code = "123456",
+            purpose = EmailVerificationPurpose.REGISTRATION,
         )
 
         assertTrue(result.isSuccess)
@@ -119,6 +132,63 @@ class UserRepositoryImplTest {
 
         val error = result.exceptionOrNull() as SignUpException
         assertTrue(error.status == SignUpResultStatus.EMAIL_PROOF_INVALID)
+        coVerify(exactly = 0) { localDataSource.saveUser(any()) }
+    }
+
+    @Test
+    fun `recoverAccount saves the server profile without using request values`() = runTest {
+        val recoveredUser = user.copy(
+            name = "서버 이름",
+            email = "server@example.com",
+            birth = "1988-12-31",
+            phone = "01099998888",
+            tier = User.TIER_PREMIUM,
+        )
+        coEvery {
+            userService.recoverUser(
+                RecoverUserRequestBody(
+                    email = "user@example.com",
+                    phone = "01011112222",
+                    verificationToken = "recovery-proof",
+                )
+            )
+        } returns RecoverUserResponseDto(
+            status = "8200",
+            name = recoveredUser.name,
+            email = recoveredUser.email,
+            birth = recoveredUser.birth,
+            phone = recoveredUser.phone,
+            tier = recoveredUser.tier,
+        )
+        coJustRun { localDataSource.saveUser(recoveredUser) }
+
+        val result = repository.recoverAccount(
+            email = " User@Example.com ",
+            phone = "01011112222",
+            verificationToken = "recovery-proof",
+        )
+
+        assertEquals(recoveredUser, result.getOrThrow())
+        assertEquals(recoveredUser, repository.currentUser.value)
+        coVerify { localDataSource.saveUser(recoveredUser) }
+    }
+
+    @Test
+    fun `recoverAccount does not save a malformed success response`() = runTest {
+        coEvery { userService.recoverUser(any()) } returns RecoverUserResponseDto(
+            status = "8200",
+            email = "user@example.com",
+            phone = "01011112222",
+            tier = User.TIER_FREE,
+        )
+
+        val result = repository.recoverAccount(
+            email = "user@example.com",
+            phone = "01011112222",
+            verificationToken = "recovery-proof",
+        )
+
+        assertTrue(result.isFailure)
         coVerify(exactly = 0) { localDataSource.saveUser(any()) }
     }
 

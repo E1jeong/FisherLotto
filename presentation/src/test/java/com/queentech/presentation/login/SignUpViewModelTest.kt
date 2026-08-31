@@ -4,6 +4,7 @@ import com.queentech.domain.model.common.CommonResponse
 import com.queentech.domain.model.login.User
 import com.queentech.domain.model.login.SignUpException
 import com.queentech.domain.model.login.SignUpResultStatus
+import com.queentech.domain.model.login.EmailVerificationPurpose
 import com.queentech.domain.usecase.login.UserRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,9 +35,9 @@ class SignUpViewModelTest {
 
     @Test
     fun `verified proof is passed only to sign up`() = runTest {
-        coEvery { userRepository.sendVerificationCode(any()) } returns
+        coEvery { userRepository.sendVerificationCode(any(), any()) } returns
             Result.success(CommonResponse(status = "8200"))
-        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+        coEvery { userRepository.verifyEmailCode(any(), any(), any()) } returns
             Result.success(
                 CommonResponse(
                     status = "8200",
@@ -75,6 +76,19 @@ class SignUpViewModelTest {
         }
 
         coVerify {
+            userRepository.sendVerificationCode(
+                "user@example.com",
+                EmailVerificationPurpose.REGISTRATION,
+            )
+        }
+        coVerify {
+            userRepository.verifyEmailCode(
+                "user@example.com",
+                "123456",
+                EmailVerificationPurpose.REGISTRATION,
+            )
+        }
+        coVerify {
             userRepository.signUp(
                 name = "홍길동",
                 email = "user@example.com",
@@ -87,9 +101,9 @@ class SignUpViewModelTest {
 
     @Test
     fun `changing email clears verification and prevents sign up`() = runTest {
-        coEvery { userRepository.sendVerificationCode(any()) } returns
+        coEvery { userRepository.sendVerificationCode(any(), any()) } returns
             Result.success(CommonResponse(status = "8200"))
-        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+        coEvery { userRepository.verifyEmailCode(any(), any(), any()) } returns
             Result.success(
                 CommonResponse(
                     status = "8200",
@@ -135,9 +149,9 @@ class SignUpViewModelTest {
 
     @Test
     fun `fifth invalid code shows attempts exceeded state`() = runTest {
-        coEvery { userRepository.sendVerificationCode(any()) } returns
+        coEvery { userRepository.sendVerificationCode(any(), any()) } returns
             Result.success(CommonResponse(status = "8200"))
-        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+        coEvery { userRepository.verifyEmailCode(any(), any(), any()) } returns
             Result.success(CommonResponse(status = "8702"))
         val viewModel = SignUpViewModel(userRepository)
 
@@ -164,9 +178,9 @@ class SignUpViewModelTest {
 
     @Test
     fun `expired registration proof clears verified state`() = runTest {
-        coEvery { userRepository.sendVerificationCode(any()) } returns
+        coEvery { userRepository.sendVerificationCode(any(), any()) } returns
             Result.success(CommonResponse(status = "8200"))
-        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+        coEvery { userRepository.verifyEmailCode(any(), any(), any()) } returns
             Result.success(
                 CommonResponse(
                     status = "8200",
@@ -215,9 +229,9 @@ class SignUpViewModelTest {
 
     @Test
     fun `rapid double submit is guarded and calls signUp once`() = runTest {
-        coEvery { userRepository.sendVerificationCode(any()) } returns
+        coEvery { userRepository.sendVerificationCode(any(), any()) } returns
             Result.success(CommonResponse(status = "8200"))
-        coEvery { userRepository.verifyEmailCode(any(), any()) } returns
+        coEvery { userRepository.verifyEmailCode(any(), any(), any()) } returns
             Result.success(
                 CommonResponse(
                     status = "8200",
@@ -273,7 +287,12 @@ class SignUpViewModelTest {
 
     @Test
     fun `resend verification code resets timer and handles failure safely`() = runTest {
-        coEvery { userRepository.sendVerificationCode("user@example.com") } returns
+        coEvery {
+            userRepository.sendVerificationCode(
+                "user@example.com",
+                EmailVerificationPurpose.REGISTRATION,
+            )
+        } returns
             Result.success(CommonResponse(status = "8200"))
         val viewModel = SignUpViewModel(userRepository)
 
@@ -286,7 +305,12 @@ class SignUpViewModelTest {
             }
 
             // Resend fails
-            coEvery { userRepository.sendVerificationCode("user@example.com") } returns
+            coEvery {
+                userRepository.sendVerificationCode(
+                    "user@example.com",
+                    EmailVerificationPurpose.REGISTRATION,
+                )
+            } returns
                 Result.failure(RuntimeException("Network error"))
 
             viewModel.onSendVerificationCode("user@example.com")

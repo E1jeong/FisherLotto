@@ -1,6 +1,8 @@
 package com.queentech.data.model.service
 
 import com.queentech.data.model.login.GetUserRequestBody
+import com.queentech.data.model.login.RecoverUserRequestBody
+import com.queentech.data.model.login.RecoverUserResponseDto
 import com.queentech.data.model.login.EmailRequestBody
 import com.queentech.data.model.login.SignUpUserRequestBody
 import com.queentech.data.model.login.VerifyEmailCodeRequestBody
@@ -23,6 +25,11 @@ interface UserService {
     suspend fun signUpUser(
         @Body request: SignUpUserRequestBody,
     ): CommonResponseDto
+
+    @POST("api/users/recover")
+    suspend fun recoverUser(
+        @Body request: RecoverUserRequestBody,
+    ): RecoverUserResponseDto
 
     @POST("api/users/login")
     suspend fun getUser(
