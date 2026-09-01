@@ -3,6 +3,7 @@ package com.queentech.fisherlotto.navigation
 import android.Manifest
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,12 @@ fun NavigationHost() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val currentRoute = navBackStackEntry?.destination?.route
+
+    BackHandler(
+        enabled = currentRoute != MainNav.Home.route && MainNav.isMainRoute(currentRoute),
+    ) {
+        navController.popBackStack(MainNav.Home.route, inclusive = false)
+    }
 
     val normalPermissions = buildList {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -102,10 +109,10 @@ fun NavigationHost() {
                                     )
                                 },
                                 moveToHome = {
-                                    NavigationHelper.navigate(
-                                        navController,
-                                        RouteName.HOME
-                                    )
+                                    navController.navigate(MainNav.Home.route) {
+                                        popUpTo(LoginNav.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             )
                         }
@@ -115,11 +122,10 @@ fun NavigationHost() {
                         composable(route = AccountRecoveryNav.route) {
                             AccountRecoveryScreen(
                                 moveToHome = {
-                                    NavigationHelper.navigate(
-                                        navController,
-                                        RouteName.HOME,
-                                        backStackRouteName = LoginNav.route,
-                                    )
+                                    navController.navigate(MainNav.Home.route) {
+                                        popUpTo(LoginNav.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
                                 }
                             )
                         }

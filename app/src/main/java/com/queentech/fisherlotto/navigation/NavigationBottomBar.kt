@@ -51,7 +51,7 @@ fun NavigationBottomBar(
                         NavigationHelper.navigate(
                             navController,
                             item.route,
-                            navController.graph.startDestinationRoute
+                            MainNav.Home.route,
                         )
                     }
                 )

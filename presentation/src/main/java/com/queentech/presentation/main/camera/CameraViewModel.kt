@@ -42,35 +42,59 @@ class CameraViewModel @Inject constructor(
     fun onQrCodeScanned(rawValue: String) = intent {
         if (rawValue == lastScannedValue) return@intent
         lastScannedValue = rawValue
+        reduce {
+            state.copy(
+                result = null,
+                winningNumbers = null,
+                showQrResultDialog = false,
+            )
+        }
         val result = LottoQrResult.parse(rawValue) ?: run {
             postSideEffect(CameraSideEffect.Toast("올바른 로또 QR 코드가 아닙니다."))
             return@intent
         }
-        val winning = getLottoNumberUseCase(result.drawNo).getOrNull()
-        reduce { state.copy(result = result, winningNumbers = winning) }
+        val winning = getLottoNumberUseCase(result.drawNo).getOrNull() ?: run {
+            postSideEffect(CameraSideEffect.Toast("당첨번호 정보를 불러오지 못했습니다."))
+            return@intent
+        }
+        reduce {
+            state.copy(
+                result = result,
+                winningNumbers = winning,
+                showQrResultDialog = true,
+            )
+        }
 
         // DB에 스캔 이력 저장 (중복 체크)
-        if (winning != null) {
-            if (!scanHistoryRepository.exists(result.drawNo, result.games)) {
-                val mainNumbers = listOf(
-                    winning.num1Int, winning.num2Int, winning.num3Int,
-                    winning.num4Int, winning.num5Int, winning.num6Int,
-                )
-                val bonus = winning.bonusInt
-                val bestRank = result.games.map { game ->
-                    val mainMatch = game.count { it in mainNumbers }
-                    val hasBonus = bonus in game
-                    when {
-                        mainMatch == 6 -> 1
-                        mainMatch == 5 && hasBonus -> 2
-                        mainMatch == 5 -> 3
-                        mainMatch == 4 -> 4
-                        mainMatch == 3 -> 5
-                        else -> 0
-                    }
-                }.filter { it > 0 }.minOrNull() ?: 0
-                scanHistoryRepository.save(result.drawNo, result.games, bestRank)
-            }
+        if (!scanHistoryRepository.exists(result.drawNo, result.games)) {
+            val mainNumbers = listOf(
+                winning.num1Int, winning.num2Int, winning.num3Int,
+                winning.num4Int, winning.num5Int, winning.num6Int,
+            )
+            val bonus = winning.bonusInt
+            val bestRank = result.games.map { game ->
+                val mainMatch = game.count { it in mainNumbers }
+                val hasBonus = bonus in game
+                when {
+                    mainMatch == 6 -> 1
+                    mainMatch == 5 && hasBonus -> 2
+                    mainMatch == 5 -> 3
+                    mainMatch == 4 -> 4
+                    mainMatch == 3 -> 5
+                    else -> 0
+                }
+            }.filter { it > 0 }.minOrNull() ?: 0
+            scanHistoryRepository.save(result.drawNo, result.games, bestRank)
+        }
+    }
+
+    fun dismissQrResultDialog() = intent {
+        reduce {
+            state.copy(
+                result = null,
+                winningNumbers = null,
+                showQrResultDialog = false,
+            )
         }
     }
 
@@ -106,6 +130,7 @@ class CameraViewModel @Inject constructor(
 data class CameraState(
     val result: LottoQrResult? = null,
     val winningNumbers: GetLottoNumber? = null,
+    val showQrResultDialog: Boolean = false,
     val scanHistoryList: List<ScanHistory> = emptyList(),
     val showHistorySheet: Boolean = false,
     val selectedHistory: ScanHistory? = null,

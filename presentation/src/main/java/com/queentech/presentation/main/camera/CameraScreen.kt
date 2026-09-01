@@ -57,13 +57,10 @@ fun CameraScreen(
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    var qrCodeValueDialogVisible by remember { mutableStateOf(false) }
 
     viewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {
             is CameraSideEffect.Toast -> {
-                // 스캔이 실패하면 결과 다이얼로그가 뜨지 않으므로 스캐너를 다시 열어둔다.
-                qrCodeValueDialogVisible = false
                 Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
         }
@@ -97,12 +94,11 @@ fun CameraScreen(
                 lifecycleOwner = lifecycleOwner,
                 analysisExecutor = analysisExecutor,
                 onQrCodeValueDetect = {
-                    if (!qrCodeValueDialogVisible) {
+                    if (!state.showQrResultDialog) {
                         if (state.showHistorySheet) {
                             viewModel.dismissHistorySheet()
                         }
                         viewModel.onQrCodeScanned(it)
-                        qrCodeValueDialogVisible = true
                     }
                 },
                 onCameraError = { cameraError = it }
@@ -129,10 +125,10 @@ fun CameraScreen(
     }
 
     QrResultDialog(
-        visible = qrCodeValueDialogVisible,
+        visible = state.showQrResultDialog,
         result = state.result,
         winning = state.winningNumbers,
-        onDismissRequest = { qrCodeValueDialogVisible = false }
+        onDismissRequest = viewModel::dismissQrResultDialog,
     )
 
     // 스캔 이력 바텀시트
