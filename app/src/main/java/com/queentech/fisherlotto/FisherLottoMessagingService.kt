@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -32,6 +33,7 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "FisherLottoMessaging"
+        private const val SUBSCRIPTION_CACHE_SYNC_DELAY_MILLIS = 2_000L
     }
 
     override fun onDestroy() {
@@ -44,8 +46,11 @@ class FisherLottoMessagingService : FirebaseMessagingService() {
             Log.d(TAG, "SUBSCRIPTION_UPDATE received")
             serviceScope.launch {
                 try {
-                    Log.d(TAG, "Refreshing subscription status from FCM")
-                    billingRepository.refreshSubscriptionStatus()
+                    delay(SUBSCRIPTION_CACHE_SYNC_DELAY_MILLIS)
+                    Log.d(TAG, "Refreshing subscription status after Play Store cache sync delay")
+                    billingRepository.refreshSubscriptionStatus().onFailure {
+                        Log.e(TAG, "Subscription status refresh failed", it)
+                    }
                     Log.d(TAG, "Subscription status refresh completed")
                 } catch (e: Exception) {
                     Log.e(TAG, "Subscription status refresh failed", e)

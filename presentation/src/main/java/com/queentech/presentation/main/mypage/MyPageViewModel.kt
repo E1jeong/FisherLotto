@@ -3,6 +3,7 @@ package com.queentech.presentation.main.mypage
 import android.util.Log
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.login.User
@@ -10,6 +11,7 @@ import com.queentech.domain.usecase.billing.BillingRepository
 import com.queentech.domain.usecase.login.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.Container
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.syntax.simple.intent
@@ -60,6 +62,13 @@ class MyPageViewModel @Inject constructor(
     private fun loadSubscriptionStatus() = intent {
         billingRepository.subscriptionStatus.collect { status ->
             reduce { state.copy(subscriptionStatus = status) }
+        }
+    }
+
+    fun refreshSubscriptionStatus() {
+        viewModelScope.launch {
+            billingRepository.refreshSubscriptionStatus()
+                .onFailure { Log.e(TAG, "Subscription status refresh failed", it) }
         }
     }
 

@@ -239,6 +239,10 @@ class BillingRepositoryImpl @Inject constructor(
             )
             userRepository.updateTier(User.TIER_PREMIUM)
         } else {
+            if (shouldPreserveValidEntitlement(_subscriptionStatus.value)) {
+                Log.w(TAG, "Keeping the verified entitlement while Play Store purchase cache is unavailable")
+                return Result.success(_subscriptionStatus.value)
+            }
             _subscriptionStatus.value = SubscriptionStatus(
                 isActive = false,
                 productId = null,
@@ -264,5 +268,12 @@ class BillingRepositoryImpl @Inject constructor(
     companion object {
         private const val TAG = "BillingRepositoryImpl"
         val PRODUCT_IDS = listOf("fisherlotto_monthly")
+
+        internal fun shouldPreserveValidEntitlement(
+            status: SubscriptionStatus,
+            nowMillis: Long = System.currentTimeMillis(),
+        ): Boolean = status.isActive &&
+            status.verificationState == SubscriptionVerificationState.VERIFIED &&
+            (status.expiryTimeMillis ?: 0L) > nowMillis
     }
 }

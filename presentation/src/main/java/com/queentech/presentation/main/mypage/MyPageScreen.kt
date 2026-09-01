@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -74,6 +75,10 @@ fun MyPageScreen(
 ) {
     val state by myPageViewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        myPageViewModel.refreshSubscriptionStatus()
+    }
 
     myPageViewModel.collectSideEffect { sideEffect ->
         when (sideEffect) {

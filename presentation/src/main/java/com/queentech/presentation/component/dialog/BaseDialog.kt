@@ -12,7 +12,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +24,8 @@ import com.queentech.presentation.component.dialog.wrapper.DialogButtonWrapper
 import com.queentech.presentation.component.dialog.wrapper.DialogButtonsColumn
 import com.queentech.presentation.component.dialog.wrapper.DialogContentWrapper
 import com.queentech.presentation.component.dialog.wrapper.DialogTitleWrapper
+import com.queentech.presentation.theme.BgDark
+import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.FisherLottoTheme
 import com.queentech.presentation.theme.Paddings
 
@@ -43,7 +44,7 @@ fun BaseDialog(
             .heightIn(max = screenHeight * 0.8f),
         elevation = CardDefaults.cardElevation(defaultElevation = Paddings.none),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = BgDark
         ),
         shape = MaterialTheme.shapes.large
     ) {
@@ -53,7 +54,7 @@ fun BaseDialog(
             }
             Column(
                 modifier = Modifier
-                    .background(Color.Transparent)
+                    .background(SectionBg)
                     .fillMaxWidth()
                     .padding(Paddings.xlarge)
                     .verticalScroll(rememberScrollState())

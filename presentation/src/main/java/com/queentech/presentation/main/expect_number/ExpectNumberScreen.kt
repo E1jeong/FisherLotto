@@ -236,7 +236,7 @@ private fun ExpectNumberContent(
             emptyMessage = "발급하기를 눌러보세요",
             emptyEmoji = "🎣",
             showIssueButton = true,
-            isButtonDisabled = isIssueWindowClosed,
+            isButtonDisabled = isIssueWindowClosed || isThisWeekIssued,
             onIssueClick = onNumberIssueClick
         )
     }
@@ -314,6 +314,7 @@ private fun WeekSection(
             if (showIssueButton) {
                 Button(
                     onClick = onIssueClick,
+                    enabled = !isButtonDisabled,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isButtonDisabled) Color.Gray else AccentBlue
                     ),
@@ -322,7 +323,11 @@ private fun WeekSection(
                     elevation = ButtonDefaults.buttonElevation(if (isButtonDisabled) 0.dp else 4.dp)
                 ) {
                     Text(
-                        text = if (isButtonDisabled) "발급 대기" else "번호발급",
+                        text = when {
+                            isIssued -> "발급완료"
+                            isButtonDisabled -> "발급 대기"
+                            else -> "번호발급"
+                        },
                         color = if (isButtonDisabled) Color.LightGray else Color.White,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold

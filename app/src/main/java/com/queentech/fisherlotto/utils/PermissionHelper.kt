@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.queentech.presentation.component.dialog.BaseDialog
 import com.queentech.presentation.component.dialog.model.DialogButton
 import com.queentech.presentation.component.dialog.model.DialogContent
@@ -88,8 +92,16 @@ fun permissionRequest(
     rationaleText: String
 ): PermissionState {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showRationale by remember { mutableStateOf(false) }
     var permissionState by remember { mutableStateOf(PermissionState.Denied) }
+
+    fun refreshPermissionState() {
+        permissionState = PermissionHelper.checkPermissions(context, permissions)
+        if (permissionState == PermissionState.Granted) {
+            showRationale = false
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -103,7 +115,7 @@ fun permissionRequest(
     )
 
     LaunchedEffect(permissions) {
-        permissionState = PermissionHelper.checkPermissions(context, permissions)
+        refreshPermissionState()
         when (permissionState) {
             PermissionState.Granted -> {} // Do nothing for Granted
 
@@ -120,6 +132,16 @@ fun permissionRequest(
             }
 
         }
+    }
+
+    DisposableEffect(lifecycleOwner, permissions) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshPermissionState()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     if (showRationale) {
