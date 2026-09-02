@@ -213,30 +213,6 @@ private fun SignUpContent(
 
             DefaultTextField(
                 modifier = fullWidth,
-                value = email,
-                placeholder = "Email",
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                onValueChange = onEmailChanged
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            EmailVerificationContent(
-                modifier = fullWidth,
-                state = state,
-                verificationCode = verificationCode,
-                onVerificationCodeChanged = onVerificationCodeChanged,
-                onSendVerificationCodeClick = onSendVerificationCodeClick,
-                onVerifyEmailCodeClick = onVerifyEmailCodeClick,
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            DefaultTextField(
-                modifier = fullWidth,
                 value = birth,
                 placeholder = "생일 (19700101)",
                 keyboardOptions = KeyboardOptions(
@@ -256,11 +232,35 @@ private fun SignUpContent(
                 placeholder = "핸드폰번호 (01012124545)",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
-                    imeAction = ImeAction.Done
+                    imeAction = ImeAction.Next
                 ),
                 onValueChange = { input ->
                     onPhoneChanged(input.filter { it.isDigit() }.take(11))
                 }
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            DefaultTextField(
+                modifier = fullWidth,
+                value = email,
+                placeholder = "Email",
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                onValueChange = onEmailChanged
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            EmailVerificationContent(
+                modifier = fullWidth,
+                state = state,
+                verificationCode = verificationCode,
+                onVerificationCodeChanged = onVerificationCodeChanged,
+                onSendVerificationCodeClick = onSendVerificationCodeClick,
+                onVerifyEmailCodeClick = onVerifyEmailCodeClick,
             )
         }
     }

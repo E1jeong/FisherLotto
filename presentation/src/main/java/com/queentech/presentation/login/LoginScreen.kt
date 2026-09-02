@@ -59,8 +59,9 @@ fun LoginScreen(
 
     LoginContent(
         email = state.emailInput,
-        enabledTextInput = true,
+        enabledTextInput = state.userEmail.isEmpty(),
         isVisibleSignUp = state.userEmail.isEmpty(),
+        isLoggingIn = state.isLoggingIn,
         onEmailChanged = viewModel::onEmailChanged,
         onLoginClick = viewModel::onLoginClick,
         onSignUpClick = viewModel::onSignUpClick,
@@ -92,6 +93,7 @@ private fun LoginContent(
     email: String,
     enabledTextInput: Boolean,
     isVisibleSignUp: Boolean,
+    isLoggingIn: Boolean,
     onEmailChanged: (String) -> Unit,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit,
@@ -108,8 +110,9 @@ private fun LoginContent(
         bottomBar = {
             LoginBottomBar(
                 modifier = fullWidth,
-                email = email,
                 isVisibleSignUp = isVisibleSignUp,
+                isLoggingIn = isLoggingIn,
+                email = email,
                 onLoginClick = onLoginClick,
                 onSignUpClick = onSignUpClick,
                 onAccountRecoveryClick = onAccountRecoveryClick,
@@ -145,7 +148,7 @@ private fun LoginContent(
 
             DefaultTextField(
                 modifier = fullWidth,
-                enabled = enabledTextInput,
+                enabled = enabledTextInput && !isLoggingIn,
                 value = email,
                 placeholder = "Email",
                 keyboardOptions = KeyboardOptions(
@@ -164,6 +167,7 @@ private fun LoginContent(
 private fun LoginBottomBar(
     modifier: Modifier,
     isVisibleSignUp: Boolean,
+    isLoggingIn: Boolean,
     email: String,
     onLoginClick: () -> Unit,
     onSignUpClick: () -> Unit,
@@ -172,13 +176,14 @@ private fun LoginBottomBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
             modifier = modifier.height(48.dp),
             onClick = onLoginClick,
-            enabled = email.isNotBlank(),
+            enabled = email.isNotBlank() && !isLoggingIn,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -186,37 +191,47 @@ private fun LoginBottomBar(
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
-            Text("로그인")
+            Text(if (isLoggingIn) "로그인 중..." else "로그인")
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isVisibleSignUp) {
+        if (isVisibleSignUp) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "계정이 없으신가요? ",
+                    modifier = Modifier
+                        .clickable(enabled = !isLoggingIn) { onSignUpClick() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    text = "회원가입",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
                 Text(
-                    modifier = Modifier.clickable { onSignUpClick() },
-                    text = "회원가입",
-                    color = MaterialTheme.colorScheme.secondary
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    text = "|",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
                 )
-            } else {
+
                 Text(
-                    text = "이미 계정이 있습니다",
+                    modifier = Modifier
+                        .clickable(enabled = !isLoggingIn) { onAccountRecoveryClick() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    text = "기존 계정 복구",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        } else {
+            Text(
+                text = "이미 계정이 있습니다",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-
-        Text(
-            modifier = Modifier.clickable { onAccountRecoveryClick() },
-            text = "기존 계정 복구",
-            color = MaterialTheme.colorScheme.secondary,
-        )
-
-        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 
@@ -245,6 +260,7 @@ fun LoginScreenPreview() {
                 email = "",
                 enabledTextInput = true,
                 isVisibleSignUp = true,
+                isLoggingIn = false,
                 onEmailChanged = {},
                 onLoginClick = {},
                 onSignUpClick = {},

@@ -79,6 +79,12 @@ fun AccountRecoveryScreen(
             Text("이메일 인증과 전화번호 확인 후 기존 계정을 복구합니다.", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(28.dp))
             DefaultTextField(
+                modifier = Modifier.fillMaxWidth(), value = phone, placeholder = "핸드폰번호 (01012124545)",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                onValueChange = { phone = it.filter(Char::isDigit).take(11) },
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            DefaultTextField(
                 modifier = Modifier.fillMaxWidth(), value = email, placeholder = "Email",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 onValueChange = { email = it; verificationCode = ""; viewModel.onEmailChanged(it) },
@@ -90,12 +96,6 @@ fun AccountRecoveryScreen(
                 onVerificationCodeChanged = { verificationCode = it },
                 onSendClick = { verificationCode = ""; viewModel.onSendVerificationCode(email) },
                 onVerifyClick = { viewModel.onVerifyEmailCode(email, verificationCode) },
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            DefaultTextField(
-                modifier = Modifier.fillMaxWidth(), value = phone, placeholder = "핸드폰번호 (01012124545)",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
-                onValueChange = { phone = it.filter(Char::isDigit).take(11) },
             )
         }
     }

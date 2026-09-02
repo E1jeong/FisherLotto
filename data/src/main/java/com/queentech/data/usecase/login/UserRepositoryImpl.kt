@@ -162,16 +162,15 @@ class UserRepositoryImpl @Inject constructor(
 
     // 앱 재시작 시 DataStore에서 복원
     override suspend fun loadCachedUser() {
-        localDataSource.userFlow.first()?.let { cached ->
-            _currentUser.value = cached
-        }
+        val user = runCatching { localDataSource.userFlow.first() }.getOrNull()
+        _currentUser.value = user
     }
 
     override suspend fun logout() {
         _currentUser.value = null
-        localDataSource.clear()
-        lottoIssueDao.deleteAll()
-        scanHistoryDao.deleteAll()
+        runCatching { localDataSource.clear() }
+        runCatching { lottoIssueDao.deleteAll() }
+        runCatching { scanHistoryDao.deleteAll() }
     }
 
     // 서버 tier는 서브백엔드가 Google Play 검증 결과로만 갱신한다. 앱은 로컬 캐시만 관리한다.

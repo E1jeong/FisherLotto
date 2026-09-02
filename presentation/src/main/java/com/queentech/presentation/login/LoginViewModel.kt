@@ -29,12 +29,14 @@ class LoginViewModel @Inject constructor(
         buildSettings = {
             this.exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                 intent {
+                    reduce { state.copy(isLoggingIn = false) }
                     postSideEffect(LoginSideEffect.Toast("로그인 중 오류가 발생했습니다."))
-                    Log.e(TAG, "Login failed")
+                    Log.e(TAG, "Login failed", throwable)
                 }
             }
         },
         onCreate = {
+            observeCurrentUser()
             loadCachedUser()
         },
     )
@@ -43,15 +45,45 @@ class LoginViewModel @Inject constructor(
         const val TAG = "LoginViewModel"
     }
 
+    private fun observeCurrentUser() = intent {
+        userRepository.currentUser.collect { user ->
+            if (user != null) {
+                reduce {
+                    state.copy(
+                        userEmail = user.email,
+                        emailInput = user.email,
+                        userName = user.name,
+                        userBirth = user.birth,
+                        userPhone = user.phone,
+                    )
+                }
+            } else {
+                reduce {
+                    state.copy(
+                        userEmail = "",
+                        emailInput = if (state.userEmail.isNotEmpty()) "" else state.emailInput,
+                        userName = "",
+                        userBirth = "",
+                        userPhone = "",
+                    )
+                }
+            }
+        }
+    }
+
     fun onSignUpClick() = intent {
+        if (state.isLoggingIn) return@intent
         postSideEffect(LoginSideEffect.NavigateToSignUp)
     }
 
     fun onEmailChanged(value: String) = intent {
+        if (state.userEmail.isNotEmpty() || state.isLoggingIn) return@intent
         reduce { state.copy(emailInput = value) }
     }
 
     fun onLoginClick() = intent {
+        if (state.isLoggingIn) return@intent
+
         val email = state.emailInput.trim()
 
         if (email.isBlank()) {
@@ -63,6 +95,8 @@ class LoginViewModel @Inject constructor(
             return@intent
         }
 
+        reduce { state.copy(isLoggingIn = true) }
+
         val result = userRepository.login(
             name = state.userName,
             birth = state.userBirth,
@@ -71,26 +105,22 @@ class LoginViewModel @Inject constructor(
         )
 
         result.onSuccess {
-            reduce { state.copy(userEmail = email) }
+            reduce { state.copy(userEmail = email, isLoggingIn = false) }
             registerFcmToken(email)
             billingRepository.refreshSubscriptionStatus()
             postSideEffect(LoginSideEffect.NavigateToHome)
         }.onFailure {
+            reduce { state.copy(isLoggingIn = false) }
             postSideEffect(LoginSideEffect.Toast("로그인에 실패했습니다."))
         }
     }
 
     private suspend fun registerFcmToken(email: String) {
-        val token = fcmRepository.getFreshToken() ?: run {
-            Log.w(TAG, "FCM 토큰을 가져오지 못했습니다.")
-            return
-        }
+        val token = fcmRepository.getFreshToken() ?: return
         val cachedToken = fcmRepository.getCachedToken()
         val cachedEmail = fcmRepository.getCachedEmail()
-        if (token == cachedToken && email == cachedEmail) {
-            Log.d(TAG, "FCM 토큰과 이메일이 동일합니다. 서버 전송을 생략합니다.")
-            return
-        }
+        if (token == cachedToken && email == cachedEmail) return
+
         fcmRepository.sendTokenToServer(email, token)
             .onSuccess {
                 fcmRepository.saveTokenToCache(token)
@@ -101,18 +131,6 @@ class LoginViewModel @Inject constructor(
 
     fun loadCachedUser() = intent {
         userRepository.loadCachedUser()
-        val cachedUser = userRepository.currentUser.value
-        if (cachedUser != null) {
-            reduce {
-                state.copy(
-                    userEmail = cachedUser.email,
-                    emailInput = cachedUser.email,
-                    userName = cachedUser.name,
-                    userBirth = cachedUser.birth,
-                    userPhone = cachedUser.phone
-                )
-            }
-        }
     }
 }
 
@@ -123,6 +141,7 @@ data class LoginState(
     val userName: String = "",      // 유저 이름
     val userBirth: String = "",     // 유저 생년월일
     val userPhone: String = "",     // 유저 전화번호
+    val isLoggingIn: Boolean = false,
 )
 
 sealed interface LoginSideEffect {
