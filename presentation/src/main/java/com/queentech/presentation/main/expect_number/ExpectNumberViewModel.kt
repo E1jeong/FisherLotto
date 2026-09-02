@@ -142,6 +142,7 @@ class ExpectNumberViewModel @Inject constructor(
 
         val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
         if (isSubscribed) {
+            kotlinx.coroutines.delay(1000L)
             applyIssuedNumbers(result, thisWeekStart)
         } else {
             pendingExpectNumber = result
@@ -169,6 +170,8 @@ class ExpectNumberViewModel @Inject constructor(
                 return@intent
             }
 
+            reduce { state.copy(isLoading = true) }
+            kotlinx.coroutines.delay(800L)
             applyIssuedNumbers(pending, thisWeekStart)
             pendingExpectNumber = null
         } finally {
@@ -202,7 +205,6 @@ class ExpectNumberViewModel @Inject constructor(
     private fun observeExpectedNumberReset() = intent {
         billingRepository.expectedNumberResetEvents.collect {
             refreshNumbers()
-            postSideEffect(ExpectNumberSideEffect.Toast("구독 혜택이 적용되었습니다. 다시 발급해 주세요"))
         }
     }
 

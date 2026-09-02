@@ -41,6 +41,7 @@ class MyPageViewModel @Inject constructor(
             loadUser()
             loadSubscriptionStatus()
             loadSubscriptionProducts()
+            observeBillingReset()
         },
     )
 
@@ -58,6 +59,12 @@ class MyPageViewModel @Inject constructor(
     }
 
     // ── Billing ──
+
+    private fun observeBillingReset() = intent {
+        billingRepository.expectedNumberResetEvents.collect {
+            postSideEffect(MyPageSideEffect.Toast("구독 혜택이 적용되었습니다. 당첨 예상번호 화면에서 새로운 번호를 발급받아 보세요."))
+        }
+    }
 
     private fun loadSubscriptionStatus() = intent {
         billingRepository.subscriptionStatus.collect { status ->

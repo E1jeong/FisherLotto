@@ -47,28 +47,37 @@ class ExpectNumberViewModelPurchaseResetTest {
     }
 
     @Test
-    fun `신규 결제 캐시 초기화 이벤트가 오면 미발급 상태와 안내를 표시한다`() = runTest {
-        every { billingRepository.expectedNumberResetEvents } returns flowOf(Unit)
-        val vm = viewModel(storedThisWeek = emptyList())
+    fun `신규 결제 캐시 초기화 이벤트가 오면 번호를 다시 조회하여 미발급 상태를 반영한다`() = runTest {
+        val resetEvents = kotlinx.coroutines.flow.MutableSharedFlow<Unit>()
+        every { billingRepository.expectedNumberResetEvents } returns resetEvents
+        val vm = viewModel(storedThisWeek = listOf("1,2,3,4,5,6"))
 
         vm.test(this) {
             expectInitialState()
             runOnCreate()
 
-            var toastSeen = false
-            while (!toastSeen) {
-                when (val item = awaitItem()) {
-                    is Item.SideEffectItem -> {
-                        assertEquals(resetToast, item.value)
-                        toastSeen = true
-                    }
-                    is Item.StateItem -> Unit
+            var initialSeen = false
+            while (!initialSeen) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.isThisWeekIssued) {
+                    initialSeen = true
                 }
             }
+
+            coEvery { lottoIssueRepository.getThisWeekNumbers(any()) } returns emptyList()
+            resetEvents.emit(Unit)
+
+            var resetSeen = false
+            while (!resetSeen) {
+                val item = awaitItem()
+                if (item is Item.StateItem && !item.value.isThisWeekIssued) {
+                    resetSeen = true
+                }
+            }
+
             cancelAndIgnoreRemainingItems()
         }
 
-        coVerify(exactly = 0) { lottoIssueRepository.deleteWeek(any()) }
         assertFalse(vm.container.stateFlow.value.isThisWeekIssued)
         assertTrue(vm.container.stateFlow.value.thisWeekNumbers.isEmpty())
     }

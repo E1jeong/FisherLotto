@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -11,12 +12,22 @@ class App : Application() {
 
     companion object {
         const val CHANNEL_ID = "fisherlotto_default"
+        private val TEST_DEVICE_IDS = listOf(
+            "D27B0322DAAAC502C937E5B2D4E52AAD"
+        )
     }
 
     override fun onCreate() {
         super.onCreate()
 
         createNotificationChannel()
+
+        if (BuildConfig.DEBUG) {
+            val configuration = RequestConfiguration.Builder()
+                .setTestDeviceIds(TEST_DEVICE_IDS)
+                .build()
+            MobileAds.setRequestConfiguration(configuration)
+        }
         MobileAds.initialize(this)
     }
 
