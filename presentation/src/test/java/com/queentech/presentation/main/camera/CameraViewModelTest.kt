@@ -151,6 +151,33 @@ class CameraViewModelTest {
         assertNull(viewModel.container.stateFlow.value.result)
     }
 
+    @Test
+    fun `동일한 무효 QR의 연속 스캔은 쿨다운 기간 동안 무시된다`() = runTest {
+        val viewModel = createViewModel()
+
+        viewModel.test(this) {
+            expectInitialState()
+            viewModel.onQrCodeScanned("invalid-qr")
+
+            var toastCount = 0
+            while (toastCount < 1) {
+                when (val item = awaitItem()) {
+                    is Item.SideEffectItem -> {
+                        if (item.value is CameraSideEffect.Toast) toastCount++
+                    }
+                    is Item.StateItem -> {}
+                }
+            }
+
+            // 쿨다운 기간 내 동일 QR 재스캔 -> 무시됨
+            viewModel.onQrCodeScanned("invalid-qr")
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingItems()
+        }
+
+        assertFalse(viewModel.container.stateFlow.value.showQrResultDialog)
+    }
+
     private fun createViewModel() = CameraViewModel(
         getLottoNumberUseCase = getLottoNumberUseCase,
         scanHistoryRepository = scanHistoryRepository,

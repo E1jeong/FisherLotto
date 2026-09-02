@@ -35,13 +35,19 @@ class CameraViewModel @Inject constructor(
 
     companion object {
         private const val ONE_YEAR_MILLIS = 365L * 24 * 60 * 60 * 1000
+        private const val SCAN_COOLDOWN_MILLIS = 2500L
     }
 
     private var lastScannedValue: String? = null
+    private var lastScannedTime: Long = 0L
 
     fun onQrCodeScanned(rawValue: String) = intent {
-        if (rawValue == lastScannedValue) return@intent
+        val currentTime = System.currentTimeMillis()
+        if (rawValue == lastScannedValue && currentTime - lastScannedTime < SCAN_COOLDOWN_MILLIS) {
+            return@intent
+        }
         lastScannedValue = rawValue
+        lastScannedTime = currentTime
         reduce {
             state.copy(
                 result = null,
@@ -89,6 +95,8 @@ class CameraViewModel @Inject constructor(
     }
 
     fun dismissQrResultDialog() = intent {
+        lastScannedValue = null
+        lastScannedTime = 0L
         reduce {
             state.copy(
                 result = null,
