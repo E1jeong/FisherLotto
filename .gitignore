@@ -74,6 +74,8 @@ gradle-app.setting
 *.apk
 *.ap_
 *.aab
+/app/release/
+release/
 
 # Files for the ART/Dalvik VM
 *.dex
