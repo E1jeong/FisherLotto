@@ -8,6 +8,7 @@ import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.login.User
 import com.queentech.domain.usecase.billing.BillingRepository
+import com.queentech.domain.usecase.fcm.FcmRepository
 import com.queentech.domain.usecase.login.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -24,6 +25,7 @@ import javax.inject.Inject
 class MyPageViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val billingRepository: BillingRepository,
+    private val fcmRepository: FcmRepository,
 ) : ViewModel(), ContainerHost<MyPageState, MyPageSideEffect> {
 
     override val container: Container<MyPageState, MyPageSideEffect> = container(
@@ -38,6 +40,7 @@ class MyPageViewModel @Inject constructor(
             }
         },
         onCreate = {
+            loadNotificationPermissionPromptState()
             loadUser()
             loadSubscriptionStatus()
             loadSubscriptionProducts()
@@ -108,6 +111,19 @@ class MyPageViewModel @Inject constructor(
         reduce { state.copy(isBillingLoading = false) }
     }
 
+    private fun loadNotificationPermissionPromptState() = intent {
+        val promptShown = runCatching {
+            fcmRepository.hasShownNotificationPermissionPrompt()
+        }.getOrDefault(false)
+        reduce { state.copy(notificationPermissionPromptShown = promptShown) }
+    }
+
+    fun markNotificationPermissionPromptShown() = intent {
+        reduce { state.copy(notificationPermissionPromptShown = true) }
+        runCatching { fcmRepository.markNotificationPermissionPromptShown() }
+            .onFailure { Log.e(TAG, "Failed to persist notification permission prompt state", it) }
+    }
+
     fun onDeleteAccountClick() = intent {
         reduce { state.copy(showDeleteAccountDialog = true) }
     }
@@ -141,6 +157,7 @@ data class MyPageState(
     val isBillingLoading: Boolean = false,
     val showDeleteAccountDialog: Boolean = false,
     val isDeleting: Boolean = false,
+    val notificationPermissionPromptShown: Boolean? = null,
 )
 
 sealed interface MyPageSideEffect {

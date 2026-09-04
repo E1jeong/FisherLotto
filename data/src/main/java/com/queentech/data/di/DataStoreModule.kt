@@ -10,6 +10,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -22,5 +23,14 @@ object DataStoreModule {
         @ApplicationContext context: Context
     ): DataStore<Preferences> = PreferenceDataStoreFactory.create {
         context.preferencesDataStoreFile("user_prefs")
+    }
+
+    @Provides
+    @Singleton
+    @Named("notification_preferences")
+    fun provideNotificationPreferencesDataStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create {
+        context.preferencesDataStoreFile("notification_prefs")
     }
 }

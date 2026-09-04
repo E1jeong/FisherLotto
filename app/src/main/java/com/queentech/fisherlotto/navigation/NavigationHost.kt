@@ -53,98 +53,84 @@ fun NavigationHost() {
         navController.popBackStack(MainNav.Home.route, inclusive = false)
     }
 
-    val normalPermissions = buildList {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
-    val normalPermissionState = permissionRequest(
-        permissions = normalPermissions,
-        rationaleTitle = "권한 요청",
-        rationaleText = "권한 요청을 수락해주시길 바랍니다."
-    )
-
-    if (normalPermissionState == PermissionState.Granted) {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            Scaffold(
-                containerColor = MaterialTheme.colorScheme.background,
-                content = { paddingValues ->
-                    NavHost(
-                        modifier = Modifier.padding(paddingValues),
-                        navController = navController,
-                        startDestination = LoginNav.route
-                    ) {
-                        composable(route = MainNav.Home.route) {
-                            HomeScreen()
-                        }
-                        composable(route = MainNav.Camera.route) {
-                            CameraPermissionScreen()
-                        }
-                        composable(route = MainNav.ExpectNumber.route) {
-                            ExpectNumberScreen()
-                        }
-                        composable(route = MainNav.MyPage.route) {
-                            MyPageScreen(
-                                onNavigateToLogin = {
-                                    NavigationHelper.navigateToLoginAfterLogout(
-                                        navController,
-                                        RouteName.LOGIN
-                                    )
-                                }
-                            )
-                        }
-                        composable(route = LoginNav.route) {
-                            LoginScreen(
-                                moveToSignUp = {
-                                    NavigationHelper.navigate(
-                                        navController,
-                                        RouteName.SIGNUP
-                                    )
-                                },
-                                moveToAccountRecovery = {
-                                    NavigationHelper.navigate(
-                                        navController,
-                                        RouteName.ACCOUNT_RECOVERY
-                                    )
-                                },
-                                moveToHome = {
-                                    navController.navigate(MainNav.Home.route) {
-                                        popUpTo(LoginNav.route) { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                }
-                            )
-                        }
-                        composable(route = SignUpNav.route) {
-                            SignUpScreen(popBackStack = { navController.popBackStack() })
-                        }
-                        composable(route = AccountRecoveryNav.route) {
-                            AccountRecoveryScreen(
-                                moveToHome = {
-                                    navController.navigate(MainNav.Home.route) {
-                                        popUpTo(LoginNav.route) { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                }
-                            )
-                        }
-                        composable(route = MainNav.Statistic.route) {
-                            StatisticScreen()
-                        }
+    Surface(color = MaterialTheme.colorScheme.background) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            content = { paddingValues ->
+                NavHost(
+                    modifier = Modifier.padding(paddingValues),
+                    navController = navController,
+                    startDestination = LoginNav.route
+                ) {
+                    composable(route = MainNav.Home.route) {
+                        HomeScreen()
                     }
-                },
-                bottomBar = {
-                    if (MainNav.isMainRoute(currentRoute)) {
-                        NavigationBottomBar(
-                            navController = navController,
-                            currentRoute = currentRoute
+                    composable(route = MainNav.Camera.route) {
+                        CameraPermissionScreen()
+                    }
+                    composable(route = MainNav.ExpectNumber.route) {
+                        ExpectNumberScreen()
+                    }
+                    composable(route = MainNav.MyPage.route) {
+                        MyPageScreen(
+                            onNavigateToLogin = {
+                                NavigationHelper.navigateToLoginAfterLogout(
+                                    navController,
+                                    RouteName.LOGIN
+                                )
+                            }
                         )
                     }
-                },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-            )
-        }
+                    composable(route = LoginNav.route) {
+                        LoginScreen(
+                            moveToSignUp = {
+                                NavigationHelper.navigate(
+                                    navController,
+                                    RouteName.SIGNUP
+                                )
+                            },
+                            moveToAccountRecovery = {
+                                NavigationHelper.navigate(
+                                    navController,
+                                    RouteName.ACCOUNT_RECOVERY
+                                )
+                            },
+                            moveToHome = {
+                                navController.navigate(MainNav.Home.route) {
+                                    popUpTo(LoginNav.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                    composable(route = SignUpNav.route) {
+                        SignUpScreen(popBackStack = { navController.popBackStack() })
+                    }
+                    composable(route = AccountRecoveryNav.route) {
+                        AccountRecoveryScreen(
+                            moveToHome = {
+                                navController.navigate(MainNav.Home.route) {
+                                    popUpTo(LoginNav.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                    composable(route = MainNav.Statistic.route) {
+                        StatisticScreen()
+                    }
+                }
+            },
+            bottomBar = {
+                if (MainNav.isMainRoute(currentRoute)) {
+                    NavigationBottomBar(
+                        navController = navController,
+                        currentRoute = currentRoute
+                    )
+                }
+            },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        )
     }
 }
 

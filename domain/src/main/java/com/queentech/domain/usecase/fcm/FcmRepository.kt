@@ -16,6 +16,12 @@ interface FcmRepository {
     // 내부 저장소에 이메일 저장
     suspend fun saveEmailToCache(email: String)
 
+    // 알림 권한 사전 안내를 이미 표시했는지 확인
+    suspend fun hasShownNotificationPermissionPrompt(): Boolean
+
+    // 알림 권한 사전 안내 표시 이력 저장
+    suspend fun markNotificationPermissionPromptShown()
+
     // Next.js 서브 서버로 토큰 전송
     suspend fun sendTokenToServer(email: String, fcmToken: String): Result<Unit>
 

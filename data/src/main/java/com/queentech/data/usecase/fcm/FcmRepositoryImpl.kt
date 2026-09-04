@@ -37,6 +37,14 @@ class FcmRepositoryImpl @Inject constructor(
         fcmLocalDataSource.saveEmail(email)
     }
 
+    override suspend fun hasShownNotificationPermissionPrompt(): Boolean {
+        return fcmLocalDataSource.hasShownNotificationPermissionPrompt()
+    }
+
+    override suspend fun markNotificationPermissionPromptShown() {
+        fcmLocalDataSource.markNotificationPermissionPromptShown()
+    }
+
     override suspend fun sendTokenToServer(email: String, fcmToken: String): Result<Unit> {
         return try {
             fcmService.registerToken(FcmTokenRequest(email = email, fcmToken = fcmToken))

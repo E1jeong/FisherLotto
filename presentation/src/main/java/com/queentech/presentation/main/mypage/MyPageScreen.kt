@@ -1,7 +1,13 @@
 package com.queentech.presentation.main.mypage
 
+import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
@@ -37,21 +44,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.queentech.domain.model.billing.SubscriptionProduct
 import com.queentech.domain.model.billing.SubscriptionStatus
 import com.queentech.domain.model.billing.SubscriptionVerificationState
@@ -75,9 +88,41 @@ fun MyPageScreen(
 ) {
     val state by myPageViewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var notificationsEnabled by remember {
+        mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { notificationsEnabled = it },
+    )
+
+    fun openNotificationSettings() {
+        context.startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            }
+        )
+    }
 
     LaunchedEffect(Unit) {
         myPageViewModel.refreshSubscriptionStatus()
+    }
+
+    LaunchedEffect(notificationsEnabled, state.notificationPermissionPromptShown) {
+        if (notificationsEnabled && state.notificationPermissionPromptShown == false) {
+            myPageViewModel.markNotificationPermissionPromptShown()
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     myPageViewModel.collectSideEffect { sideEffect ->
@@ -101,6 +146,27 @@ fun MyPageScreen(
         state = state,
         onDeleteAccountClick = myPageViewModel::onDeleteAccountClick,
         onSubscribeClick = myPageViewModel::onSubscribeClick,
+        notificationsEnabled = notificationsEnabled,
+        onNotificationSettingsClick = ::openNotificationSettings,
+    )
+
+    ConfirmDialog(
+        visible = shouldShowNotificationPermissionPrompt(
+            sdkInt = Build.VERSION.SDK_INT,
+            notificationsEnabled = notificationsEnabled,
+            promptShown = state.notificationPermissionPromptShown,
+        ),
+        headerLabel = "NOTIFICATION",
+        title = "구독 상태 알림",
+        message = "구독 갱신, 해지 및 만료 예정 상태를 알려드려요.",
+        confirmText = "알림 받기",
+        dismissText = "나중에",
+        confirmColor = AccentBlue,
+        onConfirm = {
+            myPageViewModel.markNotificationPermissionPromptShown()
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        },
+        onDismiss = myPageViewModel::markNotificationPermissionPromptShown,
     )
 
     ConfirmDialog(
@@ -119,6 +185,8 @@ private fun MyPageContent(
     state: MyPageState,
     onDeleteAccountClick: () -> Unit = {},
     onSubscribeClick: (String) -> Unit = {},
+    notificationsEnabled: Boolean = true,
+    onNotificationSettingsClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -126,9 +194,6 @@ private fun MyPageContent(
             .background(BgDark)
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Header ──
-        MyPageHeader()
-
         // ── User Profile Section ──
         UserProfileSection(user = state.user, subscriptionStatus = state.subscriptionStatus)
 
@@ -140,6 +205,13 @@ private fun MyPageContent(
             products = state.subscriptionProducts,
             isBillingLoading = state.isBillingLoading,
             onSubscribeClick = onSubscribeClick,
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        NotificationSettingsSection(
+            notificationsEnabled = notificationsEnabled,
+            onClick = onNotificationSettingsClick,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -173,27 +245,14 @@ private fun MyPageContent(
     }
 }
 
-// ── Header ──
-
-@Composable
-private fun MyPageHeader() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(AccentBlue.copy(alpha = 0.3f), BgDark)
-                )
-            )
-            .padding(horizontal = 20.dp, vertical = 24.dp)
-    ) {
-        Text(
-            text = "마이페이지",
-            color = TextPrimary,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-        )
-    }
+internal fun shouldShowNotificationPermissionPrompt(
+    sdkInt: Int,
+    notificationsEnabled: Boolean,
+    promptShown: Boolean?,
+): Boolean {
+    return sdkInt >= Build.VERSION_CODES.TIRAMISU &&
+        !notificationsEnabled &&
+        promptShown == false
 }
 
 // ── User Profile ──
@@ -367,6 +426,55 @@ private fun SubscriptionSection(
                 )
             }
 
+        }
+    }
+}
+
+@Composable
+private fun NotificationSettingsSection(
+    notificationsEnabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SectionBg),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "구독 알림 설정",
+                tint = AccentBlue,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "구독 알림 설정",
+                    color = TextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = if (notificationsEnabled) "구독 상태 알림을 받고 있습니다." else "알림이 꺼져 있습니다.",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                )
+            }
+            Text(
+                text = if (notificationsEnabled) "설정" else "켜기",
+                color = AccentBlue,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }
