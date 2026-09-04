@@ -41,7 +41,9 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.queentech.presentation.theme.BgDark
 import com.queentech.presentation.theme.TextPrimary
@@ -220,7 +222,11 @@ private fun processImageProxy(
 ) {
     imageProxy.image?.let { image ->
         val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
-        val scanner = BarcodeScanning.getClient()
+        val scanner = BarcodeScanning.getClient(
+            BarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                .build()
+        )
         scanner.process(inputImage)
             .addOnSuccessListener { barcodes ->
                 for (barcode in barcodes) {
