@@ -131,8 +131,10 @@ private fun HomeContent(
         item {
             LotteryNewsHeader(
                 modifier = Modifier.padding(
-                    horizontal = Paddings.xlarge,
-                    vertical = Paddings.large
+                    start = Paddings.xlarge,
+                    top = Paddings.large,
+                    end = Paddings.xlarge,
+                    bottom = Paddings.none,
                 ),
                 isLoading = isNewsLoading,
                 onRefresh = onRefreshNews

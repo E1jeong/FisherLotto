@@ -18,14 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -91,7 +88,7 @@ fun StatisticScreen(viewModel: StatisticViewModel = hiltViewModel()) {
 
     StatisticContent(
         state = state,
-        onRefresh = viewModel::refresh,
+        onRetry = viewModel::retryIssuedStats,
         onLoadMore = viewModel::loadMoreData
     )
 }
@@ -99,7 +96,7 @@ fun StatisticScreen(viewModel: StatisticViewModel = hiltViewModel()) {
 @Composable
 private fun StatisticContent(
     state: StatisticState,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     onLoadMore: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(StatisticTab.COUNT) }
@@ -117,7 +114,7 @@ private fun StatisticContent(
                     .padding(Paddings.xlarge, Paddings.xlarge, Paddings.xlarge, Paddings.medium),
                 statsList = state.issuedStatsList,
                 isLoading = state.isLoading,
-                onRefresh = onRefresh,
+                onRetry = onRetry,
             )
         }
 
@@ -280,7 +277,7 @@ private fun IssuedStatsSection(
     modifier: Modifier = Modifier,
     statsList: List<GetLottoStats>,
     isLoading: Boolean,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -301,22 +298,12 @@ private fun IssuedStatsSection(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = AccentBlue
-                    )
-                    Spacer(Modifier.width(8.dp))
-                }
-                IconButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "새로고침",
-                        tint = TextSecondary
-                    )
-                }
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = AccentBlue
+                )
             }
         }
         Spacer(Modifier.height(Paddings.medium))
@@ -336,11 +323,16 @@ private fun IssuedStatsSection(
                     .padding(Paddings.xlarge),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "표시할 발급 통계 데이터가 없어요.",
-                    color = TextSecondary,
-                    fontSize = 14.sp
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "표시할 발급 통계 데이터가 없어요.",
+                        color = TextSecondary,
+                        fontSize = 14.sp
+                    )
+                    TextButton(onClick = onRetry) {
+                        Text("다시 시도")
+                    }
+                }
             }
         } else {
             statsList.forEachIndexed { index, data ->
@@ -688,7 +680,7 @@ fun StatisticScreenPreview() {
                     ),
                     isLoading = false
                 ),
-                onRefresh = {},
+                onRetry = {},
                 onLoadMore = {}
             )
         }

@@ -119,8 +119,32 @@ class StatisticViewModel @Inject constructor(
         }
     }
 
-    fun refresh() = intent {
-        loadInitialData()
+    fun retryIssuedStats() = intent {
+        if (state.isLoading) return@intent
+
+        reduce { state.copy(isLoading = true) }
+
+        val latestLotto = getLottoNumberUseCase(round = 0).getOrNull()
+        if (latestLotto == null) {
+            reduce { state.copy(isLoading = false) }
+            postSideEffect(StatisticSideEffect.Toast("최신 회차 정보를 불러오지 못했습니다."))
+            return@intent
+        }
+
+        val latestRound = latestLotto.roundInt
+        val statsStartRound = maxOf(1, latestRound - ISSUED_STATS_SIZE + 1)
+        val (fetchedStats, hasError) = fetchStatsRange(statsStartRound, latestRound)
+
+        if (hasError) {
+            postSideEffect(StatisticSideEffect.Toast("일부 회차 정보를 불러오지 못했습니다."))
+        }
+
+        reduce {
+            state.copy(
+                issuedStatsList = fetchedStats,
+                isLoading = false,
+            )
+        }
     }
 
     private suspend fun fetchLottoRange(start: Int, end: Int): Pair<List<GetLottoNumber>, Boolean> = coroutineScope {
