@@ -7,21 +7,13 @@ description: Use when working in FisherLotto and the user asks to review local c
 
 ## Inputs To Read
 
-Before reviewing changes, read:
-
-- `AGENTS.md`
-- `docs/PRD.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ADR.md`
-- `docs/TESTING.md`
-
-Then inspect changed files with Git.
+Inspect the Git diff, then follow root `AGENTS.md` for affected module gates and task-relevant wiki context. Consult the wiki's `tests/test-planning.md` only for test strategy; do not preload unrelated product or decision pages.
 
 ## Checklist
 
 Check:
 
-1. Architecture compliance: module dependencies and layer responsibilities follow `docs/ARCHITECTURE.md`.
+1. Architecture compliance: module dependencies and layer responsibilities follow root/module guides and the wiki's owning architecture decisions.
 2. Domain purity: `domain` has no Android/provider dependency leaks.
 3. Presentation boundary: `presentation` depends on domain contracts, not data implementations.
 4. Provider safety: raw provider errors, secrets, billing tokens, auth credentials, and stack traces are not exposed.

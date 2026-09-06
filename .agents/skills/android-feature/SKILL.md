@@ -7,13 +7,7 @@ description: Use when working in FisherLotto and the user asks to add, modify, o
 
 ## Context To Read First
 
-Before proposing or implementing feature work, read:
-
-- `AGENTS.md`
-- `docs/PRD.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ADR.md`
-- Relevant existing files in `domain`, `data`, `presentation`, and `app`
+Follow root `AGENTS.md` to the project wiki, then select the affected feature/architecture page and nearest module guide. Inspect only source boundaries touched by the task; reuse already-loaded context.
 
 ## Workflow
 
@@ -36,7 +30,7 @@ Before proposing or implementing feature work, read:
 ## Planning Documents
 
 - Do not create a repository-local `phases/` tree. Planned migrations and roadmap work belong in the FisherLotto Obsidian project wiki, as required by `AGENTS.md`.
-- Write implementation plans, task documents, and walkthroughs in Korean.
+- Follow root guidance for report and maintained-document language.
 - Keep acceptance criteria concrete and include the smallest Gradle command that verifies the planned behavior.
 
 ## Output Expectations

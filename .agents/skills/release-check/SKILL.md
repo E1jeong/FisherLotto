@@ -8,12 +8,11 @@ description: Use when working in FisherLotto and the user asks to prepare, revie
 ## Context To Read First
 
 - `AGENTS.md`
-- `docs/PRD.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ADR.md`
 - `docs/RELEASE.md`
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
+
+Resolve the wiki through root guidance. Read only release-relevant policy or feature pages; product and architecture history are not mandatory release inputs.
 
 ## Checklist
 
