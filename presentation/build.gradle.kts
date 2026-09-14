@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
     id("dagger.hilt.android.plugin")
     alias(libs.plugins.ksp)
 }
@@ -92,7 +91,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material3)
     implementation(libs.material.icon.extended)
-    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -112,15 +110,9 @@ dependencies {
     implementation(libs.google.ads)
     implementation(libs.google.guava)
 
-    implementation(libs.coil.compose)
-
     implementation(libs.orbit.core)
     implementation(libs.orbit.compose)
     implementation(libs.orbit.viewmodel)
-
-    implementation(libs.paging.compose)
-    implementation(libs.paging.runtime)
-    implementation(libs.paging.common)
 
     implementation(libs.camera)
     implementation(libs.camera.lifecycle)

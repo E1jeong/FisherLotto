@@ -3,7 +3,6 @@ package com.queentech.data.di
 import com.queentech.data.BuildConfig
 import com.queentech.data.model.service.BillingService
 import com.queentech.data.model.service.FcmService
-import com.queentech.data.model.service.LottoService
 import com.queentech.data.model.service.SubLottoService
 import com.queentech.data.model.service.UserService
 import dagger.Module
@@ -18,7 +17,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Named
 
 
-const val LOTTO_SERVER_URL = "http://www.fisherlotto.com:10907/"
 const val LOTTO_SUB_BACKEND_URL = "https://www.fisherlotto.com:3001/"
 
 @Module
@@ -38,24 +36,6 @@ object RetrofitModule {
             .writeTimeout(30, TimeUnit.SECONDS) // 쓰기 타임아웃을 30초로 설정
             .readTimeout(30, TimeUnit.SECONDS) // 읽기 타임아웃을 30초로 설정
             .build()
-    }
-
-    // --- 메인서버 Retrofit ---
-    @Provides
-    @Named("lotto")
-    fun provideRetrofit(client: OkHttpClient): Retrofit {
-        val gsonConverterFactory = GsonConverterFactory.create()
-
-        return Retrofit.Builder()
-            .baseUrl(LOTTO_SERVER_URL)
-            .addConverterFactory(gsonConverterFactory)
-            .client(client)
-            .build()
-    }
-
-    @Provides
-    fun provideLottoService(@Named("lotto") retrofit: Retrofit): LottoService {
-        return retrofit.create(LottoService::class.java)
     }
 
     // --- 서브서버 Retrofit ---

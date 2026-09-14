@@ -65,14 +65,9 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.retrofit.converter.serialization)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
-    testImplementation(libs.retrofit.converter.moshi)
-    testImplementation(libs.moshi)
-    testImplementation(libs.moshi.kotlin)
-    testImplementation(libs.okhttp.mockwebserver)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

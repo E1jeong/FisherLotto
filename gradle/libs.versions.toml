@@ -16,13 +16,10 @@ navigationCompose = "2.8.5"
 navigationComposeHilt = "1.2.0"
 room = "2.6.1"
 gson = "2.10.1"
-coil = "2.3.0"
 retrofit = "2.9.0"
 orbit = "6.1.0"
-paging = "3.3.5"
 datastore = "1.1.1"
 camera = "1.4.1"
-constraintlayout = "1.1.0"
 serialization = "1.6.3"
 mlkit = "17.3.0"
 googleServices = "4.4.2"
@@ -31,7 +28,6 @@ jsoup = "1.15.3"
 okhttp = "4.12.0"
 turbine = "1.1.0"
 mockk = "1.13.12"
-moshi = "1.15.1"
 coroutines = "1.8.1"
 ksp = "2.0.0-1.0.24"
 billing = "9.1.0"
@@ -57,7 +53,6 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 material-icon-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constraintlayout" }
 androidx-test-core = { group = "androidx.test", name = "core", version = "1.6.1" }
 
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
@@ -77,16 +72,11 @@ androidx-room-testing = { group = "androidx.room", name = "room-testing", versio
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 google-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
-coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-retrofit-converter-serialization = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version = "1.0.0" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-retrofit-converter-moshi = {group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit"}
 
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
-okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 
 jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 
@@ -94,10 +84,6 @@ orbit-core = { group = "org.orbit-mvi", name = "orbit-core", version.ref = "orbi
 orbit-viewmodel = { group = "org.orbit-mvi", name = "orbit-viewmodel", version.ref = "orbit" }
 orbit-compose = { group = "org.orbit-mvi", name = "orbit-compose", version.ref = "orbit" }
 orbit-test = { group = "org.orbit-mvi", name = "orbit-test", version.ref = "orbit" }
-
-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
-paging-common = { group = "androidx.paging", name = "paging-common", version.ref = "paging" }
-paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 
 datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
@@ -107,18 +93,13 @@ camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "
 mlkit = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit" }
 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk"}
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine"}
-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi"}
-moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 
 lottie-compose = {group = "com.airbnb.android", name="lottie-compose", version="6.6.6"}
-browser = {group = "androidx.browser", name="browser", version="1.8.0"}
 
 google-billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
 google-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "googleAds" }

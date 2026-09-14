@@ -20,7 +20,7 @@
 | **QR 스캔 이력** | 스캔한 복권 QR 이력 및 당첨 결과 로컬 저장 (Room DB) | ✅ |
 | **로또 뉴스** | Google News RSS 기반 로또 관련 최신 뉴스 제공 (30분 캐싱) | ✅ |
 | **예상 번호** | 리워드 광고 시청 후 주간 예상 번호 발급 (주 1회, 토요일 마감) | ✅ |
-| **당첨 통계** | 회차별 등수 당첨자 수 통계 테이블 (Paging 3 기반 페이지네이션) | ✅ |
+| **당첨 통계** | 회차별 등수 당첨자 수 통계 테이블 (직접 구현한 무한 스크롤) | ✅ |
 | **로그인 / 회원가입** | 이메일 로그인 / 회원가입 | ✅ |
 | **마이페이지** | 사용자 정보 관리 + 구독 관리 + 회원탈퇴 | ✅ |
 | **구독 서비스** | Google Play Billing 기반 구독 결제 — 광고 제거, 예상번호 발급 횟수 증가, 지난주 예상번호 당첨 확인 | ✅ |
@@ -39,16 +39,13 @@
 - **Jetpack Compose** (BOM 2024.12.01)
 - **Material 3**
 - **Navigation Compose** 2.8.5 — 하단 내비게이션 기반 5탭 구조
-- **Paging 3** 3.3.5 — 통계 탭 페이지네이션
-- **Coil** — 이미지 로딩
 - **Lottie Compose** — 애니메이션
-- **ConstraintLayout Compose**
 
 ### 네트워크 및 데이터
 
 - **Retrofit** 2.9.0 + **OkHttp** 4.12.0 — REST API 통신 (타임아웃 30초, 로깅 인터셉터)
-- **@Named 다중 Retrofit** — 메인 서버(`fisherlotto.com:10907`, HTTP) / 서브 서버(`fisherlotto.com:3001`, HTTPS) 분리 관리
-- **Kotlinx Serialization / Gson** — JSON 직렬화
+- **@Named Retrofit** — 서브 백엔드(`https://www.fisherlotto.com:3001/`) 단일 클라이언트
+- **Kotlinx Serialization / Gson** — JSON 직렬화 (스캔 이력은 Serialization, API는 Gson)
 - **Room** 2.6.1 — 로컬 데이터베이스 (예상번호 발급 이력 + QR 스캔 이력, DB v3)
 - **DataStore** 1.1.1 — 사용자 정보 캐시 저장
 - **Jsoup** — Google News RSS 파싱
@@ -60,7 +57,7 @@
 
 ### 결제 및 광고
 
-- **Google Play Billing** 7.1.1 — 구독 상품 결제, 상태 관리, 구매 복원
+- **Google Play Billing** 9.1.0 — 구독 상품 결제, 상태 관리, 구매 복원
 - **Google AdMob** 23.0.0 — 리워드 광고 (예상 번호 발급 시)
 
 ### 알림
@@ -80,7 +77,6 @@
 
 - **JUnit 4** + **MockK** 1.13.12 — 단위 테스트
 - **Turbine** 1.1.0 — Flow 테스트
-- **MockWebServer** — API 테스트
 
 ## 모듈 구조
 
@@ -107,7 +103,7 @@ data → domain
 
 - **의존성 역전 원칙(DIP)** — 유스케이스·저장소 인터페이스를 `domain`에 정의, 구현체는 `data`에 위치
 - **Hilt @Binds** — 유스케이스 인터페이스와 구현체를 연결 (`LottoModule`, `NewsModule`, `BillingModule`)
-- **@Named Retrofit** — 메인 서버(HTTP) / 서브 서버(HTTPS) 인스턴스를 분리 관리
+- **@Named Retrofit** — 서브 백엔드 HTTPS 클라이언트를 이름으로 주입
 - **Orbit MVI** — ViewModel의 상태 관리를 단방향으로 통일하여 예측 가능한 UI 상태 유지
 - **Room 마이그레이션** — DB v1 → v2 (scan_history 테이블 추가) → v3 (bestRank 컬럼 추가, matchCount 제거)
 - **라이브러리 버전 목록** — `libs.versions.toml`로 라이브러리 버전 중앙 관리
@@ -122,12 +118,12 @@ data → domain
 
 - **Android Studio**: Ladybug 이상
 - **Kotlin**: 2.0.0
-- **AGP**: 8.7.3
+- **AGP**: 8.10.1
 - **KSP**: 2.0.0-1.0.24
 - **최소 지원 SDK**: 26 (Android 8.0)
-- **대상 SDK**: 35
+- **대상 SDK**: 36
 - **JDK**: 17
-- **앱 버전**: 0.0.6 (versionCode 6)
+- **앱 버전**: 0.0.7 (versionCode 7)
 
 ## 블로그
 
