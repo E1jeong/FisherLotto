@@ -91,7 +91,12 @@ class BillingClientWrapper @Inject constructor(
         }
     }
 
-    fun launchBillingFlow(activity: Activity, productDetails: ProductDetails, offerToken: String): BillingResult {
+    fun launchBillingFlow(
+        activity: Activity,
+        productDetails: ProductDetails,
+        offerToken: String,
+        obfuscatedAccountId: String,
+    ): BillingResult {
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
                 .setProductDetails(productDetails)
@@ -101,6 +106,7 @@ class BillingClientWrapper @Inject constructor(
 
         val billingFlowParams = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(productDetailsParamsList)
+            .setObfuscatedAccountId(obfuscatedAccountId)
             .build()
 
         return billingClient.launchBillingFlow(activity, billingFlowParams)

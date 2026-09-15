@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
@@ -94,7 +95,15 @@ class BillingRepositoryImpl @Inject constructor(
         val offerToken = productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
             ?: throw IllegalStateException("No offer available for: $productId")
 
-        val billingResult = billingClientWrapper.launchBillingFlow(activity, productDetails, offerToken)
+        val email = userLocalDataSource.userFlow.firstOrNull()?.email
+            ?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("Login required")
+        val billingResult = billingClientWrapper.launchBillingFlow(
+            activity,
+            productDetails,
+            offerToken,
+            playAccountIdForEmail(email),
+        )
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             throw IllegalStateException("Billing flow failed: ${billingResult.debugMessage}")
         }
@@ -253,6 +262,11 @@ class BillingRepositoryImpl @Inject constructor(
             userRepository.updateTier(User.TIER_FREE)
         }
         return Result.success(_subscriptionStatus.value)
+    }
+
+    private fun playAccountIdForEmail(email: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(email.toByteArray(Charsets.UTF_8))
+        return bytes.joinToString("") { "%02x".format(it.toInt() and 0xFF) }
     }
 
     private fun setVerificationFailed() {
