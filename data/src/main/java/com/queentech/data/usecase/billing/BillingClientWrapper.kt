@@ -15,8 +15,12 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -29,7 +33,8 @@ class BillingClientWrapper @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : PurchasesUpdatedListener {
 
-    private val _purchasesUpdated = MutableSharedFlow<Pair<BillingResult, List<Purchase>?>>(extraBufferCapacity = 1)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _purchasesUpdated = MutableSharedFlow<Pair<BillingResult, List<Purchase>?>>(extraBufferCapacity = 16)
     val purchasesUpdated = _purchasesUpdated.asSharedFlow()
 
     val billingClient: BillingClient = BillingClient.newBuilder(context)
@@ -40,7 +45,9 @@ class BillingClientWrapper @Inject constructor(
     private val connectionMutex = Mutex()
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
-        _purchasesUpdated.tryEmit(billingResult to purchases)
+        scope.launch {
+            _purchasesUpdated.emit(billingResult to purchases)
+        }
     }
 
     suspend fun ensureConnected(): Boolean = connectionMutex.withLock {

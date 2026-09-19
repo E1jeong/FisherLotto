@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -87,5 +88,47 @@ class MyPageViewModelTest {
         }
 
         coVerify(exactly = 1) { fcmRepository.markNotificationPermissionPromptShown() }
+    }
+
+    @Test
+    fun `신규 결제 캐시 초기화 이벤트가 오면 재발급 안내 다이얼로그를 표시한다`() = runTest {
+        val resetEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        every { userRepository.currentUser } returns MutableStateFlow(null)
+        every { billingRepository.subscriptionStatus } returns emptyFlow()
+        every { billingRepository.expectedNumberResetEvents } returns resetEvents
+        coEvery { billingRepository.querySubscriptionProducts() } returns Result.success(emptyList())
+        coEvery { fcmRepository.hasShownNotificationPermissionPrompt() } returns true
+        val viewModel = MyPageViewModel(userRepository, billingRepository, fcmRepository)
+
+        viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.notificationPermissionPromptShown == true) {
+                    break
+                }
+            }
+
+            resetEvents.emit(Unit)
+
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.showExpectedNumberResetDialog) {
+                    break
+                }
+            }
+
+            viewModel.dismissExpectedNumberResetDialog()
+
+            while (true) {
+                val item = awaitItem()
+                if (item is Item.StateItem && !item.value.showExpectedNumberResetDialog) {
+                    break
+                }
+            }
+            cancelAndIgnoreRemainingItems()
+        }
     }
 }

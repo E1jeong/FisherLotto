@@ -42,6 +42,7 @@ fun ConfirmDialog(
     message: String,
     confirmText: String = "예",
     dismissText: String = "아니오",
+    showDismissButton: Boolean = true,
     headerAccentColor: Color = AccentGold,
     confirmColor: Color = AccentRed,
     dismissColor: Color = AccentBlue,
@@ -136,15 +137,17 @@ fun ConfirmDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            text = dismissText,
-                            color = dismissColor,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (showDismissButton) {
+                        TextButton(onClick = onDismiss) {
+                            Text(
+                                text = dismissText,
+                                color = dismissColor,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = onConfirm) {
                         Text(
                             text = confirmText,

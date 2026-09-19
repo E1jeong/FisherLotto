@@ -105,10 +105,6 @@ fun MyPageScreen(
         )
     }
 
-    LaunchedEffect(Unit) {
-        myPageViewModel.refreshSubscriptionStatus()
-    }
-
     LaunchedEffect(notificationsEnabled, state.notificationPermissionPromptShown) {
         if (notificationsEnabled && state.notificationPermissionPromptShown == false) {
             myPageViewModel.markNotificationPermissionPromptShown()
@@ -119,6 +115,7 @@ fun MyPageScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+                myPageViewModel.refreshSubscriptionStatus()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -177,6 +174,18 @@ fun MyPageScreen(
         isLoading = state.isDeleting,
         onConfirm = myPageViewModel::onDeleteAccountConfirm,
         onDismiss = myPageViewModel::dismissDeleteAccountDialog,
+    )
+
+    ConfirmDialog(
+        visible = state.showExpectedNumberResetDialog,
+        headerLabel = "PREMIUM",
+        title = "구독 혜택이 적용되었습니다",
+        message = "당첨 예상번호 화면에서 새로운 번호를 다시 발급해 주세요.",
+        confirmText = "확인",
+        showDismissButton = false,
+        confirmColor = AccentBlue,
+        onConfirm = myPageViewModel::dismissExpectedNumberResetDialog,
+        onDismiss = myPageViewModel::dismissExpectedNumberResetDialog,
     )
 }
 

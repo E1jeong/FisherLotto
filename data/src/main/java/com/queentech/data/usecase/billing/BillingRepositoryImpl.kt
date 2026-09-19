@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.security.MessageDigest
 import java.util.Calendar
 import java.util.TimeZone
@@ -49,6 +51,9 @@ class BillingRepositoryImpl @Inject constructor(
 
     private val _expectedNumberResetEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     override val expectedNumberResetEvents: Flow<Unit> = _expectedNumberResetEvents.asSharedFlow()
+
+    private val purchaseMutex = Mutex()
+    private val handledPurchaseTokens = mutableSetOf<String>()
 
     private var cachedProductDetails = mutableMapOf<String, com.android.billingclient.api.ProductDetails>()
 
@@ -111,15 +116,24 @@ class BillingRepositoryImpl @Inject constructor(
 
     private suspend fun handlePurchases(purchases: List<Purchase>) {
         for (purchase in purchases) {
-            if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                val receiptSent = sendReceiptToServer(purchase, resetExpectedNumbersOnSuccess = true)
-                if (receiptSent) {
-                    val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
-                    if (!acknowledged) {
-                        Log.e(TAG, "Failed to acknowledge purchase: ${purchase.orderId}")
-                    }
+            handleNewPurchase(purchase)
+        }
+    }
+
+    private suspend fun handleNewPurchase(purchase: Purchase): Boolean {
+        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return false
+        return purchaseMutex.withLock {
+            if (purchase.isAcknowledged) return@withLock false
+            if (purchase.purchaseToken in handledPurchaseTokens) return@withLock false
+            val receiptSent = sendReceiptToServer(purchase, resetExpectedNumbersOnSuccess = true)
+            if (receiptSent) {
+                handledPurchaseTokens.add(purchase.purchaseToken)
+                val acknowledged = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
+                if (!acknowledged) {
+                    Log.e(TAG, "Failed to acknowledge purchase: ${purchase.orderId}")
                 }
             }
+            receiptSent
         }
     }
 
@@ -195,6 +209,10 @@ class BillingRepositoryImpl @Inject constructor(
         }
 
         if (activePurchase != null) {
+            if (!activePurchase.isAcknowledged && handleNewPurchase(activePurchase)) {
+                return Result.success(_subscriptionStatus.value)
+            }
+
             val productId = activePurchase.products.firstOrNull(PRODUCT_IDS::contains)
             val serverResponse = try {
                 val response = billingService.querySubscription(

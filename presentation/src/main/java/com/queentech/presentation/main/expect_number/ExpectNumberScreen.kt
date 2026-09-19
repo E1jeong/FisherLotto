@@ -134,6 +134,10 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.onScreenShown()
+    }
+
     InitExpectNumberScreen(
         context = context,
         viewModel = viewModel,

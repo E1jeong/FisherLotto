@@ -227,6 +227,10 @@ class ExpectNumberViewModel @Inject constructor(
         }
     }
 
+    fun onScreenShown() = intent {
+        refreshNumbers()
+    }
+
     fun dismissIssueWindowClosedDialog() = intent {
         reduce { state.copy(showIssueWindowClosedDialog = false) }
     }

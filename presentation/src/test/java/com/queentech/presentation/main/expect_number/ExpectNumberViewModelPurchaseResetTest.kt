@@ -100,4 +100,34 @@ class ExpectNumberViewModelPurchaseResetTest {
 
         coVerify(exactly = 0) { lottoIssueRepository.deleteWeek(any()) }
     }
+
+    @Test
+    fun `화면이 다시 보이면 Room을 다시 읽어 미발급 상태를 반영한다`() = runTest {
+        every { billingRepository.expectedNumberResetEvents } returns emptyFlow()
+        val vm = viewModel(storedThisWeek = listOf("1,2,3,4,5,6"))
+
+        vm.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            var issuedStateSeen = false
+            while (!issuedStateSeen) {
+                val item = awaitItem()
+                if (item is Item.StateItem && item.value.isThisWeekIssued) issuedStateSeen = true
+            }
+
+            coEvery { lottoIssueRepository.getThisWeekNumbers(any()) } returns emptyList()
+            vm.onScreenShown()
+
+            var resetSeen = false
+            while (!resetSeen) {
+                val item = awaitItem()
+                if (item is Item.StateItem && !item.value.isThisWeekIssued) resetSeen = true
+            }
+            cancelAndIgnoreRemainingItems()
+        }
+
+        assertFalse(vm.container.stateFlow.value.isThisWeekIssued)
+        assertTrue(vm.container.stateFlow.value.thisWeekNumbers.isEmpty())
+    }
 }

@@ -65,8 +65,12 @@ class MyPageViewModel @Inject constructor(
 
     private fun observeBillingReset() = intent {
         billingRepository.expectedNumberResetEvents.collect {
-            postSideEffect(MyPageSideEffect.Toast("구독 혜택이 적용되었습니다. 당첨 예상번호 화면에서 새로운 번호를 발급받아 보세요."))
+            reduce { state.copy(showExpectedNumberResetDialog = true) }
         }
+    }
+
+    fun dismissExpectedNumberResetDialog() = intent {
+        reduce { state.copy(showExpectedNumberResetDialog = false) }
     }
 
     private fun loadSubscriptionStatus() = intent {
@@ -156,6 +160,7 @@ data class MyPageState(
     val subscriptionProducts: List<SubscriptionProduct> = emptyList(),
     val isBillingLoading: Boolean = false,
     val showDeleteAccountDialog: Boolean = false,
+    val showExpectedNumberResetDialog: Boolean = false,
     val isDeleting: Boolean = false,
     val notificationPermissionPromptShown: Boolean? = null,
 )
