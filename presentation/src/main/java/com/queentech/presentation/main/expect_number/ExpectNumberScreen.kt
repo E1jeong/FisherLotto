@@ -1,8 +1,5 @@
 package com.queentech.presentation.main.expect_number
 
-import android.app.Activity
-import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -34,12 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,11 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.rewarded.RewardedAd
-import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import com.queentech.presentation.BuildConfig
 import com.queentech.presentation.theme.AccentBlue
 import com.queentech.presentation.theme.AccentGold
 import com.queentech.presentation.theme.BgDark
@@ -70,97 +56,23 @@ import com.queentech.presentation.theme.SectionBg
 import com.queentech.presentation.theme.TextPrimary
 import com.queentech.presentation.theme.TextSecondary
 import com.queentech.presentation.util.ColorHelper
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectSideEffect
-
-private const val TAG = "ExpectNumberScreen"
 
 @Composable
 fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
     val state by viewModel.container.stateFlow.collectAsState()
     val context = LocalContext.current
-    val activity = context as? Activity
-    val coroutineScope = rememberCoroutineScope()
 
-    // 보상형 광고 객체 및 로딩 상태
-    var rewardedAd by remember { mutableStateOf<RewardedAd?>(null) }
-    var isAdLoading by remember { mutableStateOf(false) }
-    var isWaitingForAdToShow by remember { mutableStateOf(false) }
-    var adRetryTrigger by remember { mutableIntStateOf(0) }
-
-    // 백그라운드 광고 사전 로드 및 실패 시 자동 재시도
-    LaunchedEffect(adRetryTrigger) {
-        if (rewardedAd == null && !isAdLoading) {
-            isAdLoading = true
-            loadRewardedAd(
-                context = context,
-                onAdLoaded = { ad ->
-                    rewardedAd = ad
-                    isAdLoading = false
-                    if (isWaitingForAdToShow && activity != null) {
-                        isWaitingForAdToShow = false
-                        ad.show(activity) {
-                            viewModel.onAdWatchedSuccessfully()
-                        }
-                        rewardedAd = null
-                        adRetryTrigger++
-                    }
-                },
-                onAdFailed = {
-                    isAdLoading = false
-                    if (isWaitingForAdToShow) {
-                        isWaitingForAdToShow = false
-                        Toast.makeText(context, "광고를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                    }
-                    // 3초 후 백그라운드 재시도
-                    coroutineScope.launch {
-                        delay(3000L)
-                        adRetryTrigger++
-                    }
-                }
-            )
-        }
-    }
-
-    // 광고 대기 타임아웃 방어 (최대 5초 대기)
-    LaunchedEffect(isWaitingForAdToShow) {
-        if (isWaitingForAdToShow) {
-            delay(5000L)
-            if (isWaitingForAdToShow) {
-                isWaitingForAdToShow = false
-                Toast.makeText(context, "광고 로딩 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+    viewModel.collectSideEffect { sideEffect ->
+        when (sideEffect) {
+            is ExpectNumberSideEffect.Toast -> {
+                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     LaunchedEffect(Unit) {
         viewModel.onScreenShown()
-    }
-
-    InitExpectNumberScreen(
-        context = context,
-        viewModel = viewModel,
-        rewardedAd = rewardedAd,
-        onShowAd = { ad ->
-            if (activity != null) {
-                ad.show(activity) {
-                    viewModel.onAdWatchedSuccessfully()
-                }
-                rewardedAd = null
-                adRetryTrigger++
-            }
-        },
-        onWaitForAd = {
-            isWaitingForAdToShow = true
-            if (!isAdLoading && rewardedAd == null) {
-                adRetryTrigger++
-            }
-        }
-    )
-
-    if (isWaitingForAdToShow) {
-        AdLoadingDialog()
     }
 
     if (state.isLoading) {
@@ -179,36 +91,6 @@ fun ExpectNumberScreen(viewModel: ExpectNumberViewModel = hiltViewModel()) {
         onNumberIssueClick = viewModel::onExpectNumberClick,
         onDismissIssueWindowClosedDialog = viewModel::dismissIssueWindowClosedDialog
     )
-}
-
-@Composable
-private fun InitExpectNumberScreen(
-    context: Context,
-    viewModel: ExpectNumberViewModel,
-    rewardedAd: RewardedAd?,
-    onShowAd: (RewardedAd) -> Unit,
-    onWaitForAd: () -> Unit
-) {
-    val currentRewardedAd by rememberUpdatedState(rewardedAd)
-    val currentOnShowAd by rememberUpdatedState(onShowAd)
-    val currentOnWaitForAd by rememberUpdatedState(onWaitForAd)
-
-    viewModel.collectSideEffect { sideEffect ->
-        when (sideEffect) {
-            is ExpectNumberSideEffect.Toast -> {
-                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
-            }
-
-            is ExpectNumberSideEffect.ShowRewardAd -> {
-                val ad = currentRewardedAd
-                if (ad != null) {
-                    currentOnShowAd(ad)
-                } else {
-                    currentOnWaitForAd()
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -240,61 +122,6 @@ private fun IssuingNumberLoadingDialog() {
             }
         }
     }
-}
-
-@Composable
-private fun AdLoadingDialog() {
-    Dialog(onDismissRequest = {}) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgDark,
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator(
-                    color = AccentBlue,
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "광고를 불러오는 중입니다...",
-                    color = TextPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-    }
-}
-
-private fun loadRewardedAd(
-    context: Context,
-    onAdLoaded: (RewardedAd) -> Unit,
-    onAdFailed: (LoadAdError) -> Unit
-) {
-    val adRequest = AdRequest.Builder().build()
-    RewardedAd.load(
-        context,
-        BuildConfig.ADMOB_REWARDED_AD_UNIT_ID,
-        adRequest,
-        object : RewardedAdLoadCallback() {
-            override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.w(TAG, "RewardedAd failed to load: code=${adError.code}, message=${adError.message}")
-                onAdFailed(adError)
-            }
-
-            override fun onAdLoaded(ad: RewardedAd) {
-                Log.d(TAG, "RewardedAd loaded successfully")
-                onAdLoaded(ad)
-            }
-        }
-    )
 }
 
 @Composable

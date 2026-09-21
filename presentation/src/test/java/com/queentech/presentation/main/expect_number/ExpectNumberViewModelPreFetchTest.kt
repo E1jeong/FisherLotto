@@ -64,7 +64,7 @@ class ExpectNumberViewModelPreFetchTest {
     }
 
     @Test
-    fun `서버에 번호가 없으면 광고를 띄우지 않고 안내 토스트를 표시한다`() = runTest {
+    fun `서버에 번호가 없으면 안내 토스트를 표시하고 저장하지 않는다`() = runTest {
         coEvery { getExpectNumberUseCase(any(), any()) } returns Result.success(
             GetExpectNumber(count = 0, lotto = emptyList())
         )
@@ -98,7 +98,7 @@ class ExpectNumberViewModelPreFetchTest {
     }
 
     @Test
-    fun `서버에 번호가 있으면 무료 회원은 광고 요청을 보낸다`() = runTest {
+    fun `서버에 번호가 있으면 무료 회원도 광고 없이 즉시 저장된다`() = runTest {
         val mockNumbers = listOf("1,2,3,4,5,6", "7,8,9,10,11,12")
         coEvery { getExpectNumberUseCase(any(), any()) } returns Result.success(
             GetExpectNumber(count = 2, lotto = mockNumbers)
@@ -114,49 +114,6 @@ class ExpectNumberViewModelPreFetchTest {
             runOnCreate()
 
             vm.onExpectNumberClick()
-
-            var adSeen = false
-            while (!adSeen) {
-                when (val item = awaitItem()) {
-                    is Item.SideEffectItem -> {
-                        assertEquals(ExpectNumberSideEffect.ShowRewardAd, item.value)
-                        adSeen = true
-                    }
-                    is Item.StateItem -> Unit
-                }
-            }
-            cancelAndIgnoreRemainingItems()
-        }
-    }
-
-    @Test
-    fun `광고 시청 완료 후 사전 조회된 번호가 정상 저장 및 반영된다`() = runTest {
-        val mockNumbers = listOf("1,2,3,4,5,6", "7,8,9,10,11,12")
-        coEvery { getExpectNumberUseCase(any(), any()) } returns Result.success(
-            GetExpectNumber(count = 2, lotto = mockNumbers)
-        )
-
-        val vm = createViewModel()
-
-        vm.test(this) {
-            expectInitialState()
-            runOnCreate()
-
-            vm.onExpectNumberClick()
-
-            var adSeen = false
-            while (!adSeen) {
-                when (val item = awaitItem()) {
-                    is Item.SideEffectItem -> {
-                        if (item.value == ExpectNumberSideEffect.ShowRewardAd) {
-                            adSeen = true
-                        }
-                    }
-                    is Item.StateItem -> Unit
-                }
-            }
-
-            vm.onAdWatchedSuccessfully()
 
             var issuedSeen = false
             while (!issuedSeen) {
@@ -175,5 +132,42 @@ class ExpectNumberViewModelPreFetchTest {
 
         coVerify(exactly = 1) { lottoIssueRepository.saveIssue(mockNumbers, any()) }
         assertTrue(vm.container.stateFlow.value.isThisWeekIssued)
+    }
+
+    @Test
+    fun `저장 직전에 이미 발급된 주이면 중복 저장하지 않는다`() = runTest {
+        val mockNumbers = listOf("1,2,3,4,5,6", "7,8,9,10,11,12")
+        coEvery { getExpectNumberUseCase(any(), any()) } returns Result.success(
+            GetExpectNumber(count = 2, lotto = mockNumbers)
+        )
+
+        val vm = createViewModel()
+        coEvery { lottoIssueRepository.isThisWeekIssued(any()) } returnsMany listOf(false, true)
+
+        vm.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            vm.onExpectNumberClick()
+
+            var toastSeen = false
+            while (!toastSeen) {
+                when (val item = awaitItem()) {
+                    is Item.SideEffectItem -> {
+                        assertEquals(
+                            ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"),
+                            item.value
+                        )
+                        toastSeen = true
+                    }
+                    is Item.StateItem -> Unit
+                }
+            }
+            cancelAndIgnoreRemainingItems()
+        }
+
+        coVerify(exactly = 0) { lottoIssueRepository.saveIssue(any(), any()) }
+        assertFalse(vm.container.stateFlow.value.isLoading)
+        assertFalse(vm.container.stateFlow.value.isThisWeekIssued)
     }
 }

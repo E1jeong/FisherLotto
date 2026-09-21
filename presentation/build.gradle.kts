@@ -1,27 +1,9 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("dagger.hilt.android.plugin")
     alias(libs.plugins.ksp)
-}
-
-// 보상형 광고 단위 ID. 실 ID는 secrets.properties 또는 local.properties의 ADMOB_REWARDED_AD_UNIT_ID로 주입하고,
-// 값이 없거나 debug 빌드일 때는 Google 공식 테스트 ID를 쓴다.
-val ADMOB_TEST_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
-
-fun getSecretOrLocalProperty(key: String, defaultValue: String = ""): String {
-    val secretsFile = rootProject.file("secrets.properties")
-    if (secretsFile.exists()) {
-        val props = Properties()
-        secretsFile.inputStream().use { props.load(it) }
-        val value = props.getProperty(key)
-        if (!value.isNullOrBlank()) return value
-    }
-    val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
-    return localProperties.getProperty(key, defaultValue) ?: defaultValue
 }
 
 android {
@@ -33,24 +15,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-
-        buildConfigField(
-            "String",
-            "ADMOB_REWARDED_AD_UNIT_ID",
-            "\"${getSecretOrLocalProperty("ADMOB_REWARDED_AD_UNIT_ID", ADMOB_TEST_REWARDED_AD_UNIT_ID)}\""
-        )
     }
 
     buildTypes {
-        debug {
-            // 개발 중 실제 광고를 클릭하면 무효 트래픽으로 AdMob 계정이 정지될 수 있다.
-            buildConfigField(
-                "String",
-                "ADMOB_REWARDED_AD_UNIT_ID",
-                "\"$ADMOB_TEST_REWARDED_AD_UNIT_ID\""
-            )
-        }
-
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -65,9 +32,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-    }
-    buildFeatures {
-        buildConfig = true
     }
 }
 
@@ -107,7 +71,6 @@ dependencies {
     kspAndroidTest(libs.google.hilt.compiler)
 
     implementation(libs.google.gson)
-    implementation(libs.google.ads)
     implementation(libs.google.guava)
 
     implementation(libs.orbit.core)

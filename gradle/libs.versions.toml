@@ -31,7 +31,6 @@ mockk = "1.13.12"
 coroutines = "1.8.1"
 ksp = "2.0.0-1.0.24"
 billing = "9.1.0"
-googleAds = "23.0.0"
 guava = "32.1.3-android"
 workManager = "2.9.0"
 
@@ -102,7 +101,6 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 lottie-compose = {group = "com.airbnb.android", name="lottie-compose", version="6.6.6"}
 
 google-billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
-google-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "googleAds" }
 google-guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 

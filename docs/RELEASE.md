@@ -24,14 +24,15 @@ Only run release build commands when local signing and SDK setup are available.
 - Do not commit secret values from `local.properties`.
 - Do not change signing passwords or key aliases through AI edits.
 - Treat `google-services.json` and signing files as sensitive project assets.
-- Confirm Firebase, Billing, and AdMob configuration changes are intentional.
+- Confirm Firebase and Billing configuration changes are intentional.
 
 ## Runtime Checks
 
 - Latest lotto result loads.
 - QR scan opens camera and handles invalid QR data.
 - Scan history persists after app restart.
-- Prediction number flow respects ad/subscription rules.
+- Prediction number flow issues free sets without ads and paid sets for subscribers.
+- Play Console Ads / Data Safety / privacy text match the no-ad, no-`AD_ID` binary before that AAB is published.
 - Email login state is reflected in UI and survives restart.
 - Subscription state is restored and reflected in UI.
 - FCM/local notification behavior is not broken by background restrictions.

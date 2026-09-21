@@ -9,7 +9,6 @@ import com.queentech.domain.usecase.login.UserRepository
 import com.queentech.domain.usecase.lotto.GetExpectNumberUseCase
 import com.queentech.domain.usecase.lotto.GetLottoNumberUseCase
 import com.queentech.domain.usecase.lotto.LottoIssueRepository
-import kotlinx.coroutines.flow.firstOrNull
 import com.queentech.presentation.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -51,6 +50,7 @@ class ExpectNumberViewModel @Inject constructor(
         },
     )
 
+    // Orbit intents run in parallel; serialize current-week Room writes.
     private val issueMutex = Mutex()
 
     // Room 조회와 번호 상태 반영의 원자성 보장용
@@ -108,8 +108,6 @@ class ExpectNumberViewModel @Inject constructor(
         reduce { state.copy(isIssueWindowClosed = DateUtils.isIssueWindowClosed()) }
     }
 
-    private var pendingExpectNumber: GetExpectNumber? = null
-
     fun onExpectNumberClick() = intent {
         val isIssueWindowClosed = DateUtils.isIssueWindowClosed()
         if (isIssueWindowClosed) {
@@ -140,65 +138,39 @@ class ExpectNumberViewModel @Inject constructor(
             return@intent
         }
 
-        val isSubscribed = billingRepository.subscriptionStatus.firstOrNull()?.isActive == true
-        if (isSubscribed) {
-            kotlinx.coroutines.delay(1000L)
-            applyIssuedNumbers(result, thisWeekStart)
-        } else {
-            pendingExpectNumber = result
-            reduce { state.copy(isLoading = false) }
-            postSideEffect(ExpectNumberSideEffect.ShowRewardAd)
-        }
-    }
-
-    fun onAdWatchedSuccessfully() = intent {
-        val pending = pendingExpectNumber
-        if (pending == null || pending.count <= 0 || pending.lotto.isEmpty()) {
-            postSideEffect(ExpectNumberSideEffect.Toast("발급할 번호 정보를 찾을 수 없습니다. 다시 시도해주세요."))
-            return@intent
-        }
-
-        if (!issueMutex.tryLock()) return@intent
-
-        try {
-            val thisWeekStart = DateUtils.getCurrentWeekStartMillis()
-
-            // 이중 발급 방어: 광고 콜백 중복 호출 등 예외 상황 대비
-            if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
-                postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
-                pendingExpectNumber = null
-                return@intent
-            }
-
-            reduce { state.copy(isLoading = true) }
-            kotlinx.coroutines.delay(800L)
-            applyIssuedNumbers(pending, thisWeekStart)
-            pendingExpectNumber = null
-        } finally {
-            if (issueMutex.isLocked) issueMutex.unlock()
-        }
+        kotlinx.coroutines.delay(1000L)
+        applyIssuedNumbers(result, thisWeekStart)
     }
 
     private suspend fun SimpleSyntax<ExpectNumberState, ExpectNumberSideEffect>.applyIssuedNumbers(
         result: GetExpectNumber,
         thisWeekStart: Long,
     ) {
-        lottoIssueRepository.saveIssue(
-            numbers = result.lotto,
-            weekStartMillis = thisWeekStart
-        )
+        issueMutex.withLock {
+            if (lottoIssueRepository.isThisWeekIssued(thisWeekStart)) {
+                refreshNumbers()
+                reduce { state.copy(isLoading = false) }
+                postSideEffect(ExpectNumberSideEffect.Toast("이번주에 이미 발급했습니다"))
+                return@withLock
+            }
 
-        val lastWeekStart = DateUtils.getLastWeekStartMillis()
-        val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
-
-        reduce {
-            state.copy(
-                count = result.count,
-                lastWeekNumbers = lastWeek,
-                thisWeekNumbers = result.lotto,
-                isThisWeekIssued = true,
-                isLoading = false,
+            lottoIssueRepository.saveIssue(
+                numbers = result.lotto,
+                weekStartMillis = thisWeekStart
             )
+
+            val lastWeekStart = DateUtils.getLastWeekStartMillis()
+            val lastWeek = lottoIssueRepository.getLastWeekNumbers(lastWeekStart)
+
+            reduce {
+                state.copy(
+                    count = result.count,
+                    lastWeekNumbers = lastWeek,
+                    thisWeekNumbers = result.lotto,
+                    isThisWeekIssued = true,
+                    isLoading = false,
+                )
+            }
         }
     }
 
@@ -257,5 +229,4 @@ data class ExpectNumberState(
 
 sealed interface ExpectNumberSideEffect {
     data class Toast(val message: String) : ExpectNumberSideEffect
-    object ShowRewardAd : ExpectNumberSideEffect
 }

@@ -10,10 +10,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// AdMob 앱 ID. 실 ID는 secrets.properties 또는 local.properties의 ADMOB_APP_ID로 주입하고,
-// 값이 없거나 debug 빌드일 때는 Google 공식 테스트 ID를 쓴다.
-val ADMOB_TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
-
 fun getSecretOrLocalProperty(key: String, defaultValue: String = ""): String {
     val secretsFile = rootProject.file("secrets.properties")
     if (secretsFile.exists()) {
@@ -38,9 +34,6 @@ android {
         versionName = "0.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        manifestPlaceholders["admobAppId"] =
-            getSecretOrLocalProperty("ADMOB_APP_ID", ADMOB_TEST_APP_ID)
     }
 
     signingConfigs {
@@ -55,8 +48,6 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("config")
-            // 개발 중 실제 광고를 클릭하면 무효 트래픽으로 AdMob 계정이 정지될 수 있다.
-            manifestPlaceholders["admobAppId"] = ADMOB_TEST_APP_ID
         }
 
         release {
@@ -78,23 +69,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-}
-
-// CI 러너나 개발 환경에 배포 설정이 없을 때 release 빌드 시 조기 감지한다.
-tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
-    doFirst {
-        val missing = listOf("ADMOB_APP_ID", "ADMOB_REWARDED_AD_UNIT_ID")
-            .filter { getSecretOrLocalProperty(it).isBlank() }
-
-        if (missing.isEmpty()) return@doFirst
-
-        // 메시지는 영문으로 둔다. Windows 콘솔 코드페이지에서 한글이 깨져 읽을 수 없다.
-        val message = "Missing release config in secrets.properties/local.properties: $missing"
-        if (System.getenv("CI") == "true") {
-            throw GradleException("$message - add a step that writes secrets/local.properties from GitHub Secrets.")
-        }
-        logger.warn("WARNING: $message - local verification build only, do NOT distribute this artifact.")
     }
 }
 
@@ -131,6 +105,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose.hilt)
 
-    implementation(libs.google.ads)
     implementation(libs.androidx.work.runtime.ktx)
 }

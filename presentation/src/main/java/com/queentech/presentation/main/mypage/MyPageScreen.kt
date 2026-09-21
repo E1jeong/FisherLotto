@@ -396,7 +396,7 @@ private fun SubscriptionSection(
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "광고제거, 발급 게임수 증가, 지난주 예상번호 당첨 확인",
+                text = "발급 게임수 증가, 지난주 예상번호 당첨 확인",
                 color = TextSecondary,
                 fontSize = 12.sp,
             )
