@@ -30,8 +30,8 @@ android {
         applicationId = "com.queentech.fisherlotto"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.0.7"
+        versionCode = 8
+        versionName = "0.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,7 +56,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-//            signingConfig = signingConfigs.getByName("config") // github actions 자동 배포를 위해 주석처리
+            signingConfig = signingConfigs.getByName("config") // github actions 자동 배포를 위해 주석처리
         }
     }
     compileOptions {

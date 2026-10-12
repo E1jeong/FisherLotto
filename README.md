@@ -122,7 +122,7 @@ data → domain
 - **최소 지원 SDK**: 26 (Android 8.0)
 - **대상 SDK**: 36
 - **JDK**: 17
-- **앱 버전**: 0.0.7 (versionCode 7)
+- **앱 버전**: 0.0.8 (versionCode 8)
 
 ## 블로그
 
