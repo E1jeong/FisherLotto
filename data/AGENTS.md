@@ -2,7 +2,7 @@
 
 ## Scope
 
-Repository implementations, Retrofit services, Room, DataStore, Billing, and DTO/entity-to-domain mappers.
+Repository and use-case implementations (`usecase/`), Retrofit services and DTOs (`model/`), Room, DataStore, Billing, and DTO/entity-to-domain mappers.
 
 ## Orient First
 
@@ -16,7 +16,7 @@ Depends on `domain` only. Keep DTOs, Room entities, and provider responses insid
 
 ## Change Gates
 
-- Any persisted Room schema change requires an explicit `AutoMigration` or `Migration`.
+- Any persisted Room schema change requires bumping `AppDatabase.version` and registering a `Migration` in `di/DatabaseModule.kt`; `exportSchema = false`, so `AutoMigration` is unavailable.
 - Billing entitlement and token handling must remain idempotent and provider-verified.
 
 ## Verify

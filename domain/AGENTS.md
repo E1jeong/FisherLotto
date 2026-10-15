@@ -2,7 +2,7 @@
 
 ## Scope
 
-Pure Kotlin models, repository contracts, use cases, and lotto rules.
+Pure Kotlin models and repository/use-case interfaces; both interface kinds live under `usecase/`.
 
 ## Orient First
 
@@ -11,7 +11,7 @@ Pure Kotlin models, repository contracts, use cases, and lotto rules.
 
 ## Boundary & Architecture Constraints
 
-No Android, UI, networking, persistence, DI, DTO, or entity dependencies. Repository interfaces belong here; their implementations belong in `data`.
+No Android, UI, networking, persistence, DI, DTO, or entity dependencies. Repository and use-case interfaces belong here; their implementations belong in `data`.
 
 ## Change Gates
 

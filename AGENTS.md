@@ -10,10 +10,10 @@ Report plans and results in Korean; keep the owner-facing `README.md` in Korean,
 
 | Module | Responsibility | Orient first | Local guide |
 | --- | --- | --- | --- |
-| `domain/` | Pure models, contracts, and lotto rules | `domain/src/main/java/com/queentech/domain/` | `domain/AGENTS.md` |
+| `domain/` | Pure models and repository/use-case contracts | `domain/src/main/java/com/queentech/domain/` | `domain/AGENTS.md` |
 | `data/` | Repositories, Retrofit, Room, DataStore, Billing | `data/src/main/java/com/queentech/data/` | `data/AGENTS.md` |
-| `presentation/` | Compose UI, Orbit ViewModels, navigation | `presentation/src/main/java/com/queentech/presentation/` | `presentation/AGENTS.md` |
-| `app/` | Android shell, DI, FCM, workers, release wiring | `app/src/main/` | `app/AGENTS.md` |
+| `presentation/` | Compose UI screens and Orbit ViewModels | `presentation/src/main/java/com/queentech/presentation/` | `presentation/AGENTS.md` |
+| `app/` | Android shell, DI, navigation graph, FCM, workers, signing | `app/src/main/` | `app/AGENTS.md` |
 
 Dependencies: `app -> presentation, data, domain`; `presentation -> domain`; `data -> domain`; `domain` has no project-module dependency.
 

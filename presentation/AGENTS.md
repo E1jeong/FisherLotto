@@ -2,7 +2,7 @@
 
 ## Scope
 
-Compose UI, Orbit MVI ViewModels, navigation, UI state, dialogs, and reusable components.
+Compose screens, Orbit MVI ViewModels, UI state, dialogs, and reusable components. The navigation graph lives in `app/.../navigation/`.
 
 ## Orient First
 
