@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>어부로또 계정 삭제</title>
+<style>
+  :root { --fg: #1f2328; --muted: #59636e; --bg: #ffffff; --line: #d1d9e0; --accent: #0b5cad; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg: #e6edf3; --muted: #9198a1; --bg: #0d1117; --line: #3d444d; --accent: #4493f8; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 8px; }
+  h2 { font-size: 1.15rem; margin: 36px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  p, li { margin: 6px 0; }
+  .meta { color: var(--muted); font-size: 0.9rem; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.95rem; }
+  th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>어부로또 계정 및 데이터 삭제</h1>
+<p class="meta">어부로또(Android 앱) 계정과 관련 데이터를 삭제하는 방법을 안내합니다.</p>
+
+<h2>1. 앱에서 직접 삭제</h2>
+<ol>
+  <li>어부로또 앱을 열고 로그인합니다.</li>
+  <li>하단 탭에서 <strong>내 정보</strong>로 이동합니다.</li>
+  <li><strong>회원탈퇴</strong>를 누르고 확인합니다.</li>
+</ol>
+<p>탈퇴가 완료되면 서버의 회원 정보와 기기에 저장된 데이터가 즉시 삭제됩니다.</p>
+
+<h2>2. 이메일로 삭제 요청</h2>
+<p>앱을 삭제했거나 사용할 수 없는 경우 아래 이메일로 요청할 수 있습니다.</p>
+<ul>
+  <li>받는 사람: <a href="mailto:iot@queentech.kr?subject=%EC%96%B4%EB%B6%80%EB%A1%9C%EB%98%90%20%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD">iot@queentech.kr</a></li>
+  <li>제목: 어부로또 계정 삭제 요청</li>
+  <li>내용: 가입한 이메일 주소와 휴대전화번호</li>
+</ul>
+<p>본인 확인 후 7일 이내에 삭제하고, 처리 결과를 이메일로 알려드립니다.</p>
+
+<h2>3. 삭제되는 데이터</h2>
+<table>
+  <tr><th>데이터</th><th>처리</th></tr>
+  <tr><td>이메일 주소, 이름, 휴대전화번호, 생년월일</td><td>즉시 삭제</td></tr>
+  <tr><td>푸시 알림 토큰(FCM)</td><td>즉시 삭제</td></tr>
+  <tr><td>기기에 저장된 프로필, 발급 번호 기록, QR 스캔 기록</td><td>앱에서 탈퇴하면 즉시 삭제 (이메일 요청 시에는 앱을 삭제하면 함께 지워집니다)</td></tr>
+</table>
+
+<h2>4. 보관되는 데이터</h2>
+<p>전자상거래법에 따라 아래 기록은 탈퇴 후에도 정해진 기간 동안 보관한 뒤 파기합니다.</p>
+<table>
+  <tr><th>데이터</th><th>보관 기간</th></tr>
+  <tr><td>구독 결제 기록 (Google Play 구매 토큰, 주문·상품 정보)</td><td>5년</td></tr>
+  <tr><td>소비자 불만 또는 분쟁 처리 기록</td><td>3년</td></tr>
+</table>
+
+<h2>5. 구독 해지 안내</h2>
+<p>계정을 삭제해도 Google Play 정기 구독은 자동으로 해지되지 않습니다. 결제를 멈추려면 <strong>Google Play 스토어 &gt; 프로필 &gt; 결제 및 정기 결제 &gt; 정기 결제</strong>에서 어부로또 구독을 직접 해지해 주세요.</p>
+
+<p class="meta">자세한 내용은 <a href="privacy-policy.html">개인정보처리방침</a>을 확인하세요.</p>
+</main>
+</body>
+</html>
