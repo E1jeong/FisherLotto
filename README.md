@@ -4,7 +4,7 @@
 
 ## 문서
 
-제품 요구사항·아키텍처·설계 결정·테스트 전략은 Obsidian의 `Dev/Project/Personal/FisherLotto` 위키에서 관리합니다. 위치는 [AGENTS.md](AGENTS.md)를 따라 확인하고, 현재 코드 버전의 릴리스 작업에는 [릴리스 체크리스트](docs/RELEASE.md)를 사용합니다. 기존 PRD·아키텍처·ADR·테스트 문서는 위키에 통합한 뒤 삭제했습니다.
+제품 요구사항·아키텍처·설계 결정·테스트 전략은 Obsidian의 `Dev/Project/Personal/FisherLotto` 위키에서 관리합니다. 위치는 [AGENTS.md](AGENTS.md)를 따라 확인하고, 현재 코드 버전의 릴리스 점검은 [release-check 스킬](.agents/skills/release-check/SKILL.md)을 사용합니다. 기존 PRD·아키텍처·ADR·테스트 문서는 위키에 통합한 뒤 삭제했습니다.
 
 ## 프로젝트 소개
 
