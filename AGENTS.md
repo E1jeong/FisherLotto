@@ -4,7 +4,9 @@
 
 This is a code-navigation and safety guide, not project history. Product context, decisions, and detailed code tracing live in the vault-relative `Dev/Project/Personal/FisherLotto` wiki; resolve it through `_meta/routing-tables.md` or `obsidian-wiki-sync`, then follow the vault root `AGENTS.md`.
 
-Report plans and results in Korean; keep the owner-facing `README.md` in Korean, preserving code identifiers. Use the nearest module guide before changing a module.
+Keep the owner-facing `README.md` in Korean, preserving code identifiers. Use the nearest module guide before changing a module.
+
+Repository skills: `.agents/skills/<name>/SKILL.md` (`android-feature`, `release-check`, `review`); if one matches the task and is not in your skill catalog, read it before starting.
 
 ## Code Map
 
