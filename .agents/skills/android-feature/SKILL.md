@@ -29,7 +29,7 @@ Follow root `AGENTS.md` to the project wiki, then select the affected feature/ar
 
 ## Planning Documents
 
-- Do not create a repository-local `phases/` tree. Planned migrations and roadmap work belong in the FisherLotto Obsidian project wiki, as required by `AGENTS.md`.
+- Do not create a repository-local `phases/` tree. Planned migrations and roadmap work belong in the FisherLotto Obsidian project wiki.
 - Follow root guidance for report and maintained-document language.
 - Keep acceptance criteria concrete and include the smallest Gradle command that verifies the planned behavior.
 
