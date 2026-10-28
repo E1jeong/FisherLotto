@@ -56,7 +56,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("config") // github actions 자동 배포를 위해 주석처리
+            signingConfig = signingConfigs.getByName("config") // 로컬 릴리스 빌드 서명용 (CI 자동 배포 시 jks/secrets.properties 부재로 실패 주의)
         }
     }
     compileOptions {
