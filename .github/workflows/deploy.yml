@@ -1,13 +1,47 @@
 name: FisherLotto Play Store Auto Deploy
 
 on:
-  workflow_dispatch: # 📌 우리가 확정한 '수동 실행(버튼 클릭)' 방식으로 변경했습니다!
+  push:
+    tags: ['v*'] # 버전 태그(v0.0.9 등) push 시 production draft까지 자동 업로드
 
 jobs:
   deploy:
     runs-on: ubuntu-latest # GitHub의 우분투 서버를 하나 빌려서 작업합니다.
 
     steps:
+      - name: 0. 미출시 프로덕션 draft 확인 (있으면 중단)
+        env:
+          SA_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: com.queentech.fisherlotto
+        run: |
+          set -euo pipefail
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          # 서비스 계정 JWT → 액세스 토큰
+          KEY_FILE="$RUNNER_TEMP/sa.pem"
+          printf '%s' "$SA_JSON" | jq -r .private_key > "$KEY_FILE"
+          CLIENT_EMAIL=$(printf '%s' "$SA_JSON" | jq -r .client_email)
+          NOW=$(date +%s)
+          HEADER=$(printf '%s' '{"alg":"RS256","typ":"JWT"}' | b64url)
+          CLAIM=$(jq -nc --arg iss "$CLIENT_EMAIL" --argjson iat "$NOW" \
+            '{iss:$iss,scope:"https://www.googleapis.com/auth/androidpublisher",aud:"https://oauth2.googleapis.com/token",iat:$iat,exp:($iat+600)}' | b64url)
+          SIG=$(printf '%s' "$HEADER.$CLAIM" | openssl dgst -sha256 -sign "$KEY_FILE" | b64url)
+          rm -f "$KEY_FILE"
+          TOKEN=$(curl -sSf -X POST https://oauth2.googleapis.com/token \
+            -d grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer \
+            -d assertion="$HEADER.$CLAIM.$SIG" | jq -r .access_token)
+          echo "::add-mask::$TOKEN"
+          # 임시 edit을 열어 production 트랙 조회 후 폐기
+          API="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits"
+          EDIT_ID=$(curl -sSf -X POST -H "Authorization: Bearer $TOKEN" "$API" | jq -r .id)
+          DRAFTS=$(curl -sSf -H "Authorization: Bearer $TOKEN" "$API/$EDIT_ID/tracks/production" \
+            | jq '[.releases[]? | select(.status == "draft")] | length')
+          curl -sSf -X DELETE -H "Authorization: Bearer $TOKEN" "$API/$EDIT_ID" > /dev/null
+          if [ "$DRAFTS" -gt 0 ]; then
+            echo "::error::production 트랙에 미출시 draft가 있습니다. Play Console에서 출시하거나 삭제한 뒤 다시 실행하세요."
+            exit 1
+          fi
+          echo "미출시 draft 없음 → 배포 진행"
+
       - name: 1. 어부로또 코드 가져오기
         uses: actions/checkout@v4
 
@@ -23,7 +57,8 @@ jobs:
       - name: 3. 앱 빌드하기 (App Bundle 생성)
         run: |
           chmod +x gradlew
-          ./gradlew bundleRelease
+          # versionCode: 실행 번호 - 4 (13번째 실행 = 9) / versionName: 태그에서 v 제거 (v0.0.9 → 0.0.9)
+          ./gradlew bundleRelease -PversionCode=$((GITHUB_RUN_NUMBER - 4)) -PversionName="${GITHUB_REF_NAME#v}"
 
       - name: 4. 앱 서명하기 (금고에서 키 꺼내서 도장 찍기)
         uses: ilharp/sign-android-release@v2
@@ -41,4 +76,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: com.queentech.fisherlotto
           releaseFiles: ${{steps.sign_app.outputs.signedFile}}
-          track: internal
+          track: production
+          status: draft # 프로덕션 초안으로만 업로드, 출시는 Play Console에서 수동 진행

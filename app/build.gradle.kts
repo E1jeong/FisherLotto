@@ -30,8 +30,8 @@ android {
         applicationId = "com.queentech.fisherlotto"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.0.8"
+        versionCode = project.findProperty("versionCode")?.toString()?.toInt() ?: 8 // CI는 -PversionCode로 주입
+        versionName = project.findProperty("versionName")?.toString() ?: "0.0.8" // CI는 태그(v0.0.9 → 0.0.9)로 주입
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,7 +56,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("config") // 로컬 릴리스 빌드 서명용 (CI 자동 배포 시 jks/secrets.properties 부재로 실패 주의)
+            // 로컬: jks가 있으면 업로드 키로 서명 / CI: jks 부재 → 미서명 빌드 후 deploy.yml 서명 단계에서 서명
+            if (rootProject.file("fisherlotto.jks").exists()) {
+                signingConfig = signingConfigs.getByName("config")
+            }
         }
     }
     compileOptions {

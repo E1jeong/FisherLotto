@@ -16,7 +16,7 @@ The module assembles the other project modules. Keep business rules and reposito
 ## Change Gates
 
 - Handle camera and notification permission denial without aborting the app.
-- Debug and release builds both sign with the root `fisherlotto.jks`; treat the keystore, its passwords, and `google-services.json` as machine-dependent configuration and never add their values to Git.
+- Debug builds sign with the root `fisherlotto.jks`; release builds sign with it only when it exists, so CI builds unsigned and signs in `.github/workflows/deploy.yml`. Treat the keystore, its passwords, and `google-services.json` as machine-dependent configuration and never add their values to Git.
 
 ## Verify
 

@@ -15,7 +15,7 @@ Resolve the wiki through root guidance. Read only release-relevant policy or fea
 
 ## Checklist
 
-1. Confirm `versionCode` and `versionName`.
+1. Confirm `versionCode` and `versionName`; tag-triggered `.github/workflows/deploy.yml` injects both, so the `app/build.gradle.kts` defaults apply only to local builds.
 2. Check signing config changes carefully; never change signing passwords or key aliases through AI edits.
 3. Confirm no secret values are added to source.
 4. Identify changes touching Billing, Auth, Firebase, FCM, Room, permissions, or release config.
