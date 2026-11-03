@@ -2,7 +2,7 @@
 
 ## Context
 
-This is a code-navigation and safety guide, not project history. Product context, decisions, and detailed code tracing live in the vault-relative `Dev/Project/Personal/FisherLotto` wiki; resolve it through `_meta/routing-tables.md` or `obsidian-wiki-sync`, then follow the vault root `AGENTS.md`.
+This is a code-navigation and safety guide, not project history. Product context, decisions, and detailed code tracing live in the vault-relative `Dev/Project/Personal/FisherLotto` wiki; resolve it through `_meta/routing-tables.md` or `obsidian-wiki-sync`.
 
 Keep the owner-facing `README.md` in Korean, preserving code identifiers. Use the nearest module guide before changing a module.
 
