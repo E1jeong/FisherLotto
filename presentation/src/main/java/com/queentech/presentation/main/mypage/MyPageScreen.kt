@@ -230,25 +230,8 @@ private fun MyPageContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // ── App Version ──
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-        ) {
-            val context = LocalContext.current
-            val versionName = remember {
-                try {
-                    context.packageManager.getPackageInfo(context.packageName, 0).versionName
-                } catch (_: Exception) {
-                    "-"
-                }
-            }
-            Text(
-                text = "v$versionName",
-                color = TextSecondary,
-                fontSize = 12.sp,
-            )
-        }
+        // ── Seller Info ──
+        SellerInfoSection()
 
         Spacer(Modifier.height(32.dp))
     }
@@ -662,6 +645,59 @@ private fun DeleteAccountButton(onDeleteAccountClick: () -> Unit) {
                 color = AccentRed,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+// ── Seller Info ──
+
+private const val sellerNameLine = "상호 퀸테크 | 대표자 한재성"
+
+private val sellerInfoLines = listOf(
+    "사업자등록번호 828-60-00101",
+    "통신판매업 신고번호 제 2026-서울송파-0866호 (송파구청)",
+    "이메일 iot@queentech.kr",
+)
+
+@Composable
+private fun SellerInfoSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+        Spacer(Modifier.height(12.dp))
+        val context = LocalContext.current
+        val versionName = remember {
+            try {
+                context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            } catch (_: Exception) {
+                "-"
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = sellerNameLine,
+                color = TextSecondary,
+                fontSize = 11.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "v$versionName",
+                color = TextSecondary,
+                fontSize = 11.sp,
+            )
+        }
+        sellerInfoLines.forEach { line ->
+            Text(
+                text = line,
+                color = TextSecondary,
+                fontSize = 11.sp,
             )
         }
     }
