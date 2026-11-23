@@ -1,0 +1,18 @@
+{
+  "name": "fisherlotto-shorts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch": "node scripts/fetch-data.mjs",
+    "studio": "remotion studio src/index.ts",
+    "still": "remotion still src/index.ts Shorts",
+    "render": "remotion render src/index.ts Shorts out/shorts.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.545",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.545"
+  }
+}

@@ -16,6 +16,7 @@ Repository skills: `.agents/skills/<name>/SKILL.md` (`android-feature`, `release
 | `data/` | Repositories, Retrofit, Room, DataStore, Billing | `data/src/main/java/com/queentech/data/` | `data/AGENTS.md` |
 | `presentation/` | Compose UI screens and Orbit ViewModels | `presentation/src/main/java/com/queentech/presentation/` | `presentation/AGENTS.md` |
 | `app/` | Android shell, DI, navigation graph, FCM, workers, signing | `app/src/main/` | `app/AGENTS.md` |
+| `marketing/shorts/` | Weekly YouTube Shorts template (Remotion, Node; outside Gradle) | `marketing/shorts/src/Shorts.tsx` | `marketing/shorts/README.md` |
 
 Dependencies: `app -> presentation, data, domain`; `presentation -> domain`; `data -> domain`; `domain` has no project-module dependency.
 
