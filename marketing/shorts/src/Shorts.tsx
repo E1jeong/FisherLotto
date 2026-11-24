@@ -1,5 +1,20 @@
-import {AbsoluteFill, Easing, Img, Sequence, interpolate, random, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, Easing, Img, Sequence, interpolate, random, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import data from './data.json';
+import badgePopSfx from './sfx/badge_pop.wav';
+import countTickSfx from './sfx/count_tick.wav';
+import hookDropSfx from './sfx/hook_drop.wav';
+import nudgeSfx from './sfx/nudge.wav';
+import outroSfx from './sfx/outro.wav';
+import pullUpSfx from './sfx/pull_up.wav';
+import punchSfx from './sfx/punch.wav';
+import strikeSfx from './sfx/strike.wav';
+import whipSfx from './sfx/whip.wav';
+
+const Sfx = ({at = 0, dur, src, volume = 0.6}: {at?: number; dur: number; src: string; volume?: number}) => (
+  <Sequence from={at} durationInFrames={dur}>
+    <Audio src={src} volume={volume} />
+  </Sequence>
+);
 
 type Stats = {lottoRound: number; pickDate: string; grade1: number; grade2: number; grade3: number; combiCount: number};
 const cur = data.current as Stats;
@@ -220,6 +235,10 @@ const Intro = () => {
   const line = `M${h.eyeX + 4} -20 Q${h.eyeX - h.sway * 22 + (f < STRIKE ? 10 : 0)} ${h.eyeY / 2} ${h.eyeX} ${h.eyeY - 9 * HOOK_S}`;
   return (
     <AbsoluteFill>
+      <Sfx at={2} dur={20} src={hookDropSfx} volume={0.45} />
+      <Sfx at={46} dur={10} src={nudgeSfx} volume={0.5} />
+      <Sfx at={61} dur={26} src={strikeSfx} volume={0.75} />
+      <Sfx at={75} dur={30} src={pullUpSfx} volume={0.55} />
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
         <path d={line} stroke="rgba(255,255,255,0.7)" strokeWidth={2.5} fill="none" />
       </svg>
@@ -252,6 +271,7 @@ const Cut = ({dur, children}: {dur: number; children: React.ReactNode}) => {
   const zoom = interpolate(f, [0, dur], [1, 1.07]);
   return (
     <AbsoluteFill style={{transform: `translateY(${y}px) scale(${zoom})`, filter: blur > 0.5 ? `blur(${blur}px)` : undefined}}>
+      <Sfx dur={15} src={whipSfx} volume={0.5} />
       {children}
     </AbsoluteFill>
   );
@@ -264,9 +284,13 @@ const PunchNumber = ({value, size, glow}: {value: number; size: number; glow: st
   const punch = spring({frame: f - 4, fps, config: {damping: 11, stiffness: 160}});
   const shown = interpolate(f, [4, 30], [0, value], {...clamp, easing: Easing.out(Easing.cubic)});
   return (
-    <div style={{fontSize: size, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 60px ${glow}`, transform: `scale(${interpolate(punch, [0, 1], [2.2, 1])})`, opacity: interpolate(punch, [0, 0.3], [0, 1], clamp)}}>
-      {fmtInt(shown)}
-    </div>
+    <>
+      <Sfx at={7} dur={12} src={punchSfx} volume={0.6} />
+      {value > 0 && <Sfx at={5} dur={29} src={countTickSfx} volume={0.38} />}
+      <div style={{fontSize: size, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums', textShadow: `0 0 60px ${glow}`, transform: `scale(${interpolate(punch, [0, 1], [2.2, 1])})`, opacity: interpolate(punch, [0, 0.3], [0, 1], clamp)}}>
+        {fmtInt(shown)}
+      </div>
+    </>
   );
 };
 
@@ -315,6 +339,7 @@ const RankCut = ({rank}: {rank: (typeof RANKS)[number]}) => {
   }
   return (
     <AbsoluteFill style={{alignItems: 'center', textAlign: 'center'}}>
+      <Sfx at={2} dur={10} src={badgePopSfx} volume={0.42} />
       <Glow color={rank.color} />
       <div style={{position: 'absolute', top: 300, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
         <div style={{width: 210, height: 210, borderRadius: '50%', background: rank.color, color: '#0B1E4A', fontSize: 84, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${badge})`, boxShadow: `0 0 80px ${rank.color}99`}}>{rank.label}</div>
@@ -369,6 +394,7 @@ const Outro = () => {
   const fadeIn = interpolate(f, [0, 12], [0, 1], clamp);
   return (
     <AbsoluteFill style={{alignItems: 'center', opacity: fadeIn}}>
+      <Sfx at={2} dur={40} src={outroSfx} volume={0.5} />
       <Img src={staticFile('app_icon.png')} style={{position: 'absolute', top: 230, width: 300, height: 300, transform: `scale(${s})`}} />
       <div style={{position: 'absolute', top: 560, fontSize: 92, fontWeight: 800}}>어부로또</div>
       <div style={{position: 'absolute', top: 690, fontSize: 40, color: MUTED}}>Play 스토어에서 '어부로또' 검색</div>

@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "fetch": "node scripts/fetch-data.mjs",
+    "sfx": "node scripts/generate-sfx.mjs",
     "studio": "remotion studio src/index.ts",
     "still": "remotion still src/index.ts Shorts",
     "render": "remotion render src/index.ts Shorts out/shorts.mp4"
