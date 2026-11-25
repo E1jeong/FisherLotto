@@ -1,4 +1,5 @@
 import {AbsoluteFill, Audio, Easing, Img, Sequence, interpolate, random, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import happyBoyThemeBgm from './bgm/happy_boy_theme.mp3';
 import data from './data.json';
 import badgePopSfx from './sfx/badge_pop.wav';
 import countTickSfx from './sfx/count_tick.wav';
@@ -408,8 +409,16 @@ const Outro = () => {
   );
 };
 
+// BGM: 앞 무음(약 1.4초)을 잘라 시작, 마지막 1초 페이드아웃 (CC BY 4.0 — 출처 표기는 README)
+const BGM_VOLUME = 0.2;
+const Bgm = () => {
+  const {durationInFrames, fps} = useVideoConfig();
+  return <Audio src={happyBoyThemeBgm} trimBefore={43} volume={(f) => interpolate(f, [durationInFrames - fps, durationInFrames - 1], [BGM_VOLUME, 0], clamp)} />;
+};
+
 export const Shorts = () => (
   <AbsoluteFill style={{fontFamily: FONT, color: '#FFFFFF', background: 'linear-gradient(180deg, #0B3B8C 0%, #0A2A66 55%, #061A40 100%)'}}>
+    <Bgm />
     <Water />
     <Bubbles />
     <Sequence durationInFrames={110}><Intro /></Sequence>
