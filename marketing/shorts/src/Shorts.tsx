@@ -403,7 +403,7 @@ const Outro = () => {
         <Img src={staticFile('qr.png')} style={{width: 340, height: 340, display: 'block'}} />
       </div>
       <div style={{position: 'absolute', top: 1260, fontSize: 30, color: MUTED, textAlign: 'center', lineHeight: 1.5}}>
-        본 통계는 참고·오락용이며<br />당첨을 보장하지 않습니다.
+        추천 조합의 결과적인 통계 정보만을 제공하며,<br />당첨이 보장되지 않습니다.
       </div>
     </AbsoluteFill>
   );
@@ -424,5 +424,7 @@ export const Shorts = () => (
     <Sequence durationInFrames={110}><Intro /></Sequence>
     <Sequence from={100} durationInFrames={STATS_DUR}><Stats /></Sequence>
     <Sequence from={100 + STATS_DUR}><Outro /></Sequence>
+    {/* 영상 전체 푸터: 하단 약 20%는 Shorts UI에 가려지므로 그 바로 위에 둔다 */}
+    <div style={{position: 'absolute', top: 1480, width: '100%', textAlign: 'center', fontSize: 28, color: 'rgba(255,255,255,0.55)'}}>어부로또 제공</div>
   </AbsoluteFill>
 );
